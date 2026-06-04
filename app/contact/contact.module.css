@@ -1,0 +1,75 @@
+/* Push page below fixed header */
+.page {
+  padding-top: 72px;
+}
+
+/* ─── Page header ─────────────────────────────────────────────────────────── */
+
+.pageHeader {
+  padding-block: clamp(48px, 8vh, 88px) clamp(32px, 5vh, 56px);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 7.5vw, 96px);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  line-height: 1;
+  margin-bottom: var(--space-5);
+}
+
+.subheadline {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.5vw, 18px);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+  max-width: 560px;
+}
+
+/* ─── Two-column body ─────────────────────────────────────────────────────── */
+
+.body {
+  border-top: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: clamp(var(--space-12), 8vw, var(--space-24));
+  align-items: start;
+}
+
+/* Info column — sticky on desktop */
+.infoCol {
+  position: sticky;
+  top: calc(72px + var(--space-8));
+}
+
+.formCol {
+  /* no special treatment needed */
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .page {
+    padding-top: 64px;
+  }
+
+  .pageHeader {
+    padding-block: var(--space-10) var(--space-8);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+  }
+
+  .infoCol {
+    position: static;
+    /* Info appears first (below headline), form below */
+  }
+}

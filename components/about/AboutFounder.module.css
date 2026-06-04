@@ -1,0 +1,106 @@
+.section {
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+/* ─── Layout ──────────────────────────────────────────────────────────────── */
+
+.inner {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: clamp(var(--space-12), 6vw, var(--space-20));
+  align-items: center;
+}
+
+/* When there is no image, text spans full width */
+.textCellFull {
+  grid-column: 1 / -1;
+  max-width: 720px;
+}
+
+/* ─── Founder image ───────────────────────────────────────────────────────── */
+
+.imageCell {
+  /* ScrollReveal wrapper */
+}
+
+.imageWrapper {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  background-color: #1a1410;
+}
+
+.image {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* ─── Section label ───────────────────────────────────────────────────────── */
+
+.sectionLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-8);
+}
+
+/* ─── Statement (blockquote) ──────────────────────────────────────────────── */
+
+.statement {
+  margin: 0;
+  margin-bottom: var(--space-10);
+  padding-inline-start: var(--space-6);
+  border-inline-start: 2px solid var(--color-accent);
+}
+
+.statementText {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2.2vw, 26px);
+  font-weight: var(--weight-light);
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  font-style: italic;
+}
+
+/* ─── Attribution ─────────────────────────────────────────────────────────── */
+
+.attribution {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.founderName {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.founderTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 860px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-10);
+  }
+
+  .imageWrapper {
+    aspect-ratio: 4/3;
+    max-width: 480px;
+  }
+}

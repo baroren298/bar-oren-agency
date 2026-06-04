@@ -1,0 +1,64 @@
+.section {
+  border-top: 1px solid var(--color-border);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: clamp(var(--space-12), 6vw, var(--space-24));
+  align-items: start;
+}
+
+/* ─── Section label ───────────────────────────────────────────────────────── */
+
+.sectionLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  line-height: 1;
+  padding-top: 6px; /* optical alignment with first line of lead */
+  position: sticky;
+  top: calc(72px + var(--space-8));
+}
+
+/* ─── Content column ──────────────────────────────────────────────────────── */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-width: 680px;
+}
+
+/* Lead paragraph — larger, more impactful */
+.leadParagraph {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: var(--weight-light);
+  line-height: 1.55;
+  color: var(--color-text-primary);
+}
+
+/* Body paragraphs */
+.paragraph {
+  font-family: var(--font-body);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-loose);
+  color: var(--color-text-secondary);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 860px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  .sectionLabel {
+    position: static;
+  }
+}

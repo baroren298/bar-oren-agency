@@ -1,0 +1,59 @@
+.section {
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-width: 640px;
+}
+
+/* ─── Prompt ──────────────────────────────────────────────────────────────── */
+
+.prompt {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: var(--weight-light);
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.talentName {
+  /* intentionally unstyled — same as surrounding text */
+}
+
+/* ─── CTA button ──────────────────────────────────────────────────────────── */
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-4) var(--space-8);
+  border: 1px solid var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  background-color: transparent;
+  transition:
+    background-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
+  width: fit-content;
+}
+
+.ctaBtn:hover {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .ctaBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

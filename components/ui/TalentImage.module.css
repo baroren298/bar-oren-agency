@@ -1,0 +1,16 @@
+/*
+ * Base styles shared by both the image and gradient paths.
+ * Callers may pass extra classes via the `className` prop
+ * to layer in transitions, hover effects, etc.
+ */
+
+.image {
+  object-fit: cover;
+  /* object-position is applied as an inline style from props */
+}
+
+.gradient {
+  /* Fill the parent's position: relative container */
+  position: absolute;
+  inset: 0;
+}

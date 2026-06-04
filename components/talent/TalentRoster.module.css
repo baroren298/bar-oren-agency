@@ -1,0 +1,48 @@
+.wrapper {
+  /* sticky filter is inside this */
+}
+
+/* ─── Grid container ──────────────────────────────────────────────────────── */
+
+.gridContainer {
+  padding-top: var(--space-12);
+  padding-bottom: var(--space-24);
+}
+
+/* ─── Talent grid — 3 columns ─────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(20px, 3vw, 40px) clamp(16px, 2.5vw, 32px);
+}
+
+/* ─── Empty state ─────────────────────────────────────────────────────────── */
+
+.empty {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--color-text-tertiary);
+  padding-block: var(--space-16);
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 1023px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 479px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-10);
+  }
+
+  .gridContainer {
+    padding-top: var(--space-8);
+  }
+}

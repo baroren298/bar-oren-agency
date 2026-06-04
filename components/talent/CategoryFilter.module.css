@@ -1,0 +1,72 @@
+.nav {
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  white-space: nowrap;
+  padding-inline: var(--container-padding);
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+/* ─── Filter button ───────────────────────────────────────────────────────── */
+
+.btn {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  padding: var(--space-5) var(--space-5);
+  position: relative;
+  transition: color var(--duration-fast) var(--ease-default);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; /* sits on the nav border */
+  inset-inline-start: var(--space-5);
+  inset-inline-end: var(--space-5);
+  height: 1px;
+  background-color: var(--color-text-primary);
+  transform: scaleX(0);
+  transform-origin: start;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.btn:hover {
+  color: var(--color-text-primary);
+}
+
+.btn.active {
+  color: var(--color-text-primary);
+}
+
+.btn.active::after {
+  transform: scaleX(1);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .btn {
+    padding: var(--space-4) var(--space-3);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+  }
+}

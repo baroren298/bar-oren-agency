@@ -1,0 +1,67 @@
+.section {
+  border-top: 1px solid var(--color-border);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* ─── Section label ───────────────────────────────────────────────────────── */
+
+.label {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* ─── Brand name row ──────────────────────────────────────────────────────── */
+
+.brandList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-5);
+  row-gap: var(--space-4);
+}
+
+.brandItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.brand {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  line-height: 1;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+/* Subtle hover — brands aren't links but this adds life */
+.brandItem:hover .brand {
+  color: var(--color-text-secondary);
+}
+
+.dot {
+  color: var(--color-border);
+  font-size: var(--text-small);
+  user-select: none;
+  line-height: 1;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .brandList {
+    gap: var(--space-3) var(--space-4);
+  }
+}

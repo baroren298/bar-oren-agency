@@ -1,0 +1,120 @@
+/* ─── Base typographic rules ──────────────────────────────────────────────── */
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+}
+
+/* ─── Heading defaults ────────────────────────────────────────────────────── */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+h1 { font-size: var(--text-h1); }
+h2 { font-size: var(--text-h2); }
+h3 { font-size: var(--text-h3); }
+
+/* ─── Body text ───────────────────────────────────────────────────────────── */
+
+p {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-loose);
+  color: var(--color-text-primary);
+}
+
+p + p {
+  margin-top: var(--space-4);
+}
+
+/* ─── Links ───────────────────────────────────────────────────────────────── */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ─── Utility classes ─────────────────────────────────────────────────────── */
+
+.text-display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-tight);
+  letter-spacing: 0.02em;
+}
+
+.text-h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-tight);
+}
+
+.text-h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-snug);
+}
+
+.text-body-lg {
+  font-family: var(--font-body);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-loose);
+}
+
+.text-body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-relaxed);
+}
+
+.text-label {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: var(--leading-normal);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+/* ─── English overrides (applied when lang="en") ─────────────────────────── */
+
+html[lang="en"] body {
+  font-family: var(--font-body-en);
+}
+
+html[lang="en"] h1,
+html[lang="en"] h2,
+html[lang="en"] h3,
+html[lang="en"] h4,
+html[lang="en"] h5,
+html[lang="en"] h6 {
+  font-family: var(--font-display-en);
+  letter-spacing: 0.01em;
+}

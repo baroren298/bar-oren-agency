@@ -1,0 +1,121 @@
+.section {
+  border-top: 1px solid var(--color-border);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────────── */
+
+.sectionLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+/* ─── 2×2 services grid ───────────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px; /* border via gap + background trick */
+  background-color: var(--color-border);
+  border: 1px solid var(--color-border);
+}
+
+/* ─── Service card ────────────────────────────────────────────────────────── */
+
+.serviceCard {
+  background-color: var(--color-bg);
+  padding: var(--space-10) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  transition: background-color var(--duration-base) var(--ease-default);
+}
+
+.serviceCard:hover {
+  background-color: var(--color-surface);
+}
+
+/* Service number — accent colour, acts as an editorial anchor */
+.number {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.16em;
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.description {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+/* ─── Footer CTA ──────────────────────────────────────────────────────────── */
+
+.footer {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.ctaLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.ctaLink:hover {
+  color: var(--color-text-primary);
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform var(--duration-base) var(--ease-default);
+}
+
+.ctaLink:hover .arrow {
+  transform: translateX(-4px);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .serviceCard {
+    padding: var(--space-8) var(--space-6);
+  }
+}
