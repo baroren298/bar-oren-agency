@@ -177,10 +177,16 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 72px;
+  height: 88px;
   padding-inline: var(--container-padding);
   max-width: var(--container-max);
   margin-inline: auto;
+}
+
+@media (max-width: 768px) {
+  .header-inner {
+    height: 72px;
+  }
 }
 
 .wordmark {
@@ -189,10 +195,16 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1;
 }
 .logo-img {
-  height: 44px;
+  height: 64px;
   width: auto;
   display: block;
   object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .logo-img {
+    height: 52px;
+  }
 }
 
 /* On dark hero — invert to white logo, blend away the background */
@@ -797,8 +809,8 @@ h1, h2, h3, h4, h5, h6 {
 /* ═══════════════════════════════════════════════════════════════════════════
    ABOUT PAGE
    ═══════════════════════════════════════════════════════════════════════════ */
-.page-body { padding-top: 72px; }
-@media (max-width: 768px) { .page-body { padding-top: 64px; } }
+.page-body { padding-top: 88px; }
+@media (max-width: 768px) { .page-body { padding-top: 72px; } }
 
 /* About hero */
 .about-hero {
