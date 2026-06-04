@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>צור קשר | Bar Oren Talent Agency</title>
+  <meta name="description" content="לשיתופי פעולה, קאסטינג ופניות מותגים — צרו קשר ישירות עם בר אורן." />
+  <link rel="canonical" href="/contact.html" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
+
+  <!-- ─── HEADER ─────────────────────────────────────────────────────────── -->
+  <header class="site-header solid" id="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="wordmark" aria-label="Bar Oren Talent Agency — דף הבית">
+        <span class="wordmark-name">Bar Oren</span>
+        <span class="wordmark-agency">Talent Agency</span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="ניווט ראשי">
+        <ul class="nav-list">
+          <li><a href="talent.html" class="nav-link">כישרונות</a></li>
+          <li><a href="about.html" class="nav-link">אודות</a></li>
+          <li><a href="contact.html" class="nav-link active">צור קשר</a></li>
+        </ul>
+      </nav>
+
+      <button class="menu-toggle" id="menu-toggle" aria-label="פתח תפריט" aria-expanded="false">
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="תפריט ניווט">
+      <nav>
+        <ul class="mobile-nav-list">
+          <li><a href="talent.html" class="mobile-nav-link">כישרונות</a></li>
+          <li><a href="about.html" class="mobile-nav-link">אודות</a></li>
+          <li><a href="contact.html" class="mobile-nav-link active">צור קשר</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ─── MAIN ───────────────────────────────────────────────────────────── -->
+  <main id="main-content" class="page-body">
+
+    <!-- Page Header -->
+    <div class="contact-page-header">
+      <div class="container">
+        <h1 class="contact-headline">בואו נדבר.</h1>
+        <p class="contact-subheadline">לשיתופי פעולה, קאסטינג ופניות מותגים — בר אורן זמינה ישירות.</p>
+      </div>
+    </div>
+
+    <!-- Contact Body -->
+    <section class="section" aria-label="יצירת קשר">
+      <div class="contact-body-grid container">
+
+        <!-- Info column -->
+        <div class="contact-info-col">
+          <div class="contact-info-wrapper">
+            <p class="contact-section-label reveal">ישירות</p>
+
+            <a href="https://wa.me/972XXXXXXXXX" target="_blank" rel="noopener noreferrer"
+               class="contact-whatsapp-btn reveal" aria-label="פתח שיחת WhatsApp עם בר אורן">
+              WhatsApp
+              <span style="display:inline-block;transition:transform var(--duration-base);font-size:14px;">←</span>
+            </a>
+
+            <div class="contact-row reveal">
+              <p class="contact-row-label">אימייל</p>
+              <a href="mailto:bar@baroren.com" class="contact-row-value">bar@baroren.com</a>
+            </div>
+
+            <div class="contact-row reveal">
+              <p class="contact-row-label">מיקום</p>
+              <p class="contact-row-value">תל אביב, ישראל</p>
+            </div>
+
+            <div class="reveal">
+              <p class="contact-row-label" style="margin-bottom: var(--space-3);">עקבו אחרינו</p>
+              <div class="social-links">
+                <a href="https://instagram.com/baroren" target="_blank" rel="noopener noreferrer"
+                   class="social-link" aria-label="Instagram — בר אורן">Instagram</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form column -->
+        <div class="contact-form-col">
+          <div class="contact-form-wrapper">
+            <p class="form-section-label reveal">שלחו הודעה</p>
+
+            <!-- Form action uses FormSubmit.co (free static form service) -->
+            <!-- Replace YOUR_EMAIL with actual email before deploying        -->
+            <form
+              id="contact-form"
+              class="contact-form"
+              action="https://formsubmit.co/bar@baroren.com"
+              method="POST"
+              novalidate
+              aria-label="טופס יצירת קשר"
+            >
+              <!-- Formsubmit config -->
+              <input type="hidden" name="_subject" value="פנייה חדשה מהאתר — Bar Oren" />
+              <input type="hidden" name="_next" value="https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO/contact.html?sent=1" />
+              <input type="hidden" name="_captcha" value="false" />
+              <input type="text" name="_honey" style="display:none;" />
+
+              <!-- Name -->
+              <div class="field-group">
+                <label for="name" class="field-label">
+                  שם מלא<span class="field-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  type="text" id="name" name="name"
+                  class="field-input" autocomplete="name"
+                  placeholder="ישראל ישראלי" required
+                />
+                <p class="field-error" id="name-error" role="alert" style="display:none;color:#b34040;font-size:var(--text-small);"></p>
+              </div>
+
+              <!-- Email + Phone -->
+              <div class="two-col">
+                <div class="field-group">
+                  <label for="email" class="field-label">
+                    אימייל<span class="field-required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    type="email" id="email" name="email"
+                    class="field-input" autocomplete="email"
+                    placeholder="name@example.com" dir="ltr" required
+                  />
+                  <p class="field-error" id="email-error" role="alert" style="display:none;color:#b34040;font-size:var(--text-small);"></p>
+                </div>
+                <div class="field-group">
+                  <label for="phone" class="field-label">טלפון</label>
+                  <input
+                    type="tel" id="phone" name="phone"
+                    class="field-input" autocomplete="tel"
+                    placeholder="050-000-0000" dir="ltr"
+                  />
+                </div>
+              </div>
+
+              <!-- Message -->
+              <div class="field-group">
+                <label for="message" class="field-label">
+                  הודעה<span class="field-required" aria-hidden="true">*</span>
+                </label>
+                <textarea
+                  id="message" name="message" rows="5"
+                  class="field-input"
+                  placeholder="ספרו לנו במה אתם מעוניינים..." required
+                ></textarea>
+                <p class="field-error" id="message-error" role="alert" style="display:none;color:#b34040;font-size:var(--text-small);"></p>
+              </div>
+
+              <button type="submit" class="submit-btn" id="submit-btn">שלחו הודעה</button>
+            </form>
+
+            <!-- Success message (shown after redirect back with ?sent=1) -->
+            <div id="success-block" style="display:none;" aria-live="polite"
+                 style="padding: var(--space-10) var(--space-8); border: 1px solid var(--color-border); background-color: var(--color-surface); display:flex; flex-direction:column; gap: var(--space-4);">
+              <p style="font-size:28px;color:var(--color-accent);">✓</p>
+              <p style="font-family:var(--font-display);font-size:clamp(20px,2.5vw,28px);font-weight:var(--weight-light);">ההודעה נשלחה.</p>
+              <p style="color:var(--color-text-secondary);">בר אורן תיצור איתכם קשר בהקדם.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ─── FOOTER ─────────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <a href="index.html" aria-label="Bar Oren Talent Agency — דף הבית"
+           style="display:flex;flex-direction:column;gap:2px;line-height:1;">
+          <span class="footer-wordmark-name">Bar Oren</span>
+          <span class="footer-wordmark-agency">Talent Agency</span>
+        </a>
+      </div>
+      <nav class="footer-links" aria-label="קישורי footer">
+        <a href="https://instagram.com/baroren" target="_blank" rel="noopener noreferrer" class="footer-link">Instagram</a>
+        <span class="footer-dot" aria-hidden="true">·</span>
+        <a href="mailto:bar@baroren.com" class="footer-link">bar@baroren.com</a>
+      </nav>
+      <p class="footer-copy">© <span id="year"></span> Bar Oren Talent Agency</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Mobile menu
+    const toggle = document.getElementById('menu-toggle');
+    const menu   = document.getElementById('mobile-menu');
+    toggle.addEventListener('click', () => {
+      const open = menu.classList.toggle('open');
+      toggle.classList.toggle('open', open);
+      toggle.setAttribute('aria-label', open ? 'סגור תפריט' : 'פתח תפריט');
+      toggle.setAttribute('aria-expanded', String(open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+
+    // Show success if redirected back with ?sent=1
+    if (new URL(window.location).searchParams.get('sent') === '1') {
+      document.getElementById('contact-form').style.display = 'none';
+      document.getElementById('success-block').style.display = 'flex';
+    }
+
+    // Client-side validation
+    const form = document.getElementById('contact-form');
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    form.addEventListener('submit', (e) => {
+      let valid = true;
+
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const message = form.message.value.trim();
+
+      if (!name)    { showError('name-error', 'נא להזין שם מלא'); valid = false; }
+      else           { showError('name-error', ''); }
+
+      if (!email)              { showError('email-error', 'נא להזין כתובת אימייל'); valid = false; }
+      else if (!EMAIL_RE.test(email)) { showError('email-error', 'כתובת אימייל לא תקינה'); valid = false; }
+      else                      { showError('email-error', ''); }
+
+      if (!message) { showError('message-error', 'נא להזין הודעה'); valid = false; }
+      else           { showError('message-error', ''); }
+
+      if (!valid) e.preventDefault();
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
