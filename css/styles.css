@@ -195,12 +195,16 @@ h1, h2, h3, h4, h5, h6 {
   object-fit: contain;
 }
 
-/* Hero mode — white wordmark */
-.site-header.on-hero .wordmark-name,
-.site-header.on-hero .wordmark-agency {
-  color: rgba(250, 248, 245, 0.9);
+/* On dark hero — invert to white logo, blend away the background */
+.site-header.on-hero .logo-img {
+  filter: invert(1);
+  mix-blend-mode: screen;
 }
-.site-header.on-hero .wordmark-agency { color: rgba(196, 168, 130, 0.85); }
+/* After scroll the header turns light — logo back to normal */
+.site-header.on-hero.scrolled .logo-img {
+  filter: none;
+  mix-blend-mode: normal;
+}
 
 .desktop-nav .nav-list {
   display: flex;
@@ -402,6 +406,29 @@ h1, h2, h3, h4, h5, h6 {
   margin-inline: auto;
 }
 .hero-content { max-width: 680px; }
+
+/* Hero with centered logo */
+.hero-inner--centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: clamp(48px, 8vh, 96px);
+}
+.hero-content--logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  text-align: center;
+  max-width: 520px;
+}
+.hero-logo {
+  width: clamp(200px, 40vw, 380px);
+  height: auto;
+  filter: invert(1);
+  mix-blend-mode: screen;
+  display: block;
+}
 .hero-agency-label {
   font-family: var(--font-body);
   font-size: var(--text-xs);
