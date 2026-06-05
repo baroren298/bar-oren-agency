@@ -57,7 +57,7 @@
 /* ─── Image column ────────────────────────────────────────────────────────── */
 
 .imageCol {
-  flex: 0 0 58%;
+  flex: 0 0 340px;
   position: relative;
   overflow: hidden;
   background-color: #1a1410;
