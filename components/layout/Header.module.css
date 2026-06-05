@@ -10,7 +10,7 @@
 }
 
 .header.scrolled {
-  background-color: rgba(248, 245, 240, 0.94);
+  background-color: rgba(237, 237, 237, 0.94);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom-color: var(--color-border);
@@ -18,7 +18,7 @@
 
 /* On non-hero pages, always show background */
 .header:not(.onHero) {
-  background-color: rgba(248, 245, 240, 0.94);
+  background-color: rgba(237, 237, 237, 0.94);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom-color: var(--color-border);
