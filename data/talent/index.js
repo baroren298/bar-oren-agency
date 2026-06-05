@@ -169,30 +169,30 @@ export const talentList = [
     followers: { instagram: 160_000, tiktok: 95_000, youtube: null },
   },
 
-  // ─── 6 ─ Omer Sheleg ───────────────────────────────────────────────────────
+  // ─── 6 ─ Kim Chorilov ──────────────────────────────────────────────────────
   {
     id: '6',
-    slug: 'omer-sheleg',
-    name: 'עומר שלג',
-    nameEn: 'Omer Sheleg',
+    slug: 'kim-chorilov',
+    name: 'קים צ׳ורילוב',
+    nameEn: 'Kim Chorilov',
 
-    category: ['actor'],
-    tags: ['קאסטינג', 'פרסומות', 'טלוויזיה'],
+    category: ['content', 'influencer', 'model'],
+    tags: ['לייף סטייל', 'אופנה', 'ביוטי'],
 
     featured: false,
     sortOrder: 6,
 
-    profileImage: null, // '/images/talent/omer-sheleg/profile.jpg'
+    profileImage: '/images/talent/kim-chorilov/profile.jpg',
     gallery:      [],
 
-    bioHe: 'שחקן עם ניסיון רב בהפקות טלוויזיה, קולנוע ופרסום. עומר מביא נוכחות על המסך שקשה להתעלם ממנה — אינטנסיביות מחושבת, מגוון רחב ואמינות טבעית שהמצלמה לוכדת.',
-    bioEn: 'An actor with extensive experience in television, film and commercial productions. Omer brings a screen presence that is impossible to ignore — measured intensity, wide range and a natural authenticity the camera captures.',
+    bioHe: 'קים צ׳ורילוב היא יוצרת תוכן ודוגמנית עם נוכחות טבעית, אסתטיקה נקייה וסגנון אישי שמתחבר לעולמות הלייף סטייל, האופנה והביוטי.',
+    bioEn: 'Kim Chorilov is a content creator and model with a natural presence, clean aesthetic and personal style rooted in lifestyle, fashion and beauty.',
 
-    instagram: 'https://www.instagram.com/omersheleg',
+    instagram: null,
     tiktok:    null,
     youtube:   null,
 
-    followers: { instagram: 48_000, tiktok: null, youtube: null },
+    followers: { instagram: null, tiktok: null, youtube: null },
   },
 
 ];
