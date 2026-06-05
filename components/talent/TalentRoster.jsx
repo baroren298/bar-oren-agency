@@ -4,13 +4,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import TalentCard from '@/components/home/TalentCard';
+import TalentModal from './TalentModal';
 import CategoryFilter from './CategoryFilter';
 import styles from './TalentRoster.module.css';
 
 export default function TalentRoster({ talent = [] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selected, setSelected] = useState(searchParams.get('category') || 'all');
+  const [selected,   setSelected]   = useState(searchParams.get('category') || 'all');
+  const [openTalent, setOpenTalent] = useState(null);
 
   /* Sync with URL on back/forward navigation */
   useEffect(() => {
@@ -32,6 +34,9 @@ export default function TalentRoster({ talent = [] }) {
     },
     [router, searchParams]
   );
+
+  const handleOpen  = useCallback((t) => setOpenTalent(t), []);
+  const handleClose = useCallback(() => setOpenTalent(null), []);
 
   const filtered =
     selected === 'all'
@@ -63,7 +68,7 @@ export default function TalentRoster({ talent = [] }) {
                   ease: [0.25, 0.1, 0.25, 1],
                 }}
               >
-                <TalentCard talent={t} aspectRatio="3/4" />
+                <TalentCard talent={t} aspectRatio="3/4" onOpen={handleOpen} />
               </motion.div>
             ))}
           </motion.div>
@@ -73,6 +78,13 @@ export default function TalentRoster({ talent = [] }) {
           <p className={styles.empty}>אין כישרונות בקטגוריה זו כרגע.</p>
         )}
       </div>
+
+      {/* Talent modal — rendered outside the grid so it sits above everything */}
+      <AnimatePresence>
+        {openTalent && (
+          <TalentModal talent={openTalent} onClose={handleClose} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

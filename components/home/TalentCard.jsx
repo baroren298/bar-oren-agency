@@ -10,14 +10,21 @@ function getCategoryLabel(categories) {
   return cat?.label ?? '';
 }
 
-export default function TalentCard({ talent, className = '', aspectRatio = '2/3' }) {
+export default function TalentCard({ talent, className = '', aspectRatio = '2/3', onOpen }) {
   const imageSrc = talent.profileImage || null;
+
+  /* If onOpen is provided (roster page), intercept left-click to open modal.
+   * The href is kept for SEO, right-click → open in new tab, middle-click. */
+  const handleClick = onOpen
+    ? (e) => { e.preventDefault(); onOpen(talent); }
+    : undefined;
 
   return (
     <Link
       href={`/talent/${talent.slug}`}
       className={`${styles.card} ${className}`}
       aria-label={`${talent.name} — עמוד כישרון`}
+      onClick={handleClick}
     >
       {/* Portrait */}
       <div className={styles.imageWrapper} style={{ aspectRatio }}>
