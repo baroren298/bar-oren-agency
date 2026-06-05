@@ -36,6 +36,17 @@ export default function HeroSection() {
           className={styles.logo}
         />
         <p className={styles.descriptor}>{siteConfig.descriptor}</p>
+
+        <div className={styles.photoWrapper}>
+          <Image
+            src="/images/herophoto.png"
+            alt="כישרונות בניהול בר אורן טאלנט אייג׳נסי"
+            width={1200}
+            height={680}
+            priority
+            className={styles.photo}
+          />
+        </div>
       </motion.div>
 
       {/* Scroll indicator */}
