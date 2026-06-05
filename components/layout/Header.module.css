@@ -28,39 +28,25 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 72px;
+  height: 88px;
   padding-inline: var(--container-padding);
   max-width: var(--container-max);
   margin-inline: auto;
 }
 
-/* ─── Wordmark ────────────────────────────────────────────────────────────── */
+/* ─── Wordmark / Logo ─────────────────────────────────────────────────────── */
 
 .wordmark {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
   line-height: 1;
 }
 
-.name {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: var(--weight-light);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-text-primary);
-  line-height: 1;
-}
-
-.agency {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  line-height: 1;
+.logo {
+  height: 64px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 /* ─── Desktop nav ─────────────────────────────────────────────────────────── */
@@ -146,7 +132,7 @@
 
 .mobileMenu {
   position: fixed;
-  inset: 72px 0 0 0;
+  inset: 88px 0 0 0;
   background-color: var(--color-bg);
   display: flex;
   flex-direction: column;

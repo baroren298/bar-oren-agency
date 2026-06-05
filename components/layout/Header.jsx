@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/data/site';
@@ -32,8 +33,14 @@ export default function Header() {
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''} ${isHome ? styles.onHero : ''}`}>
       <div className={styles.inner}>
         <Link href="/" className={styles.wordmark} aria-label="Bar Oren Talent Agency — דף הבית">
-          <span className={styles.name}>{siteConfig.name}</span>
-          <span className={styles.agency}>{siteConfig.tagline}</span>
+          <Image
+            src="/images/logo2.png"
+            alt="Bar Oren Talent Agency"
+            width={120}
+            height={120}
+            priority
+            className={styles.logo}
+          />
         </Link>
 
         <nav className={styles.nav} aria-label="ניווט ראשי">
