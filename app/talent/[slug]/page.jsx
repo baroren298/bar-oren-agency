@@ -22,7 +22,7 @@ export async function generateMetadata({ params }) {
 
   const title       = talent.name;
   const description = talent.bioHe || talent.bioEn || '';
-  const ogImage     = talent.heroImage || talent.profileImage || '/og-image.jpg';
+  const ogImage     = talent.profileImage || '/og-image.jpg';
   const canonical   = `/talent/${slug}`;
 
   return {
@@ -64,7 +64,7 @@ function buildPersonSchema(talent) {
     name:        talent.nameEn,
     description: talent.bioEn || talent.bioHe,
     jobTitle:    categoryLabels.join(', '),
-    image:       talent.heroImage || talent.profileImage || undefined,
+    image:       talent.profileImage || undefined,
     url:        `${siteConfig.meta.url}/talent/${talent.slug}`,
     worksFor: {
       '@type': 'Organization',

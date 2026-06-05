@@ -13,7 +13,7 @@ export default function ProfileHero({ talent }) {
       {/* Background — TalentImage fills the absolute container */}
       <div className={styles.bg}>
         <TalentImage
-          src={talent.heroImage || talent.profileImage || null}
+          src={talent.profileImage || null}
           alt={talent.name}
           fallbackIndex={talent.sortOrder}
           priority

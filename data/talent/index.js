@@ -5,9 +5,8 @@
  *
  * TO ADD A NEW TALENT — edit only this file:
  *   1. Copy a talent object below and fill in the fields.
- *   2. Add their images to: /public/images/talent/[slug]/
- *        profile.jpg   — square-ish portrait, shown in the roster grid
- *        hero.jpg      — tall portrait (2:3), shown in the profile page hero
+ *   2. Add their image to: /public/images/talent/[slug]/
+ *        profile.jpg   — portrait, used everywhere (roster grid + profile page)
  *        gallery-1.jpg — optional additional photos
  *   3. Set featured: true to show on the homepage (max 3 at a time).
  *   4. Run `git push` — Vercel auto-deploys.
@@ -22,8 +21,8 @@
  *   featured      — show on homepage featured grid (keep to max 3)
  *   sortOrder     — roster display order (lower = earlier)
  *
- *   profileImage  — path relative to /public  (null = warm gradient)
- *   heroImage     — path relative to /public  (null = warm gradient)
+ *   profileImage  — path relative to /public  e.g. '/images/talent/slug/profile.jpg'
+ *                   set to null to show warm gradient placeholder
  *   gallery       — array of { src, alt } objects
  *
  *   bioHe         — Hebrew biography (editorial tone, 2–4 sentences)
@@ -53,7 +52,6 @@ export const talentList = [
     sortOrder: 1,
 
     profileImage: null, // '/images/talent/maya-cohen/profile.jpg'
-    heroImage:    null, // '/images/talent/maya-cohen/hero.jpg'
     gallery:      [],
 
     bioHe: 'יוצרת תוכן עם עין ייחודית לאסתטיקה ואורח חיים. מאיה בונה קהילה נאמנה מתוך אותנטיות וסיפור אמיתי — ושיתופי הפעולה שלה מצליחים כי הם מרגישים כמו חלק ממנה.',
@@ -81,7 +79,6 @@ export const talentList = [
     sortOrder: 2,
 
     profileImage: null, // '/images/talent/noa-levi/profile.jpg'
-    heroImage:    null, // '/images/talent/noa-levi/hero.jpg'
     gallery:      [],
 
     bioHe: 'דוגמנית ויוצרת תוכן שמשלבת בין עולם האופנה לבין נוכחות דיגיטלית עמוקה. נועה עובדת עם מותגי אופנה ומוצרי יוקרה, ומביאה אסתטיקה ייחודית וסיפור ויז\'ואל חד לכל פרויקט.',
@@ -108,7 +105,6 @@ export const talentList = [
     sortOrder: 3,
 
     profileImage: null, // '/images/talent/yarden-bar/profile.jpg'
-    heroImage:    null, // '/images/talent/yarden-bar/hero.jpg'
     gallery:      [],
 
     bioHe: 'שחקן ויוצר תוכן בעל נוכחות כריזמטית ועוצמה טבעית. ירדן מביא עומק ואמינות לכל פרויקט — מפרסומות ועד הפקות דרמטיות — ומצליח לגעת בקהל מכל טווח גיל.',
@@ -135,7 +131,6 @@ export const talentList = [
     sortOrder: 4,
 
     profileImage: null, // '/images/talent/dana-katz/profile.jpg'
-    heroImage:    null, // '/images/talent/dana-katz/hero.jpg'
     gallery:      [],
 
     bioHe: 'יוצרת תוכן המתמחה בביוטי, בריאות ואורח חיים. דנה מאמינה שתוכן אמיתי מגיע מחיים אמיתיים — והקהל שלה מרגיש את זה. כל שיתוף פעולה שהיא בוחרת משקף את הערכים שהיא מייצגת.',
@@ -162,7 +157,6 @@ export const talentList = [
     sortOrder: 5,
 
     profileImage: null, // '/images/talent/lior-ben-david/profile.jpg'
-    heroImage:    null, // '/images/talent/lior-ben-david/hero.jpg'
     gallery:      [],
 
     bioHe: 'דוגמן ומשפיען אופנה עם נוכחות ייחודית ומרשימה. ליאור עובד עם מותגי אופנה, ספורט ולייפסטייל מובילים, ומביא פרשנות עכשווית ואמינה לכל קמפיין.',
@@ -189,7 +183,6 @@ export const talentList = [
     sortOrder: 6,
 
     profileImage: null, // '/images/talent/omer-sheleg/profile.jpg'
-    heroImage:    null, // '/images/talent/omer-sheleg/hero.jpg'
     gallery:      [],
 
     bioHe: 'שחקן עם ניסיון רב בהפקות טלוויזיה, קולנוע ופרסום. עומר מביא נוכחות על המסך שקשה להתעלם ממנה — אינטנסיביות מחושבת, מגוון רחב ואמינות טבעית שהמצלמה לוכדת.',

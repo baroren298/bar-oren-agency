@@ -11,8 +11,7 @@ function getCategoryLabel(categories) {
 }
 
 export default function TalentCard({ talent, className = '', aspectRatio = '2/3' }) {
-  /* Prefer the square-ish profile crop; fall back to hero if only one exists */
-  const imageSrc = talent.profileImage || talent.heroImage || null;
+  const imageSrc = talent.profileImage || null;
 
   return (
     <Link
