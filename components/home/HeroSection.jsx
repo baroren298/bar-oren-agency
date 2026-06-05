@@ -39,7 +39,7 @@ export default function HeroSection() {
 
         <div className={styles.photoWrapper}>
           <Image
-            src="/images/herophoto.png"
+            src="/images/herophoto.jpg"
             alt="כישרונות בניהול בר אורן טאלנט אייג׳נסי"
             width={1200}
             height={680}

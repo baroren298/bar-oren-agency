@@ -6,12 +6,12 @@ export const siteConfig = {
   descriptorEn: 'Personal and professional management for content creators, influencers, models and actors.',
 
   contact: {
-    whatsapp: 'https://wa.me/972XXXXXXXXX', // replace with real number
-    email: 'bar@baroren.com',               // replace with real email
-    phone: null,                            // optional — add phone number here
-    instagram: 'https://instagram.com/baroren', // replace with real handle
-    tiktok: null,                           // optional — add TikTok URL here
-    linkedin: null,                         // optional — add LinkedIn URL here
+    whatsapp: 'https://wa.me/972548311818',
+    email: 'bar@baroren.co.il',
+    phone: null,
+    instagram: 'https://instagram.com/baroren',
+    tiktok: null,
+    linkedin: null,
     address: 'תל אביב, ישראל',
   },
 
@@ -19,7 +19,7 @@ export const siteConfig = {
     title: 'Bar Oren Talent Agency',
     description: 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים.',
     descriptionEn: 'Personal and professional talent management. Content creators, influencers, models and actors.',
-    url: 'https://baroren.com', // replace with real domain
+    url: 'https://baroren.co.il',
     locale: 'he_IL',
   },
 

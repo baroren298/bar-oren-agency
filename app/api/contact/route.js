@@ -50,7 +50,7 @@ export async function POST(request) {
       const safeMessage = escapeHtml(message.trim()).replace(/\n/g, '<br>');
 
       const emailPayload = {
-        from:    'Bar Oren Agency <noreply@baroren.com>',
+        from:    'Bar Oren Agency <bar@baroren.co.il>',
         to:      [contactEmail],
         subject: `פנייה חדשה מהאתר — ${safeName}`,
         html: `
