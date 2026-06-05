@@ -28,7 +28,7 @@ export default function HeroSection() {
         transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1], delay: 0.15 }}
       >
         <Image
-          src="/images/logo2.png"
+          src="/images/brand/logo2.png"
           alt="Bar Oren Talent Agency"
           width={280}
           height={280}
@@ -39,7 +39,7 @@ export default function HeroSection() {
 
         <div className={styles.photoWrapper}>
           <Image
-            src="/images/herophoto.jpg"
+            src="/images/brand/herophoto.png"
             alt="כישרונות בניהול בר אורן טאלנט אייג׳נסי"
             width={1200}
             height={680}
