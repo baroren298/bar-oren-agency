@@ -39,14 +39,14 @@ export default function ContactPage() {
       {/* Two-column contact layout */}
       <section className={`${styles.body} section`} aria-label="יצירת קשר">
         <div className={`${styles.grid} container`}>
-          {/* Right column (RTL first): direct contact */}
-          <div className={styles.infoCol}>
-            <ContactInfo />
-          </div>
-
-          {/* Left column (RTL second): form */}
+          {/* Right column (RTL first): form — primary action */}
           <div className={styles.formCol}>
             <ContactForm title={contactPage.formTitle} />
+          </div>
+
+          {/* Left column (RTL second): direct contact details */}
+          <div className={styles.infoCol}>
+            <ContactInfo />
           </div>
         </div>
       </section>

@@ -37,7 +37,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1.6fr;
+  grid-template-columns: 1.6fr 1fr;
   gap: clamp(var(--space-12), 8vw, var(--space-24));
   align-items: start;
 }
