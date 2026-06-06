@@ -1,7 +1,6 @@
 import { getFeaturedTalent } from '@/data/talent';
 import { collaborations } from '@/data/collaborations';
 import HeroSection from '@/components/home/HeroSection';
-import AgencyVoice from '@/components/home/AgencyVoice';
 import FeaturedTalent from '@/components/home/FeaturedTalent';
 import Collaborations from '@/components/home/Collaborations';
 import ContactInvite from '@/components/home/ContactInvite';
@@ -30,7 +29,6 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <AgencyVoice />
       <FeaturedTalent talent={featuredTalent} />
       <Collaborations brands={collaborations} />
       <ContactInvite />
