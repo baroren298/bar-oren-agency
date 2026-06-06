@@ -38,8 +38,11 @@
 
 @media (max-width: 767px) {
   .grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-10);
+    grid-template-columns: repeat(2, 1fr);
+    /* Tighter gaps for compact editorial cards at mobile width.
+       On 390px: content width ≈ 350px → each card ≈ 167px wide. */
+    row-gap: var(--space-8);     /* 32px vertical — enough breathing room */
+    column-gap: var(--space-4);  /* 16px horizontal — compact but not cramped */
   }
 
   .gridContainer {
