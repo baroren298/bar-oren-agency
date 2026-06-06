@@ -14,6 +14,7 @@
   align-items: center;
   gap: 0;
   white-space: nowrap;
+  min-width: max-content;
   padding-inline: var(--container-padding);
   max-width: var(--container-max);
   margin-inline: auto;
