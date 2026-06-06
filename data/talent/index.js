@@ -180,7 +180,7 @@ export const talentList = [
     tags: ['לייף סטייל', 'אופנה', 'ביוטי'],
 
     featured: false,
-    sortOrder: 6,
+    sortOrder: 0,
 
     profileImage: '/images/talent/kim-chorilov/profile.jpg',
     gallery:      [],
