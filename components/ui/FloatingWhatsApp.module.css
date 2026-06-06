@@ -1,0 +1,62 @@
+.btn {
+  position: fixed;
+  /* Physical bottom-left — explicit left/bottom so RTL document direction
+     doesn't move the button to the opposite corner. */
+  bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  left: var(--space-6);
+
+  /* Above header (z-index: 100) and page content, below modal overlay (200) */
+  z-index: 150;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+
+  /* Premium dark — matches the site's editorial palette */
+  background-color: var(--color-text-primary);
+  color: var(--color-bg);
+
+  box-shadow:
+    0 2px 8px  rgba(10, 7, 4, 0.18),
+    0 6px 24px rgba(10, 7, 4, 0.14);
+
+  transition:
+    transform  var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-default);
+
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover {
+  transform: scale(1.09);
+  box-shadow:
+    0 4px 12px  rgba(10, 7, 4, 0.22),
+    0 12px 40px rgba(10, 7, 4, 0.18);
+  background-color: #2a2520; /* slightly lighter than near-black on hover */
+}
+
+/* Keyboard focus — clean accent ring, not the heavy global default */
+.btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ─── Mobile tweaks ───────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .btn {
+    /* Slightly smaller on mobile to take less screen real estate */
+    width: 48px;
+    height: 48px;
+  }
+}

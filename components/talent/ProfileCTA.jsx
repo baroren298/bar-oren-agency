@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import ScrollReveal from '@/components/ui/ScrollReveal';
-import { siteConfig } from '@/data/site';
 import styles from './ProfileCTA.module.css';
 
 export default function ProfileCTA({ talent }) {
@@ -15,13 +14,11 @@ export default function ProfileCTA({ talent }) {
         </ScrollReveal>
         <ScrollReveal delay={0.1}>
           <Link
-            href={siteConfig.contact.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/contact"
             className={styles.ctaBtn}
-            aria-label={`צרו קשר עם בר אורן לגבי ${talent.name}`}
+            aria-label={`צרו קשר לגבי ${talent.name}`}
           >
-            צרו קשר עם בר אורן
+            צרו קשר
           </Link>
         </ScrollReveal>
       </div>

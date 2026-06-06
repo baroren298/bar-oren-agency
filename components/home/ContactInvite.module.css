@@ -40,39 +40,7 @@
   margin-top: var(--space-2);
 }
 
-/* WhatsApp — text link, matches email style */
-.whatsappBtn {
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  position: relative;
-  padding-bottom: 1px;
-  transition: color var(--duration-fast) var(--ease-default);
-}
-
-.whatsappBtn::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  inset-inline-start: 0;
-  width: 0;
-  height: 1px;
-  background-color: var(--color-accent);
-  transition: width var(--duration-base) var(--ease-out);
-}
-
-.whatsappBtn:hover {
-  color: var(--color-text-primary);
-}
-
-.whatsappBtn:hover::after {
-  width: 100%;
-}
-
-/* Email — secondary, text link */
+/* Email — text link */
 .emailLink {
   font-family: var(--font-body);
   font-size: var(--text-body);

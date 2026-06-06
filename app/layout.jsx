@@ -2,6 +2,7 @@ import { Frank_Ruhl_Libre, Heebo, Cormorant_Garamond, DM_Sans } from 'next/font/
 import '../styles/globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import FloatingWhatsApp from '@/components/ui/FloatingWhatsApp';
 import JsonLd from '@/components/ui/JsonLd';
 import { siteConfig } from '@/data/site';
 
@@ -181,6 +182,8 @@ export default function RootLayout({ children }) {
         <Header />
         <main id="main-content">{children}</main>
         <Footer />
+        {/* Single site-wide WhatsApp entry point — rendered once, available on every page */}
+        <FloatingWhatsApp />
 
         <JsonLd data={siteSchema} />
       </body>

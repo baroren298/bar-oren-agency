@@ -18,20 +18,6 @@ export default function ContactInfo() {
         <p className={styles.sectionLabel}>{contactPage.directTitle}</p>
       </ScrollReveal>
 
-      {/* WhatsApp — primary action */}
-      <ScrollReveal delay={0.06}>
-        <Link
-          href={contact.whatsapp}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.whatsappBtn}
-          aria-label="פתח שיחת WhatsApp עם בר אורן"
-        >
-          WhatsApp
-          <span className={styles.btnArrow} aria-hidden="true">←</span>
-        </Link>
-      </ScrollReveal>
-
       {/* Email */}
       <ScrollReveal delay={0.1}>
         <div className={styles.contactRow}>

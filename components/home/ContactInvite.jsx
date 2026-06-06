@@ -5,7 +5,7 @@ import styles from './ContactInvite.module.css';
 
 export default function ContactInvite() {
   const { contactHeadline, contactBody } = siteConfig.homepage;
-  const { whatsapp, email } = siteConfig.contact;
+  const { email } = siteConfig.contact;
 
   return (
     <section className={`${styles.section} section-lg`} aria-label="צור קשר">
@@ -19,15 +19,6 @@ export default function ContactInvite() {
 
         <ScrollReveal delay={0.18}>
           <div className={styles.actions}>
-            <Link
-              href={whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.whatsappBtn}
-              aria-label="פתח שיחת WhatsApp עם בר אורן"
-            >
-              WhatsApp
-            </Link>
             <Link
               href={`mailto:${email}`}
               className={styles.emailLink}
