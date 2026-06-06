@@ -1,9 +1,9 @@
-import { getFeaturedTalent } from '@/data/talent';
+import { Suspense } from 'react';
+import { talentList } from '@/data/talent';
 import { collaborations } from '@/data/collaborations';
 import HeroSection from '@/components/home/HeroSection';
 import AgencyVoice from '@/components/home/AgencyVoice';
-import FeaturedTalent from '@/components/home/FeaturedTalent';
-import CategoryNav from '@/components/home/CategoryNav';
+import TalentRoster from '@/components/talent/TalentRoster';
 import Collaborations from '@/components/home/Collaborations';
 import ContactInvite from '@/components/home/ContactInvite';
 
@@ -26,14 +26,15 @@ export const metadata = {
 };
 
 export default function HomePage() {
-  const featuredTalent = getFeaturedTalent(3);
+  const sorted = [...talentList].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <>
       <HeroSection />
       <AgencyVoice />
-      <FeaturedTalent talent={featuredTalent} />
-      <CategoryNav />
+      <Suspense>
+        <TalentRoster talent={sorted} mode="inline" />
+      </Suspense>
       <Collaborations brands={collaborations} />
       <ContactInvite />
     </>

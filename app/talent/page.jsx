@@ -37,7 +37,7 @@ export default function TalentPage() {
 
       {/* Suspense required for useSearchParams inside TalentRoster */}
       <Suspense>
-        <TalentRoster talent={sorted} />
+        <TalentRoster talent={sorted} mode="page" />
       </Suspense>
     </div>
   );

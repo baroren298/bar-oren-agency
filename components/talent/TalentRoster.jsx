@@ -8,21 +8,25 @@ import TalentModal from './TalentModal';
 import CategoryFilter from './CategoryFilter';
 import styles from './TalentRoster.module.css';
 
-export default function TalentRoster({ talent = [] }) {
+export default function TalentRoster({ talent = [], mode = 'page' }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selected,   setSelected]   = useState(searchParams.get('category') || 'all');
+  const isPage = mode === 'page';
+
+  const [selected,   setSelected]   = useState(isPage ? (searchParams.get('category') || 'all') : 'all');
   const [openTalent, setOpenTalent] = useState(null);
 
-  /* Sync with URL on back/forward navigation */
+  /* Sync with URL on back/forward navigation — page mode only */
   useEffect(() => {
+    if (!isPage) return;
     const cat = searchParams.get('category') || 'all';
     setSelected(cat);
-  }, [searchParams]);
+  }, [searchParams, isPage]);
 
   const handleFilterChange = useCallback(
     (category) => {
       setSelected(category);
+      if (!isPage) return;
       const params = new URLSearchParams(searchParams.toString());
       if (category === 'all') {
         params.delete('category');
@@ -32,7 +36,7 @@ export default function TalentRoster({ talent = [] }) {
       const query = params.toString();
       router.replace(`/talent${query ? `?${query}` : ''}`, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams, isPage]
   );
 
   const handleOpen  = useCallback((t) => setOpenTalent(t), []);
