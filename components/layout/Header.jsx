@@ -34,10 +34,10 @@ export default function Header() {
       <div className={styles.inner}>
         <Link href="/" className={styles.wordmark} aria-label="Bar Oren Talent Agency — דף הבית">
           <Image
-            src="/images/brand/logo2.png"
+            src="/images/brand/logo3.png"
             alt="Bar Oren Talent Agency"
-            width={120}
-            height={120}
+            width={600}
+            height={240}
             priority
             className={styles.logo}
           />
