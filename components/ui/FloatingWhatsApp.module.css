@@ -1,9 +1,11 @@
 .btn {
   position: fixed;
-  /* Physical bottom-left — explicit left/bottom so RTL document direction
-     doesn't move the button to the opposite corner. */
+  /* Physical bottom-right — explicit right/bottom so it never overlaps
+     any left-side floating widgets (chat, cookie, etc.) regardless of
+     RTL document direction. */
   bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
-  left: var(--space-6);
+  right: var(--space-6);
+  left: unset;
 
   /* Above header (z-index: 100) and page content, below modal overlay (200) */
   z-index: 150;

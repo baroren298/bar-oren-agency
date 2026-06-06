@@ -72,6 +72,15 @@ export default function Header() {
 
         <nav className={styles.nav} aria-label="ניווט ראשי">
           <ul className={styles.navList}>
+            {/* Home — active only on exact "/" so /talent doesn't light it up */}
+            <li>
+              <Link
+                href="/"
+                className={`${styles.navLink} ${pathname === '/' ? styles.active : ''}`}
+              >
+                דף הבית
+              </Link>
+            </li>
             {siteConfig.nav.links.map((link) => (
               <li key={link.href}>
                 <Link

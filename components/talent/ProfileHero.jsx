@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import TalentImage from '@/components/ui/TalentImage';
 import { siteConfig } from '@/data/site';
 import styles from './ProfileHero.module.css';
@@ -12,7 +11,7 @@ function getCategories(categories) {
     .join(' · ');
 }
 
-/** First sentence only — keeps the hero brief; full bio lives in ProfileBio. */
+/** First sentence only — full bio lives in ProfileBio below. */
 function getExcerpt(text) {
   if (!text) return '';
   const dot = text.indexOf('.');
@@ -28,12 +27,12 @@ function InstagramIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="19"
-      height="19"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -49,8 +48,8 @@ function TikTokIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="17"
-      height="17"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
@@ -72,9 +71,10 @@ export default function ProfileHero({ talent }) {
       className={styles.hero}
       aria-label={`${talent.name} — פרופיל`}
     >
-      {/* ── Content column (right in RTL, left in LTR) ─────────────────── */}
-      <div className={styles.content}>
-        <div className={styles.contentInner}>
+      <div className={styles.inner}>
+
+        {/* ── Content column — right in RTL ──────────────────────────── */}
+        <div className={styles.content}>
           {categoryLine && (
             <p className={styles.categoryLabel}>{categoryLine}</p>
           )}
@@ -85,52 +85,47 @@ export default function ProfileHero({ talent }) {
             <p className={styles.excerpt}>{excerpt}</p>
           )}
 
-          <div className={styles.footer}>
-            {hasSocials && (
-              <div className={styles.socials} aria-label="רשתות חברתיות">
-                {talent.instagram && (
-                  <a
-                    href={talent.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.socialLink}
-                    aria-label="Instagram"
-                  >
-                    <InstagramIcon />
-                  </a>
-                )}
-                {talent.tiktok && (
-                  <a
-                    href={talent.tiktok}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.socialLink}
-                    aria-label="TikTok"
-                  >
-                    <TikTokIcon />
-                  </a>
-                )}
-              </div>
-            )}
-
-            <Link href="/contact" className={styles.cta}>
-              צרו קשר
-            </Link>
-          </div>
+          {hasSocials && (
+            <div className={styles.socials} aria-label="רשתות חברתיות">
+              {talent.instagram && (
+                <a
+                  href={talent.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.socialLink}
+                  aria-label="Instagram"
+                >
+                  <InstagramIcon />
+                </a>
+              )}
+              {talent.tiktok && (
+                <a
+                  href={talent.tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.socialLink}
+                  aria-label="TikTok"
+                >
+                  <TikTokIcon />
+                </a>
+              )}
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* ── Image column (left in RTL, right in LTR) ───────────────────── */}
-      <div className={styles.imageCol}>
-        <TalentImage
-          src={talent.profileImage || null}
-          alt={talent.name}
-          fallbackIndex={talent.sortOrder}
-          priority
-          sizes="(max-width: 768px) 100vw, 45vw"
-          objectPosition="center top"
-          className={styles.image}
-        />
+        {/* ── Image column — left in RTL ──────────────────────────────── */}
+        <div className={styles.imageCol}>
+          <TalentImage
+            src={talent.profileImage || null}
+            alt={talent.name}
+            fallbackIndex={talent.sortOrder}
+            priority
+            sizes="(max-width: 768px) 90vw, 44vw"
+            objectPosition="center top"
+            className={styles.image}
+          />
+        </div>
+
       </div>
     </section>
   );
