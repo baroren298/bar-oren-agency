@@ -96,51 +96,65 @@
   color: var(--color-text-secondary);
 }
 
-/* ─── Agency name — mobile only ──────────────────────────────────────────── */
-
-.agencyName {
-  display: none; /* hidden on desktop — logo carries the brand mark */
-}
-
-/* ─── Responsive ──────────────────────────────────────────────────────────── */
+/* ─── Responsive — mobile centered layout ────────────────────────────────── */
 
 @media (max-width: 640px) {
+  /* Generous bottom padding: clears the fixed WhatsApp button (52px) +
+     mobile browser toolbar + safe area. Explicit inset overrides RTL
+     logical properties so the value is always physical bottom. */
+  .footer {
+    padding-block-start: var(--space-12);
+    padding-block-end: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Center every child vertically stacked.
+     width: 100% + margin: auto enforces centering regardless of RTL direction. */
   .inner {
     flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-5);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    gap: var(--space-6);
   }
 
-  /* Agency name surfaces on mobile for clear hierarchy */
-  .agencyName {
-    display: block;
-    font-family: var(--font-body);
-    font-size: var(--text-small);
-    font-weight: var(--weight-medium);
-    letter-spacing: 0.06em;
-    color: var(--color-text-secondary);
-    margin-top: calc(-1 * var(--space-3)); /* tuck closer to logo */
+  /* Wordmark link becomes a block so it centers via text-align */
+  .wordmark {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
-  /* Stack links vertically, hide the inline dot separator */
+  .logo {
+    height: 40px;
+  }
+
+  /* Links stack vertically, centered */
   .links {
     flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
+    align-items: center;
+    gap: var(--space-4);
   }
 
   .dot {
     display: none;
   }
 
-  /* Copyright drops to the end */
-  .copy {
-    order: 4;
-    font-size: var(--text-xs);
-    color: var(--color-text-tertiary);
+  .link {
+    font-size: var(--text-small);
   }
 
+  .copy {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    letter-spacing: 0.06em;
+  }
+
+  /* Legal row centered */
   .legalRow {
-    justify-content: flex-start;
+    justify-content: center;
+    gap: var(--space-6);
+    padding-top: var(--space-6);
+    text-align: center;
   }
 }

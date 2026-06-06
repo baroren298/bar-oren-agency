@@ -21,8 +21,6 @@ export default function Footer() {
           </Link>
         </div>
 
-        {/* Agency name — shown only on mobile below the logo */}
-        <p className={styles.agencyName}>{siteConfig.agencyName}</p>
 
         <nav className={styles.links} aria-label="קישורי footer">
           <Link href={`mailto:${siteConfig.contact.email}`} className={styles.link}>
