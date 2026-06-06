@@ -1,8 +1,9 @@
 import { getFeaturedTalent } from '@/data/talent';
-import { collaborations } from '@/data/collaborations';
 import HeroSection from '@/components/home/HeroSection';
 import FeaturedTalent from '@/components/home/FeaturedTalent';
-import Collaborations from '@/components/home/Collaborations';
+/* Collaborations hidden for launch — restore by uncommenting the two lines below:
+import { collaborations } from '@/data/collaborations';
+import Collaborations from '@/components/home/Collaborations'; */
 import ContactInvite from '@/components/home/ContactInvite';
 
 const DESCRIPTION = 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים. סוכנות ייצוג בוטיק.';
@@ -33,7 +34,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <FeaturedTalent talent={featuredTalent} />
-      <Collaborations brands={collaborations} />
+      {/* <Collaborations brands={collaborations} /> — hidden for launch */}
       <ContactInvite />
     </>
   );
