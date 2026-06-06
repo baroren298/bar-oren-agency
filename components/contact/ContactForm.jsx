@@ -134,7 +134,7 @@ export default function ContactForm({ title }) {
         <div className={styles.successBlock}>
           <p className={styles.successIcon} aria-hidden="true">✓</p>
           <p className={styles.successTitle}>ההודעה נשלחה.</p>
-          <p className={styles.successBody}>בר אורן תיצור איתכם קשר בהקדם.</p>
+          <p className={styles.successBody}>בר אורן ייצור איתכם קשר בהקדם.</p>
         </div>
       </div>
     );
