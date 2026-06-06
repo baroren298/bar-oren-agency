@@ -28,14 +28,13 @@ export default function HeroSection() {
         transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1], delay: 0.15 }}
       >
         <Image
-          src="/images/brand/logo2.png"
+          src="/images/brand/logo.png"
           alt="Bar Oren Talent Agency"
-          width={280}
-          height={280}
+          width={500}
+          height={500}
           priority
           className={styles.logo}
         />
-        <h1 className={styles.title}>{siteConfig.agencyName}</h1>
 
         <p className={styles.descriptor}>{siteConfig.descriptor}</p>
       </motion.div>
