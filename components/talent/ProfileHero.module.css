@@ -73,7 +73,50 @@
   line-height: 0.92;
 }
 
-/* ─── Responsive ──────────────────────────────────────────────────────────── */
+/* ─── Desktop: editorial split layout ────────────────────────────────────── */
+
+@media (min-width: 769px) {
+  .hero {
+    flex-direction: row;
+    align-items: stretch;
+    /* warm near-black fills the text column */
+    background: #0c0a08;
+  }
+
+  /* Text column — inline-start side (right in RTL, left in LTR) */
+  .inner {
+    order: 1;
+    flex: 1 1 55%;
+    max-width: unset;
+    margin-inline: unset;
+    /* keep bottom-anchor within the column */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  /* Image column — inline-end side (left in RTL, right in LTR) */
+  .bg {
+    position: relative; /* override absolute */
+    inset: unset;
+    flex: 0 0 45%;
+    order: 2;
+    overflow: hidden;
+  }
+
+  /* Tighter, more natural crop — let the portrait breathe */
+  .bgImage {
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  /* Subtle uniform scrim; no directional gradient needed on constrained column */
+  .overlay {
+    background: rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ─── Mobile ──────────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .inner {
