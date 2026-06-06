@@ -45,8 +45,26 @@ export const viewport = {
   initialScale:  1,
 };
 
+/*
+ * Resolve the canonical base URL for this deployment.
+ *
+ * Priority:
+ *   1. VERCEL_PROJECT_PRODUCTION_URL — Vercel's primary production domain
+ *      (e.g. "baroren.co.il" once the custom domain is wired up, or
+ *       "bar-oren-agency.vercel.app" until then). No https:// prefix.
+ *   2. VERCEL_URL — unique URL for this specific Vercel deployment build.
+ *      Use as a fallback so preview deployments also get correct absolute OG URLs.
+ *   3. siteConfig.meta.url — local development fallback.
+ */
+const metaBase =
+  process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : siteConfig.meta.url;
+
 export const metadata = {
-  metadataBase: new URL(siteConfig.meta.url),
+  metadataBase: new URL(metaBase),
 
   title: {
     default:  siteConfig.meta.title,
