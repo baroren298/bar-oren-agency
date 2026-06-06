@@ -21,13 +21,16 @@ export default function Footer() {
           </Link>
         </div>
 
+        {/* Agency name — shown only on mobile below the logo */}
+        <p className={styles.agencyName}>{siteConfig.agencyName}</p>
+
         <nav className={styles.links} aria-label="קישורי footer">
-          <Link href={siteConfig.contact.instagram} target="_blank" rel="noopener noreferrer" className={styles.link}>
-            Instagram
-          </Link>
-          <span className={styles.dot} aria-hidden="true">·</span>
           <Link href={`mailto:${siteConfig.contact.email}`} className={styles.link}>
             {siteConfig.contact.email}
+          </Link>
+          <span className={styles.dot} aria-hidden="true">·</span>
+          <Link href={siteConfig.contact.instagram} target="_blank" rel="noopener noreferrer" className={styles.link}>
+            Instagram
           </Link>
         </nav>
 

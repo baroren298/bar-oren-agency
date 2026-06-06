@@ -96,17 +96,48 @@
   color: var(--color-text-secondary);
 }
 
+/* ─── Agency name — mobile only ──────────────────────────────────────────── */
+
+.agencyName {
+  display: none; /* hidden on desktop — logo carries the brand mark */
+}
+
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
   .inner {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-4);
+    gap: var(--space-5);
   }
 
+  /* Agency name surfaces on mobile for clear hierarchy */
+  .agencyName {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-small);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+    margin-top: calc(-1 * var(--space-3)); /* tuck closer to logo */
+  }
+
+  /* Stack links vertically, hide the inline dot separator */
+  .links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .dot {
+    display: none;
+  }
+
+  /* Copyright drops to the end */
   .copy {
-    order: 3;
+    order: 4;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
   }
 
   .legalRow {
