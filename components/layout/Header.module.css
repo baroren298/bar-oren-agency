@@ -191,6 +191,14 @@
     height: 64px;
   }
 
+  /* Logo was 64px — same as the mobile header — so align-items: center had nothing
+     to center and the visual alignment depended entirely on PNG composition.
+     At 40px the logo is genuinely centered in the 64px bar, and object-fit: contain
+     centers its content within the box, putting both logo and toggle on the same axis. */
+  .logo {
+    height: 40px;
+  }
+
   /* Mobile header is 64px tall — adjust top and height accordingly */
   .mobileMenu {
     top: 64px;
