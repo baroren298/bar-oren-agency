@@ -5,7 +5,7 @@ import AboutServices from '@/components/about/AboutServices';
 import ContactInvite from '@/components/home/ContactInvite';
 import styles from './about.module.css';
 
-const DESCRIPTION = 'בר אורן טאלנט אייג׳נסי — סוכנות ייצוג בוטיק לניהול אישי ומקצועי של כישרונות. הכירו את הסוכנות, הגישה שלנו והשירותים שאנו מציעים.';
+const DESCRIPTION = 'בר אורן טאלנט אייג׳נסי — סוכנות ייצוג בוטיק לניהול אישי ומקצועי של מיוצגים. הכירו את הסוכנות, הגישה שלנו והשירותים שאנו מציעים.';
 
 export const metadata = {
   title:       'אודות',

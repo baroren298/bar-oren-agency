@@ -79,7 +79,7 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
         </AnimatePresence>
 
         {filtered.length === 0 && (
-          <p className={styles.empty}>אין כישרונות בקטגוריה זו כרגע.</p>
+          <p className={styles.empty}>אין מיוצגים בקטגוריה זו כרגע.</p>
         )}
       </div>
 

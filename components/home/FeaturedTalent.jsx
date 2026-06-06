@@ -6,13 +6,13 @@ import styles from './FeaturedTalent.module.css';
 
 export default function FeaturedTalent({ talent = [] }) {
   return (
-    <section className={`${styles.section} section`} aria-label="כישרונות נבחרים">
+    <section className={`${styles.section} section`} aria-label="מיוצגים">
       <div className={`${styles.inner} container`}>
         {/* Header row */}
         <ScrollReveal>
           <div className={styles.header}>
             <h2 className={styles.title}>{siteConfig.homepage.featuredTitle}</h2>
-            <Link href="/talent" className={styles.ctaLink} aria-label="לכל הכישרונות">
+            <Link href="/talent" className={styles.ctaLink} aria-label="לכל המיוצגים">
               <span>{siteConfig.homepage.featuredCta}</span>
               <span className={styles.arrow} aria-hidden="true">←</span>
             </Link>
