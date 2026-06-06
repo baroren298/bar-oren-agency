@@ -77,9 +77,22 @@
     gap: var(--space-6);
   }
 
+  /* Header row: keep side-by-side (row) rather than stacking.
+     The base rule already has justify-content: space-between, which in RTL
+     places the title on the right and the CTA link on the left automatically. */
   .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
+    align-items: center;
+  }
+
+  /* Reduce top padding to tighten the hero → section gap on mobile.
+     clamp(56px, 8vw, 96px) on 390px = 56px; bring it down to 24px (~32px saved). */
+  .section {
+    padding-block-start: var(--space-6);
+  }
+
+  /* Reduce inner gap (header row → grid) from 40px to 24px (16px saved).
+     Combined with section padding: ~48px tighter than before. */
+  .inner {
+    gap: var(--space-6);
   }
 }
