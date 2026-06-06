@@ -25,7 +25,7 @@ export const siteConfig = {
 
   nav: {
     links: [
-      { label: 'כישרונות', labelEn: 'Talent',  href: '/talent'  },
+      { label: 'מיוצגים', labelEn: 'Talent',  href: '/talent'  },
       { label: 'אודות',    labelEn: 'About',   href: '/about'   },
       { label: 'צור קשר',  labelEn: 'Contact', href: '/contact' },
     ],
@@ -34,8 +34,8 @@ export const siteConfig = {
   homepage: {
     voiceHeadline: 'כישרון נבחר. ייצוג אישי.',
     voiceBody: 'אנחנו מייצגים אנשים שאי אפשר להתעלם מהם.',
-    featuredTitle: 'כישרונות נבחרים',
-    featuredCta: 'לכל הכישרונות',
+    featuredTitle: 'מיוצגים',
+    featuredCta: 'לכל המיוצגים',
     collaborationsTitle: 'שיתופי פעולה נבחרים',
     contactHeadline: 'מעוניינים בשיתוף פעולה?',
     contactBody: 'צרו קשר ישירות עם בר אורן.',
