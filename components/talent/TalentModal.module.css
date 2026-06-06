@@ -18,7 +18,7 @@
 .panel {
   position: relative;
   display: flex;
-  flex-direction: row-reverse; /* RTL: row-reverse places imageCol on the left, contentCol on the right */
+  flex-direction: row-reverse; /* RTL: imageCol on left, contentCol on right */
   width: 100%;
   max-width: 760px;
   max-height: 90vh;
@@ -27,12 +27,18 @@
   box-shadow: 0 24px 80px rgba(10, 7, 4, 0.32);
 }
 
+/* ─── Drag handle — desktop: hidden; mobile: bottom-sheet pill ────────────── */
+
+.handle {
+  display: none;
+}
+
 /* ─── Close button ────────────────────────────────────────────────────────── */
 
 .closeBtn {
   position: absolute;
   top: var(--space-4);
-  inset-inline-start: var(--space-4); /* right side in RTL */
+  inset-inline-start: var(--space-4); /* RTL: physical right side */
   z-index: 10;
   width: 36px;
   height: 36px;
@@ -52,6 +58,15 @@
 .closeBtn:hover {
   color: var(--color-text-primary);
   background-color: var(--color-accent-subtle);
+}
+
+.closeBtn:focus-visible {
+  outline: 1px solid var(--color-border-strong);
+  outline-offset: 2px;
+}
+
+.closeBtn:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* ─── Image column ────────────────────────────────────────────────────────── */
@@ -79,8 +94,23 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  /* space at top for close button */
+  /* Reserve space at top for the absolutely-positioned close button */
   padding-top: calc(var(--space-4) + 36px + var(--space-6));
+}
+
+/*
+ * scrollBody and ctaBar — desktop: display:contents collapses their boxes so
+ * children become direct flex children of contentCol, preserving the existing
+ * desktop layout exactly (gap, padding, align-self all continue to work as if
+ * these wrappers don't exist).
+ */
+
+.scrollBody {
+  display: contents;
+}
+
+.ctaBar {
+  display: contents;
 }
 
 /* ─── Category label ──────────────────────────────────────────────────────── */
@@ -145,7 +175,7 @@
   gap: var(--space-3);
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-border);
-  margin-top: auto; /* push socials + CTA toward bottom */
+  margin-top: auto; /* push socials + CTA toward bottom on desktop */
 }
 
 .socialLink {
@@ -199,53 +229,144 @@
   color: var(--color-bg);
 }
 
-/* ─── Mobile: slide-up sheet ──────────────────────────────────────────────── */
+/* ─── Mobile: premium bottom sheet ───────────────────────────────────────── */
 
 @media (max-width: 768px) {
+
+  /* Backdrop — sheet slides up from the bottom */
   .backdrop {
     align-items: flex-end;
     padding: 0;
   }
 
+  /* Panel — fixed height, no panel-level scroll (scrollBody handles scrolling) */
   .panel {
     flex-direction: column;
     max-width: 100%;
     width: 100%;
-    max-height: 95dvh;
-    border-radius: 16px 16px 0 0;
-    overflow-y: auto;
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
   }
+
+  /* ── Drag handle ───────────────────────────────────────────────────────── */
+
+  .handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    height: 28px;
+    background-color: var(--color-surface);
+    /* Tap on handle also closes (handled at backdrop level, not here) */
+  }
+
+  .handle::after {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-border-strong);
+    opacity: 0.45;
+  }
+
+  /* ── Close button — circular pill overlaid on the image ───────────────── */
+
+  .closeBtn {
+    /* Position: absolute relative to .panel (which is position:relative).
+       Panel no longer scrolls, so the button never disappears. */
+    position: absolute;
+    /* Sit just inside the image area — handle is 28px, add a small gap */
+    top: calc(28px + var(--space-2));
+    inset-inline-start: var(--space-3); /* RTL: physical right side of image */
+    z-index: 20;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    /* Frosted-glass look — blends with any image color */
+    background: rgba(237, 237, 237, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(10, 7, 4, 0.16);
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Reset any overrides from base */
+    margin: 0;
+    align-self: unset;
+  }
+
+  /* ── Image column ──────────────────────────────────────────────────────── */
 
   .imageCol {
     flex: none;
     width: 100%;
-    height: 280px;
+    /* Taller than before — gives faces more room before the crop */
+    height: 320px;
   }
 
   .imageWrapper {
-    min-height: 280px;
+    min-height: 320px;
   }
+
+  /* ── Content column — flex host for scroll area + sticky CTA ──────────── */
 
   .contentCol {
-    padding: var(--space-8) var(--space-6) var(--space-12);
-    padding-top: var(--space-8);
-    overflow-y: visible;
+    flex: 1;
+    min-height: 0;          /* allow shrinking below intrinsic height */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    gap: 0;
+    padding-top: 0;         /* close button is on the image, no need for offset */
   }
 
-  .closeBtn {
-    /* Switch from absolute (scrolls away) to sticky so it stays visible */
-    position: sticky;
-    top: 0;
-    inset-inline-start: auto;
-    align-self: flex-start; /* RTL: physical right side, same corner as before */
-    margin: var(--space-3);
-    z-index: 10;
+  /* ── Scrollable content area ───────────────────────────────────────────── */
+
+  .scrollBody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: var(--space-5) var(--space-5) var(--space-4);
   }
+
+  /* ── Pinned CTA footer — always visible at bottom of sheet ────────────── */
+
+  .ctaBar {
+    display: block;
+    flex-shrink: 0;
+    padding: var(--space-4) var(--space-5) var(--space-5);
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── CTA button — full width on mobile ────────────────────────────────── */
 
   .ctaBtn {
-    align-self: stretch;
-    text-align: center;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-self: unset;
+    margin-top: 0;
   }
+
+  /* ── Name — slightly tighter on narrow screens ─────────────────────────── */
+
+  .name {
+    font-size: clamp(22px, 6vw, 32px);
+  }
+
+  /* ── Socials — reset desktop bottom-push; let content flow naturally ───── */
 
   .socials {
     margin-top: 0;

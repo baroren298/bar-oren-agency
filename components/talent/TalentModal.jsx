@@ -21,9 +21,9 @@ function getCategoryLabels(categories) {
 }
 
 export default function TalentModal({ talent, onClose }) {
-  const panelRef   = useRef(null);
+  const panelRef    = useRef(null);
   const closeBtnRef = useRef(null);
-  const titleId    = `modal-title-${talent.id}`;
+  const titleId     = `modal-title-${talent.id}`;
 
   /* ESC key */
   useEffect(() => {
@@ -96,7 +96,10 @@ export default function TalentModal({ talent, onClose }) {
         exit={{ opacity: 0, y: 24 }}
         transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        {/* ── Close button ───────────────────────────────────────────────── */}
+        {/* ── Drag handle — visible on mobile only, provides bottom-sheet affordance ── */}
+        <div className={styles.handle} aria-hidden="true" />
+
+        {/* ── Close button ─────────────────────────────────────────────────────────── */}
         <button
           ref={closeBtnRef}
           className={styles.closeBtn}
@@ -107,7 +110,7 @@ export default function TalentModal({ talent, onClose }) {
           ✕
         </button>
 
-        {/* ── Image column ───────────────────────────────────────────────── */}
+        {/* ── Image column ─────────────────────────────────────────────────────────── */}
         <div className={styles.imageCol}>
           <div className={styles.imageWrapper}>
             <TalentImage
@@ -121,63 +124,78 @@ export default function TalentModal({ talent, onClose }) {
           </div>
         </div>
 
-        {/* ── Content column ─────────────────────────────────────────────── */}
+        {/* ── Content column ───────────────────────────────────────────────────────── */}
         <div className={styles.contentCol}>
 
-          {/* Category */}
-          {categoryLabels.length > 0 && (
-            <p className={styles.categoryLabel} aria-label="קטגוריה">
-              {categoryLabels.join(' · ')}
-            </p>
-          )}
+          {/*
+            scrollBody — on desktop this is display:contents (children become direct
+            flex children of contentCol, zero layout change). On mobile it becomes the
+            independent scrollable area so the CTA bar can stay pinned at the bottom.
+          */}
+          <div className={styles.scrollBody}>
 
-          {/* Name — id referenced by aria-labelledby on the dialog */}
-          <h2 id={titleId} className={styles.name}>{talent.name}</h2>
+            {/* Category */}
+            {categoryLabels.length > 0 && (
+              <p className={styles.categoryLabel} aria-label="קטגוריה">
+                {categoryLabels.join(' · ')}
+              </p>
+            )}
 
-          {/* Bio */}
-          {talent.bioHe && (
-            <p className={styles.bio}>{talent.bioHe}</p>
-          )}
+            {/* Name — id referenced by aria-labelledby on the dialog */}
+            <h2 id={titleId} className={styles.name}>{talent.name}</h2>
 
-          {/* Tags */}
-          {talent.tags?.length > 0 && (
-            <div className={styles.tags} aria-label="תחומי פעילות">
-              {talent.tags.map((tag) => (
-                <span key={tag} className={styles.tag}>{tag}</span>
-              ))}
-            </div>
-          )}
+            {/* Bio */}
+            {talent.bioHe && (
+              <p className={styles.bio}>{talent.bioHe}</p>
+            )}
 
-          {/* Social links */}
-          {socials.length > 0 && (
-            <div className={styles.socials} aria-label="רשתות חברתיות">
-              {socials.map((ch) => (
-                <a
-                  key={ch.key}
-                  href={talent[ch.key]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.socialLink}
-                  aria-label={`${ch.label} של ${talent.name}`}
-                >
-                  {ch.label}
-                  <span className={styles.socialArrow} aria-hidden="true">←</span>
-                </a>
-              ))}
-            </div>
-          )}
+            {/* Tags */}
+            {talent.tags?.length > 0 && (
+              <div className={styles.tags} aria-label="תחומי פעילות">
+                {talent.tags.map((tag) => (
+                  <span key={tag} className={styles.tag}>{tag}</span>
+                ))}
+              </div>
+            )}
 
-          {/* WhatsApp CTA */}
-          <a
-            href={siteConfig.contact.whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.ctaBtn}
-            aria-label={`צרו קשר עם בר אורן לגבי ${talent.name}`}
-          >
-            צרו קשר עם בר אורן
-          </a>
-        </div>
+            {/* Social links */}
+            {socials.length > 0 && (
+              <div className={styles.socials} aria-label="רשתות חברתיות">
+                {socials.map((ch) => (
+                  <a
+                    key={ch.key}
+                    href={talent[ch.key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.socialLink}
+                    aria-label={`${ch.label} של ${talent.name}`}
+                  >
+                    {ch.label}
+                    <span className={styles.socialArrow} aria-hidden="true">←</span>
+                  </a>
+                ))}
+              </div>
+            )}
+
+          </div>{/* /scrollBody */}
+
+          {/*
+            ctaBar — on desktop this is display:contents so the ctaBtn flows inside
+            contentCol as before. On mobile it becomes the pinned footer bar.
+          */}
+          <div className={styles.ctaBar}>
+            <a
+              href={siteConfig.contact.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.ctaBtn}
+              aria-label={`צרו קשר עם בר אורן לגבי ${talent.name}`}
+            >
+              צרו קשר עם בר אורן
+            </a>
+          </div>
+
+        </div>{/* /contentCol */}
       </motion.div>
     </motion.div>
   );
