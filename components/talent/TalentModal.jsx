@@ -210,7 +210,7 @@ export default function TalentModal({ talent, onClose }) {
               className={styles.ctaBtn}
               aria-label={`צרו קשר עם בר אורן לגבי ${talent.name}`}
             >
-              צרו קשר עם בר אורן
+              לבירור פרטים נוספים
             </a>
           </div>
 
