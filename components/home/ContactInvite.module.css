@@ -1,9 +1,11 @@
 .section {
   border-top: 1px solid var(--color-border);
   background-color: var(--color-surface);
-  /* Override the global section-lg padding — this section needs to be
-     tighter since it contains only a heading and a single button. */
-  padding-block: clamp(40px, 5vw, 64px);
+  /* Top is deliberately tighter — the Collaborations section above already
+     contributes its own bottom padding, so the combined gap would be ~160px
+     without this override. Bottom stays generous for visual balance. */
+  padding-block-start: clamp(20px, 2.5vw, 32px);
+  padding-block-end:   clamp(40px, 5vw, 64px);
 }
 
 .inner {
