@@ -50,10 +50,16 @@ export default function Header() {
 
   const isHome = pathname === '/';
 
+  const handleLogoClick = (e) => {
+    if (!isHome) return;            // other pages: let Link navigate normally
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''} ${isHome ? styles.onHero : ''}`}>
       <div className={styles.inner}>
-        <Link href="/" className={styles.wordmark} aria-label="Bar Oren Talent Agency — דף הבית">
+        <Link href="/" className={styles.wordmark} aria-label="Bar Oren Talent Agency — דף הבית" onClick={handleLogoClick}>
           <Image
             src="/images/brand/logo3.png"
             alt="Bar Oren Talent Agency"
