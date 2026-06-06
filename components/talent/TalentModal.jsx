@@ -32,10 +32,29 @@ export default function TalentModal({ talent, onClose }) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  /* Body scroll lock */
+  /* Body scroll lock — iOS-safe.
+   *
+   * `overflow: hidden` alone is ignored by iOS Safari. The reliable fix is
+   * `position: fixed` on the body, combined with a negative `top` equal to
+   * the current scroll offset so the page doesn't jump to the top.
+   * On cleanup we remove those styles and call `scrollTo` to restore position.
+   */
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    const scrollY = window.scrollY;
+    const body    = document.body;
+
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top      = `-${scrollY}px`;
+    body.style.width    = '100%';
+
+    return () => {
+      body.style.overflow = '';
+      body.style.position = '';
+      body.style.top      = '';
+      body.style.width    = '';
+      window.scrollTo({ top: scrollY, behavior: 'instant' });
+    };
   }, []);
 
   /* Auto-focus close button on mount; restore focus to trigger on unmount */

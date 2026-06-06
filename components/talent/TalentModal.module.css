@@ -337,6 +337,8 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* Prevent iOS rubber-band scroll from propagating to the page behind */
+    overscroll-behavior: contain;
     padding: var(--space-5) var(--space-5) var(--space-4);
   }
 
