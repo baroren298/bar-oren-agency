@@ -188,6 +188,8 @@ export const talentList = [
       '/images/talent/kim-chorilov/gallery/02.jpg',
       '/images/talent/kim-chorilov/gallery/03.jpg',
       '/images/talent/kim-chorilov/gallery/04.jpg',
+      '/images/talent/kim-chorilov/gallery/05.jpg',
+      '/images/talent/kim-chorilov/gallery/06.jpg',
     ],
 
     bioHe: 'קים צ׳ורילוב היא יוצרת תוכן ודוגמנית עם נוכחות טבעית, אסתטיקה נקייה וסגנון אישי שמתחבר לעולמות הלייף סטייל, האופנה והביוטי.',

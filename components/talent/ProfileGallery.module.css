@@ -1,55 +1,67 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ProfileGallery — uniform 3 × 2 grid, 4:5 portrait cards
+   Desktop  : 3 columns, 24 px gap
+   Tablet   : 2 columns
+   Mobile   : 2 columns, 12 px gap
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .section {
-  border-top: 1px solid var(--color-border);
+  padding-block: clamp(40px, 6vw, 72px);
+  padding-inline: var(--container-padding);
+  max-width: var(--container-max);
+  margin-inline: auto;
 }
 
-/* ─── Grid — full-width editorial layout ──────────────────────────────────── */
+/* ─── Grid ───────────────────────────────────────────────────────────────── */
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px;
-  max-width: 100%;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
 
-/* Every 3rd image spans full width */
-.item:nth-child(3n) {
-  grid-column: 1 / -1;
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+
+.item {
+  /* ensures ScrollReveal wrapper doesn't break grid sizing */
+  min-width: 0;
 }
 
 .imageWrapper {
   position: relative;
-  aspect-ratio: 4/3;
+  aspect-ratio: 4 / 5;
+  border-radius: 8px;
   overflow: hidden;
-  background-color: #1a1410;
-}
-
-/* Full-width items use a landscape ratio */
-.item:nth-child(3n) .imageWrapper {
-  aspect-ratio: 16/7;
+  background-color: var(--color-accent-subtle);
 }
 
 .image {
   object-fit: cover;
+  object-position: center top;
   transition: transform var(--duration-slow) var(--ease-default);
 }
 
 .item:hover .image {
-  transform: scale(1.02);
+  transform: scale(1.03);
 }
 
-/* ─── Responsive ──────────────────────────────────────────────────────────── */
+/* ─── Tablet ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
-  .item:nth-child(3n) {
-    grid-column: auto;
-  }
-
-  .imageWrapper,
-  .item:nth-child(3n) .imageWrapper {
-    aspect-ratio: 4/3;
+  .section {
+    padding-block: clamp(28px, 5vw, 48px);
   }
 }

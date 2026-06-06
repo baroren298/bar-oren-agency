@@ -21,7 +21,7 @@ export default function ProfileGallery({ talent }) {
                   src={src}
                   alt={alt}
                   fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
                   className={styles.image}
                 />
               </div>
