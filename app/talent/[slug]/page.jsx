@@ -4,7 +4,9 @@ import { siteConfig } from '@/data/site';
 import ProfileHero from '@/components/talent/ProfileHero';
 import ProfileBio from '@/components/talent/ProfileBio';
 import ProfileGallery from '@/components/talent/ProfileGallery';
-import ProfileMeta from '@/components/talent/ProfileMeta';
+/* ProfileMeta import removed for launch — component kept at
+   components/talent/ProfileMeta.jsx for future reuse when
+   tag/category filtering is reactivated on the roster page. */
 import ProfileCTA from '@/components/talent/ProfileCTA';
 import ProfileNav from '@/components/talent/ProfileNav';
 import JsonLd from '@/components/ui/JsonLd';
@@ -127,7 +129,9 @@ export default async function TalentProfilePage({ params }) {
       <ProfileHero    talent={talent} />
       <ProfileBio     talent={talent} />
       <ProfileGallery talent={talent} />
-      <ProfileMeta    talent={talent} />
+      {/* ProfileMeta hidden for launch — tags/categories kept in data/talent
+          for future filtering; removed from profile UI until roster filters
+          are reactivated. */}
       <ProfileCTA     talent={talent} />
       <ProfileNav     prev={prev} next={next} />
       <JsonLd data={buildProfileSchemas(talent)} />
