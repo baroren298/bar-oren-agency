@@ -35,6 +35,15 @@ export default function Footer() {
           © {year} {siteConfig.agencyName}
         </p>
       </div>
+
+      <div className={styles.legalRow}>
+        <Link href="/accessibility" className={styles.legalLink}>
+          נגישות
+        </Link>
+        <Link href="/privacy-policy" className={styles.legalLink}>
+          מדיניות פרטיות
+        </Link>
+      </div>
     </footer>
   );
 }

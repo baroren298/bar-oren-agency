@@ -1,0 +1,99 @@
+/* Push content below the fixed header */
+.page {
+  padding-top: 72px;
+}
+
+/* ─── Page header ─────────────────────────────────────────────────────────── */
+
+.pageHeader {
+  padding-block: var(--space-12) var(--space-8);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+/* ─── Prose content ───────────────────────────────────────────────────────── */
+
+.content {
+  padding-block: var(--space-16) var(--space-24);
+  max-width: 720px;
+}
+
+.updated {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-10);
+}
+
+.content h2 {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  line-height: var(--leading-snug);
+  margin-top: var(--space-12);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.content p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-loose);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.content ul {
+  list-style: disc;
+  padding-inline-start: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.content ul li {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-loose);
+  color: var(--color-text-secondary);
+}
+
+.content a {
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-strong);
+  transition: border-color var(--duration-fast) var(--ease-default);
+}
+
+.content a:hover {
+  border-bottom-color: var(--color-text-primary);
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .page {
+    padding-top: 64px;
+  }
+
+  .pageHeader {
+    padding-block: var(--space-8) var(--space-6);
+  }
+
+  .content {
+    padding-block: var(--space-10) var(--space-16);
+  }
+}

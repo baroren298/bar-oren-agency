@@ -67,6 +67,32 @@
   letter-spacing: 0.04em;
 }
 
+/* ─── Legal links row ─────────────────────────────────────────────────────── */
+
+.legalRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+.legalLink {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.legalLink:hover {
+  color: var(--color-text-secondary);
+}
+
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
@@ -78,5 +104,9 @@
 
   .copy {
     order: 3;
+  }
+
+  .legalRow {
+    justify-content: flex-start;
   }
 }

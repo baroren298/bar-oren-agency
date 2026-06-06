@@ -6,7 +6,7 @@ import Collaborations from '@/components/home/Collaborations';
 import ContactInvite from '@/components/home/ContactInvite';
 
 export const metadata = {
-  title: 'Bar Oren Talent Agency',
+  title: { absolute: 'Bar Oren Talent Agency' },
   description: 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים. סוכנות ייצוג בוטיק.',
   alternates: { canonical: '/' },
   openGraph: {

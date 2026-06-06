@@ -6,10 +6,12 @@ export default function sitemap() {
   const now  = new Date();
 
   const staticPages = [
-    { url: base,                  lastModified: now, changeFrequency: 'monthly', priority: 1.0 },
-    { url: `${base}/talent`,      lastModified: now, changeFrequency: 'weekly',  priority: 0.9 },
-    { url: `${base}/about`,       lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${base}/contact`,     lastModified: now, changeFrequency: 'yearly',  priority: 0.6 },
+    { url: base,                       lastModified: now, changeFrequency: 'monthly', priority: 1.0 },
+    { url: `${base}/talent`,           lastModified: now, changeFrequency: 'weekly',  priority: 0.9 },
+    { url: `${base}/about`,            lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${base}/contact`,          lastModified: now, changeFrequency: 'yearly',  priority: 0.6 },
+    { url: `${base}/accessibility`,    lastModified: now, changeFrequency: 'yearly',  priority: 0.3 },
+    { url: `${base}/privacy-policy`,   lastModified: now, changeFrequency: 'yearly',  priority: 0.3 },
   ];
 
   const talentPages = talentList.map((t) => ({

@@ -3,7 +3,7 @@ import { talentList } from '@/data/talent';
 import TalentRoster from '@/components/talent/TalentRoster';
 import styles from './talent.module.css';
 
-const DESCRIPTION = 'מיוצגים בניהולה האישי של בר אורן — יוצרי תוכן, משפיענים, דוגמנים ושחקנים.';
+const DESCRIPTION = 'מיוצגים בניהולו האישי של בר אורן — יוצרי תוכן, משפיענים, דוגמנים ושחקנים.';
 
 export const metadata = {
   title:       'המיוצגים',
