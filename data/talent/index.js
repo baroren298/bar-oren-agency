@@ -183,7 +183,12 @@ export const talentList = [
     sortOrder: 0,
 
     profileImage: '/images/talent/kim-chorilov/profile.jpg',
-    gallery:      [],
+    gallery: [
+      '/images/talent/kim-chorilov/gallery/01.jpg',
+      '/images/talent/kim-chorilov/gallery/02.jpg',
+      '/images/talent/kim-chorilov/gallery/03.jpg',
+      '/images/talent/kim-chorilov/gallery/04.jpg',
+    ],
 
     bioHe: 'קים צ׳ורילוב היא יוצרת תוכן ודוגמנית עם נוכחות טבעית, אסתטיקה נקייה וסגנון אישי שמתחבר לעולמות הלייף סטייל, האופנה והביוטי.',
     bioEn: 'Kim Chorilov is a content creator and model with a natural presence, clean aesthetic and personal style rooted in lifestyle, fashion and beauty.',

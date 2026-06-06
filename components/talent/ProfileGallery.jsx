@@ -8,19 +8,26 @@ export default function ProfileGallery({ talent }) {
   return (
     <section className={`${styles.section} section`} aria-label="גלריה">
       <div className={styles.grid}>
-        {talent.gallery.map((img, i) => (
-          <ScrollReveal key={i} delay={i * 0.07} className={styles.item}>
-            <div className={styles.imageWrapper}>
-              <Image
-                src={img.src}
-                alt={img.alt || `${talent.name} — תמונה ${i + 1}`}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                className={styles.image}
-              />
-            </div>
-          </ScrollReveal>
-        ))}
+        {talent.gallery.map((img, i) => {
+          /* Accept both plain string paths and { src, alt } objects */
+          const src = typeof img === 'string' ? img : img.src;
+          const alt = typeof img === 'string'
+            ? `${talent.name} — תמונה ${i + 1}`
+            : (img.alt || `${talent.name} — תמונה ${i + 1}`);
+          return (
+            <ScrollReveal key={i} delay={i * 0.07} className={styles.item}>
+              <div className={styles.imageWrapper}>
+                <Image
+                  src={src}
+                  alt={alt}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                  className={styles.image}
+                />
+              </div>
+            </ScrollReveal>
+          );
+        })}
       </div>
     </section>
   );

@@ -75,9 +75,11 @@ export default function ProfileHero({ talent }) {
 
         {/* ── Content column — right in RTL ──────────────────────────── */}
         <div className={styles.content}>
+          {/* Category label hidden for launch — data/logic kept for future
+              filter reactivation. Re-enable by uncommenting the block below.
           {categoryLine && (
             <p className={styles.categoryLabel}>{categoryLine}</p>
-          )}
+          )} */}
 
           <h1 className={styles.name}>{talent.name}</h1>
 
