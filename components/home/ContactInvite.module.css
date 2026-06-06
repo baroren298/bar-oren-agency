@@ -1,6 +1,9 @@
 .section {
   border-top: 1px solid var(--color-border);
   background-color: var(--color-surface);
+  /* Override the global section-lg padding — this section needs to be
+     tighter since it contains only a heading and a single button. */
+  padding-block: clamp(40px, 5vw, 64px);
 }
 
 .inner {

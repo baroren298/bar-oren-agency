@@ -15,7 +15,7 @@ export default function ContactInvite() {
 
         <ScrollReveal delay={0.1}>
           <Link href="/contact" className={styles.ctaBtn} aria-label="עמוד יצירת קשר">
-            צור קשר
+            צור קשר עם הסוכנות
           </Link>
         </ScrollReveal>
       </div>
