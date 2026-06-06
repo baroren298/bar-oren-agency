@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { siteConfig } from '@/data/site';
 import styles from './Footer.module.css';
@@ -10,8 +11,13 @@ export default function Footer() {
       <div className={styles.inner}>
         <div className={styles.wordmark}>
           <Link href="/" aria-label="Bar Oren Talent Agency — דף הבית">
-            <span className={styles.name}>{siteConfig.name}</span>
-            <span className={styles.agency}>{siteConfig.tagline}</span>
+            <Image
+              src="/images/brand/logo3.png"
+              alt="Bar Oren Talent Agency"
+              width={600}
+              height={240}
+              className={styles.logo}
+            />
           </Link>
         </div>
 
