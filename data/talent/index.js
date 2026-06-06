@@ -188,8 +188,8 @@ export const talentList = [
     bioHe: 'קים צ׳ורילוב היא יוצרת תוכן ודוגמנית עם נוכחות טבעית, אסתטיקה נקייה וסגנון אישי שמתחבר לעולמות הלייף סטייל, האופנה והביוטי.',
     bioEn: 'Kim Chorilov is a content creator and model with a natural presence, clean aesthetic and personal style rooted in lifestyle, fashion and beauty.',
 
-    instagram: null,
-    tiktok:    null,
+    instagram: 'https://www.instagram.com/kimchourilov',
+    tiktok:    'https://www.tiktok.com/@kimchourilov',
     youtube:   null,
 
     followers: { instagram: null, tiktok: null, youtube: null },
