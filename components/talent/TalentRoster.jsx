@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import TalentCard from '@/components/home/TalentCard';
-import TalentModal from './TalentModal';
 import CategoryFilter from './CategoryFilter';
 import styles from './TalentRoster.module.css';
 
@@ -13,8 +12,7 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
   const searchParams = useSearchParams();
   const isPage = mode === 'page';
 
-  const [selected,   setSelected]   = useState(isPage ? (searchParams.get('category') || 'all') : 'all');
-  const [openTalent, setOpenTalent] = useState(null);
+  const [selected, setSelected] = useState(isPage ? (searchParams.get('category') || 'all') : 'all');
 
   /* Sync with URL on back/forward navigation — page mode only */
   useEffect(() => {
@@ -38,9 +36,6 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
     },
     [router, searchParams, isPage]
   );
-
-  const handleOpen  = useCallback((t) => setOpenTalent(t), []);
-  const handleClose = useCallback(() => setOpenTalent(null), []);
 
   const filtered =
     selected === 'all'
@@ -78,7 +73,7 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
                   ease: [0.25, 0.1, 0.25, 1],
                 }}
               >
-                <TalentCard talent={t} aspectRatio="3/4" onOpen={handleOpen} />
+                <TalentCard talent={t} aspectRatio="3/4" />
               </motion.div>
             ))}
           </motion.div>
@@ -88,13 +83,6 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
           <p className={styles.empty}>אין מיוצגים בקטגוריה זו כרגע.</p>
         )}
       </div>
-
-      {/* Talent modal — rendered outside the grid so it sits above everything */}
-      <AnimatePresence>
-        {openTalent && (
-          <TalentModal talent={openTalent} onClose={handleClose} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
