@@ -118,6 +118,20 @@
   height: 44px;
 }
 
+/* Suppress the global brown :focus-visible ring on the toggle — it looks like
+   an unwanted box on tap. Replace with a minimal underline-style indicator that
+   only fires for keyboard users (not touch). */
+.menuToggle:focus-visible {
+  outline: 1px solid var(--color-border-strong);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Remove any browser-default tap highlight / active outline */
+.menuToggle:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .menuToggle span {
   display: block;
   width: 100%;

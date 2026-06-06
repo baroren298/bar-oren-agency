@@ -103,10 +103,19 @@ export default function Header() {
         <div id="mobile-menu" className={styles.mobileMenu} aria-label="תפריט ניווט">
           <nav aria-label="ניווט ראשי — נייד">
             <ul className={styles.mobileNavList}>
-              {siteConfig.nav.links.map((link, i) => (
+              {/* Home link — always first, active only on exact "/" */}
+              <li>
+                <Link
+                  ref={firstLinkRef}
+                  href="/"
+                  className={`${styles.mobileNavLink} ${pathname === '/' ? styles.active : ''}`}
+                >
+                  דף הבית
+                </Link>
+              </li>
+              {siteConfig.nav.links.map((link) => (
                 <li key={link.href}>
                   <Link
-                    ref={i === 0 ? firstLinkRef : undefined}
                     href={link.href}
                     className={`${styles.mobileNavLink} ${pathname.startsWith(link.href) ? styles.active : ''}`}
                   >
