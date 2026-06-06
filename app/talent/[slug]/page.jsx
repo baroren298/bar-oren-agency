@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation';
 import { talentList, getTalentBySlug } from '@/data/talent';
 import { siteConfig } from '@/data/site';
 import ProfileHero from '@/components/talent/ProfileHero';
-import ProfileBio from '@/components/talent/ProfileBio';
+/* ProfileBio import removed for launch — hero excerpt covers the intro.
+   Component kept at components/talent/ProfileBio.jsx for future reuse. */
 import ProfileGallery from '@/components/talent/ProfileGallery';
 /* ProfileMeta import removed for launch — component kept at
    components/talent/ProfileMeta.jsx for future reuse when
@@ -127,7 +128,8 @@ export default async function TalentProfilePage({ params }) {
   return (
     <>
       <ProfileHero    talent={talent} />
-      <ProfileBio     talent={talent} />
+      {/* ProfileBio hidden for launch — hero excerpt already introduces the talent.
+          Restore by re-importing ProfileBio and adding <ProfileBio talent={talent} /> here. */}
       <ProfileGallery talent={talent} />
       {/* ProfileMeta hidden for launch — tags/categories kept in data/talent
           for future filtering; removed from profile UI until roster filters
