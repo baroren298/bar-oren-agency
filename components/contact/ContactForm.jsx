@@ -3,7 +3,7 @@
 import { useState, useId } from 'react';
 import styles from './ContactForm.module.css';
 
-const INITIAL_FIELDS = { name: '', email: '', phone: '', message: '' };
+const INITIAL_FIELDS = { name: '', email: '', phone: '', message: '', _trap: '' };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validate(fields) {
@@ -173,6 +173,18 @@ export default function ContactForm({ title }) {
         </div>
 
         {field('message', 'הודעה', { placeholder: 'ספרו לנו במה אתם מעוניינים...' })}
+
+        {/* Honeypot — visually hidden, bots fill it, humans never see it */}
+        <input
+          type="text"
+          name="_trap"
+          value={fields._trap}
+          onChange={handleChange}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          className={styles.honeypot}
+        />
 
         {serverError && (
           <p className={styles.serverError} role="alert">{serverError}</p>

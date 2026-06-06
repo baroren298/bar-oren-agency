@@ -35,7 +35,7 @@ const dmSans = DM_Sans({
 });
 
 const OG_IMAGE = {
-  url: '/og-image.jpg', // place a 1200×630 image at /public/og-image.jpg before launch
+  url: '/og-image.jpg',
   width: 1200,
   height: 630,
   alt: siteConfig.meta.title,

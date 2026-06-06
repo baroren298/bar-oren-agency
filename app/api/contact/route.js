@@ -23,7 +23,13 @@ function escapeHtml(str) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, phone, message } = body;
+    const { name, email, phone, message, _trap } = body;
+
+    /* ── Honeypot check — bots fill this field, humans never see it ── */
+    if (_trap) {
+      /* Silent success: don't reveal to bots that they were rejected */
+      return Response.json({ success: true });
+    }
 
     /* ── Server-side validation ── */
     const errors = {};

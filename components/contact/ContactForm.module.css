@@ -4,6 +4,18 @@
   gap: var(--space-8);
 }
 
+/* ─── Honeypot — off-screen, never visible to humans ─────────────────────── */
+
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  tab-index: -1;
+}
+
 /* ─── Section label ───────────────────────────────────────────────────────── */
 
 .sectionLabel {
