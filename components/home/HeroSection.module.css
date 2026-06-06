@@ -31,6 +31,18 @@
   height: auto;
 }
 
+/* ─── Agency title ────────────────────────────────────────────────────────── */
+
+.title {
+  font-family: var(--font-display-en);
+  font-size: clamp(28px, 4vw, 56px);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.12em;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+  text-align: center;
+}
+
 /* ─── Descriptor ──────────────────────────────────────────────────────────── */
 
 .descriptor {
@@ -41,32 +53,6 @@
   color: var(--color-text-secondary);
   max-width: 420px;
   letter-spacing: 0.02em;
-}
-
-/* ─── Hero photo ──────────────────────────────────────────────────────────── */
-
-.photoWrapper {
-  width: min(820px, 88vw);
-  aspect-ratio: 16 / 9;
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 8px 40px rgba(26, 24, 20, 0.10);
-}
-
-.photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-}
-
-@media (max-width: 768px) {
-  .photoWrapper {
-    width: calc(100vw - 40px);
-    aspect-ratio: 4 / 3;
-    border-radius: 3px;
-  }
 }
 
 /* ─── Scroll indicator ────────────────────────────────────────────────────── */
