@@ -49,7 +49,13 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
 
   return (
     <div className={styles.wrapper}>
-      <CategoryFilter selected={selected} onChange={handleFilterChange} />
+      {/*
+        Filters temporarily hidden until the roster grows.
+        All filter state, URL sync, and CategoryFilter logic above are preserved
+        — uncomment the line below to re-enable when the roster is ready.
+
+        <CategoryFilter selected={selected} onChange={handleFilterChange} />
+      */}
 
       <div className={`${styles.gridContainer} container`}>
         <AnimatePresence mode="wait" initial={false}>

@@ -21,9 +21,10 @@ function getCategoryLabels(categories) {
 }
 
 export default function TalentModal({ talent, onClose }) {
-  const panelRef    = useRef(null);
-  const closeBtnRef = useRef(null);
-  const titleId     = `modal-title-${talent.id}`;
+  const panelRef      = useRef(null);
+  const closeBtnRef   = useRef(null);
+  const scrollBodyRef = useRef(null);
+  const titleId       = `modal-title-${talent.id}`;
 
   /* ESC key */
   useEffect(() => {
@@ -32,28 +33,46 @@ export default function TalentModal({ talent, onClose }) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  /* Body scroll lock — iOS-safe.
+  /* Body scroll lock — robust iOS Safari fix.
    *
-   * `overflow: hidden` alone is ignored by iOS Safari. The reliable fix is
-   * `position: fixed` on the body, combined with a negative `top` equal to
-   * the current scroll offset so the page doesn't jump to the top.
-   * On cleanup we remove those styles and call `scrollTo` to restore position.
+   * Three layers are required because iOS Safari is particularly stubborn:
+   *
+   * 1. position:fixed + negative top on <body>  — prevents the body from
+   *    scrolling and keeps the page visually in place (no jump to top).
+   *
+   * 2. overflow:hidden on <html>  — iOS can independently scroll the root
+   *    element; locking body alone is not enough on some iOS versions.
+   *
+   * 3. Non-passive touchmove block on document  — inertia scroll that began
+   *    before the modal opened can still propagate even with position:fixed.
+   *    We cancel it everywhere except inside our own scrollBody element.
    */
   useEffect(() => {
     const scrollY = window.scrollY;
+    const html    = document.documentElement;
     const body    = document.body;
 
+    html.style.overflow = 'hidden';
     body.style.overflow = 'hidden';
     body.style.position = 'fixed';
     body.style.top      = `-${scrollY}px`;
     body.style.width    = '100%';
 
+    const preventTouchMove = (e) => {
+      // Allow scroll only inside the modal's own scrollable area
+      if (scrollBodyRef.current?.contains(e.target)) return;
+      if (e.cancelable) e.preventDefault();
+    };
+    document.addEventListener('touchmove', preventTouchMove, { passive: false });
+
     return () => {
+      html.style.overflow = '';
       body.style.overflow = '';
       body.style.position = '';
       body.style.top      = '';
       body.style.width    = '';
-      window.scrollTo({ top: scrollY, behavior: 'instant' });
+      document.removeEventListener('touchmove', preventTouchMove);
+      window.scrollTo(0, scrollY);
     };
   }, []);
 
@@ -151,7 +170,7 @@ export default function TalentModal({ talent, onClose }) {
             flex children of contentCol, zero layout change). On mobile it becomes the
             independent scrollable area so the CTA bar can stay pinned at the bottom.
           */}
-          <div className={styles.scrollBody}>
+          <div ref={scrollBodyRef} className={styles.scrollBody}>
 
             {/* Category */}
             {categoryLabels.length > 0 && (
