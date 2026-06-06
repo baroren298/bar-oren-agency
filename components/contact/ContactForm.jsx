@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useId } from 'react';
+import Link from 'next/link';
 import styles from './ContactForm.module.css';
 
-const INITIAL_FIELDS = { name: '', email: '', phone: '', message: '', _trap: '' };
+const INITIAL_FIELDS = { name: '', email: '', phone: '', message: '', consent: false, _trap: '' };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validate(fields) {
   const errors = {};
-  if (!fields.name.trim())              errors.name    = 'נא להזין שם מלא';
-  if (!fields.email.trim())             errors.email   = 'נא להזין כתובת אימייל';
-  else if (!EMAIL_RE.test(fields.email)) errors.email  = 'כתובת אימייל לא תקינה';
-  if (!fields.message.trim())           errors.message = 'נא להזין הודעה';
+  if (!fields.name.trim())               errors.name    = 'נא להזין שם מלא';
+  if (!fields.email.trim())              errors.email   = 'נא להזין כתובת אימייל';
+  else if (!EMAIL_RE.test(fields.email)) errors.email   = 'כתובת אימייל לא תקינה';
+  if (!fields.message.trim())            errors.message = 'נא להזין הודעה';
+  if (!fields.consent)                   errors.consent = 'יש לאשר את מדיניות הפרטיות לפני שליחת הטופס.';
   return errors;
 }
 
@@ -24,11 +26,12 @@ export default function ContactForm({ title }) {
   const [serverError, setServerError] = useState('');
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFields((prev) => ({ ...prev, [name]: value }));
+    const { name, type, value, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    setFields((prev) => ({ ...prev, [name]: newValue }));
     /* Clear field error as user corrects it */
     if (touched[name]) {
-      const next = validate({ ...fields, [name]: value });
+      const next = validate({ ...fields, [name]: newValue });
       setErrors((prev) => ({ ...prev, [name]: next[name] }));
     }
   };
@@ -42,7 +45,7 @@ export default function ContactForm({ title }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const allTouched = { name: true, email: true, phone: true, message: true };
+    const allTouched = { name: true, email: true, phone: true, message: true, consent: true };
     setTouched(allTouched);
     const errs = validate(fields);
     setErrors(errs);
@@ -185,6 +188,36 @@ export default function ContactForm({ title }) {
           aria-hidden="true"
           className={styles.honeypot}
         />
+
+        {/* ── Privacy consent ── */}
+        <div className={styles.consentGroup}>
+          <div className={styles.consentRow}>
+            <input
+              type="checkbox"
+              id={`${uid}-consent`}
+              name="consent"
+              checked={fields.consent}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              aria-describedby={touched.consent && errors.consent ? `${uid}-consent-err` : undefined}
+              aria-invalid={touched.consent && errors.consent ? 'true' : undefined}
+              className={`${styles.checkbox} ${touched.consent && errors.consent ? styles.checkboxError : ''}`}
+              required
+            />
+            <label htmlFor={`${uid}-consent`} className={styles.consentLabel}>
+              אני מאשר/ת את{' '}
+              <Link href="/privacy-policy" className={styles.consentLink}>
+                מדיניות הפרטיות
+              </Link>
+              {' '}של האתר ומסכים/ה להעברת פרטיי לצורך יצירת קשר.
+            </label>
+          </div>
+          {touched.consent && errors.consent && (
+            <p id={`${uid}-consent-err`} className={styles.errorMsg} role="alert">
+              {errors.consent}
+            </p>
+          )}
+        </div>
 
         {serverError && (
           <p className={styles.serverError} role="alert">{serverError}</p>
