@@ -233,8 +233,13 @@
   }
 
   .closeBtn {
-    top: var(--space-3);
-    inset-inline-start: var(--space-3);
+    /* Switch from absolute (scrolls away) to sticky so it stays visible */
+    position: sticky;
+    top: 0;
+    inset-inline-start: auto;
+    align-self: flex-start; /* RTL: physical right side, same corner as before */
+    margin: var(--space-3);
+    z-index: 10;
   }
 
   .ctaBtn {

@@ -183,4 +183,9 @@
   .inner {
     height: 64px;
   }
+
+  /* Mobile header is 64px tall — slide menu must start below it, not at 88px */
+  .mobileMenu {
+    top: 64px;
+  }
 }

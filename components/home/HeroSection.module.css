@@ -76,6 +76,11 @@
     width: clamp(260px, 75vw, 360px);
   }
 
+  /* Reduce the gap between logo and descriptor on small screens */
+  .inner {
+    gap: var(--space-8);
+  }
+
   .scrollBtn {
     display: none;
   }
