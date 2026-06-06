@@ -140,7 +140,14 @@
 
 .mobileMenu {
   position: fixed;
-  inset: 88px 0 0 0;
+  top: 88px;
+  left: 0;
+  right: 0;
+  /* Explicit height instead of bottom: 0 — the header's backdrop-filter makes it
+     the containing block for fixed children, so bottom: 0 resolves to the header's
+     bottom edge rather than the viewport bottom, collapsing the menu to zero height. */
+  height: calc(100dvh - 88px);
+  overflow-y: auto;
   background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
@@ -184,8 +191,9 @@
     height: 64px;
   }
 
-  /* Mobile header is 64px tall — slide menu must start below it, not at 88px */
+  /* Mobile header is 64px tall — adjust top and height accordingly */
   .mobileMenu {
     top: 64px;
+    height: calc(100dvh - 64px);
   }
 }
