@@ -9,7 +9,7 @@ export const siteConfig = {
     whatsapp: 'https://wa.me/972548311818',
     email: 'bar@baroren.co.il',
     phone: null,
-    instagram: 'https://instagram.com/baroren',
+    instagram: 'https://www.instagram.com/barorenagency',
     tiktok: null,
     linkedin: null,
     address: 'תל אביב, ישראל',
