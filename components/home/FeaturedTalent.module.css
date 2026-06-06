@@ -54,47 +54,27 @@
   transform: translateX(-4px); /* RTL: ← moves right on hover */
 }
 
-/* ─── Asymmetric grid ─────────────────────────────────────────────────────── */
+/* ─── Uniform portfolio grid ──────────────────────────────────────────────── */
 
 .grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: var(--space-3);
-  align-items: start;
-}
-
-/* Left (primary) cell */
-.primaryCell {
-  /* aspect-ratio passed as prop to TalentCard */
-}
-
-/* Right column — two stacked portraits */
-.secondaryColumn {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 860px) {
   .grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-6);
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
   }
-
-  .secondaryColumn {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
-  }
-
-  /* aspect-ratio is set via prop — mobile uses 3:4 passed from FeaturedTalent */
 }
 
 @media (max-width: 480px) {
-  .secondaryColumn {
+  .grid {
     grid-template-columns: 1fr;
+    gap: var(--space-6);
   }
 
   .header {
