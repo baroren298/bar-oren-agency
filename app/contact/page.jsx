@@ -32,7 +32,7 @@ export default function ContactPage() {
       <div className={styles.pageHeader}>
         <div className="container">
           <h1 className={styles.headline}>{contactPage.headline}</h1>
-          <p className={styles.subheadline}>{contactPage.subheadline}</p>
+          {/* subheadline hidden for launch — text kept in siteConfig.contactPage.subheadline */}
         </div>
       </div>
 
