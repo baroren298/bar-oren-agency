@@ -43,8 +43,17 @@ html {
 
 body {
   background-color: var(--color-bg);
-  min-height: 100vh;
+  /* Sticky footer: body is a flex column that fills the full viewport.
+     <main> gets flex:1 below, pushing <footer> to the bottom on short pages.
+     On long pages the body simply grows with content — no fixed positioning. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh; /* dvh accounts for mobile browser chrome */
   overflow-x: hidden;
+}
+
+main {
+  flex: 1 0 auto; /* grow to fill remaining space between header and footer */
 }
 
 img,

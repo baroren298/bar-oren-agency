@@ -15,40 +15,43 @@
   color: var(--color-text-tertiary);
 }
 
-/* ─── WhatsApp primary button ─────────────────────────────────────────────── */
+/* ─── WhatsApp link — matches homepage ContactInvite text-link style ──────── */
 
 .whatsappBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-8);
-  border: 1px solid var(--color-text-primary);
   font-family: var(--font-body);
-  font-size: var(--text-small);
+  font-size: var(--text-body);
   font-weight: var(--weight-medium);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-primary);
-  background-color: transparent;
-  transition:
-    background-color var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default);
+  color: var(--color-text-secondary);
+  position: relative;
+  padding-bottom: 1px;
+  transition: color var(--duration-fast) var(--ease-default);
   align-self: flex-start;
 }
 
+.whatsappBtn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--color-accent);
+  transition: width var(--duration-base) var(--ease-out);
+}
+
 .whatsappBtn:hover {
-  background-color: var(--color-text-primary);
-  color: var(--color-bg);
+  color: var(--color-text-primary);
 }
 
+.whatsappBtn:hover::after {
+  width: 100%;
+}
+
+/* Arrow is a legacy remnant — hidden to match the homepage text-link pattern */
 .btnArrow {
-  display: inline-block;
-  transition: transform var(--duration-base) var(--ease-default);
-  font-size: 14px;
-}
-
-.whatsappBtn:hover .btnArrow {
-  transform: translateX(-4px);
+  display: none;
 }
 
 /* ─── Contact rows ────────────────────────────────────────────────────────── */
@@ -126,10 +129,3 @@ a.contactRowValue:hover {
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  .whatsappBtn {
-    width: 100%;
-    justify-content: center;
-  }
-}
