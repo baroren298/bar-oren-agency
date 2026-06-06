@@ -6,18 +6,18 @@ import styles from './talent.module.css';
 const DESCRIPTION = 'כישרונות נבחרים בניהולה האישי של בר אורן — יוצרי תוכן, משפיענים, דוגמנים ושחקנים.';
 
 export const metadata = {
-  title:       'הכישרונות',
+  title:       'המיוצגים',
   description:  DESCRIPTION,
   alternates:  { canonical: '/talent' },
   openGraph: {
-    title:       'הכישרונות | Bar Oren',
+    title:       'המיוצגים | Bar Oren',
     description:  DESCRIPTION,
     url:         '/talent',
-    images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Bar Oren — הכישרונות' }],
+    images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Bar Oren — המיוצגים' }],
   },
   twitter: {
     card:        'summary_large_image',
-    title:       'הכישרונות | Bar Oren',
+    title:       'המיוצגים | Bar Oren',
     description:  DESCRIPTION,
     images:      ['/og-image.jpg'],
   },
@@ -31,7 +31,7 @@ export default function TalentPage() {
       {/* Page header */}
       <div className={styles.pageHeader}>
         <div className="container">
-          <h1 className={styles.pageTitle}>הכישרונות</h1>
+          <h1 className={styles.pageTitle}>המיוצגים</h1>
         </div>
       </div>
 
