@@ -19,7 +19,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-10);
   text-align: center;
   padding-inline: var(--container-padding);
 }
@@ -27,7 +27,7 @@
 /* ─── Logo ────────────────────────────────────────────────────────────────── */
 
 .logo {
-  width: clamp(320px, 50vw, 590px);
+  width: clamp(360px, 55vw, 660px);
   height: auto;
 }
 
