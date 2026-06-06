@@ -41,7 +41,8 @@ export default function TalentCard({ talent, className = '', aspectRatio = '2/3'
       {/* Text */}
       <div className={styles.info}>
         <p className={styles.name}>{talent.name}</p>
-        <p className={styles.category}>{getCategoryLabel(talent.category)}</p>
+        {/* Category hidden for launch — restore when roster filters return.
+        <p className={styles.category}>{getCategoryLabel(talent.category)}</p> */}
       </div>
     </Link>
   );

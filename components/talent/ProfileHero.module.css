@@ -41,6 +41,10 @@
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
+  /* Pull image above content in mobile column layout.
+     DOM order is content→image (correct for RTL desktop flex-row).
+     order: -1 flips the visual stack on mobile without touching desktop. */
+  order: -1;
 }
 
 /* Applied to TalentImage via className */
@@ -158,6 +162,7 @@
     aspect-ratio: unset;      /* let flex height take over on desktop */
     align-self: stretch;      /* fills the full row height */
     border-radius: 8px;
+    order: 0;                 /* reset mobile order — RTL flex-row handles visual position */
   }
 }
 
@@ -167,7 +172,7 @@
 
 @media (max-width: 480px) {
   .name {
-    font-size: clamp(40px, 13vw, 64px);
+    font-size: clamp(36px, 11vw, 56px);
   }
 
   .imageCol {
@@ -176,7 +181,10 @@
   }
 
   .inner {
-    gap: var(--space-8);
-    padding-block: clamp(32px, 6vw, 56px);
+    gap: var(--space-6);
+    /* Keep the 64px header clearance — do NOT use padding-block shorthand here
+       as it would override the calc() set in the base .inner rule. */
+    padding-block-start: calc(64px + 20px);
+    padding-block-end: clamp(28px, 5vw, 44px);
   }
 }
