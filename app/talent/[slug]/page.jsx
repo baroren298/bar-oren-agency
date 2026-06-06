@@ -22,8 +22,14 @@ export async function generateMetadata({ params }) {
 
   const title       = talent.name;
   const description = talent.bioHe || talent.bioEn || '';
-  const ogImage     = talent.profileImage || '/og-image.jpg';
   const canonical   = `/talent/${slug}`;
+
+  /* Use profile image when available; fall back to the branded OG image.
+   * Profile images are portrait — omit explicit dimensions so crawlers
+   * measure the real size. Fallback og-image.jpg is known 1200×630. */
+  const ogImage = talent.profileImage
+    ? { url: talent.profileImage, alt: talent.name }
+    : { url: '/og-image.jpg', width: 1200, height: 630, alt: talent.name };
 
   return {
     title,
@@ -34,14 +40,7 @@ export async function generateMetadata({ params }) {
       title:       `${talent.name} | Bar Oren`,
       description,
       url:          canonical,
-      images: [
-        {
-          url:    ogImage,
-          width:  1200,
-          height: 800,
-          alt:    talent.name,
-        },
-      ],
+      images:      [ogImage],
     },
     twitter: {
       card:        'summary_large_image',
@@ -52,24 +51,29 @@ export async function generateMetadata({ params }) {
   };
 }
 
-/* Person structured data */
-function buildPersonSchema(talent) {
+/* Person + BreadcrumbList structured data */
+function buildProfileSchemas(talent) {
+  const BASE = siteConfig.meta.url;
+  const pageUrl = `${BASE}/talent/${talent.slug}`;
+
   const categoryLabels = siteConfig.categories
     .filter((c) => talent.category.includes(c.key) && c.key !== 'all')
     .map((c) => c.labelEn);
 
-  return {
+  const person = {
     '@context': 'https://schema.org',
     '@type':    'Person',
+    '@id':       pageUrl,
     name:        talent.nameEn,
     description: talent.bioEn || talent.bioHe,
     jobTitle:    categoryLabels.join(', '),
-    image:       talent.profileImage || undefined,
-    url:        `${siteConfig.meta.url}/talent/${talent.slug}`,
+    image:       talent.profileImage ? `${BASE}${talent.profileImage}` : undefined,
+    url:         pageUrl,
     worksFor: {
       '@type': 'Organization',
+      '@id':   `${BASE}/#organization`,
       name:     siteConfig.agencyName,
-      url:      siteConfig.meta.url,
+      url:      BASE,
     },
     sameAs: [
       talent.instagram,
@@ -77,6 +81,33 @@ function buildPersonSchema(talent) {
       talent.youtube,
     ].filter(Boolean),
   };
+
+  const breadcrumb = {
+    '@context':        'https://schema.org',
+    '@type':           'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type':  'ListItem',
+        position:  1,
+        name:     'דף הבית',
+        item:      BASE,
+      },
+      {
+        '@type':  'ListItem',
+        position:  2,
+        name:     'מיוצגים',
+        item:     `${BASE}/talent`,
+      },
+      {
+        '@type':  'ListItem',
+        position:  3,
+        name:      talent.name,
+        item:      pageUrl,
+      },
+    ],
+  };
+
+  return [person, breadcrumb];
 }
 
 export default async function TalentProfilePage({ params }) {
@@ -99,7 +130,7 @@ export default async function TalentProfilePage({ params }) {
       <ProfileMeta    talent={talent} />
       <ProfileCTA     talent={talent} />
       <ProfileNav     prev={prev} next={next} />
-      <JsonLd data={buildPersonSchema(talent)} />
+      <JsonLd data={buildProfileSchemas(talent)} />
     </>
   );
 }

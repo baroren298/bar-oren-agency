@@ -19,7 +19,7 @@ export const metadata = {
     card:        'summary_large_image',
     title:       'צור קשר | Bar Oren',
     description:  DESCRIPTION,
-    images:      ['/og-image.jpg'],
+    images:      [{ url: '/og-image.jpg', alt: 'צור קשר — Bar Oren' }],
   },
 };
 

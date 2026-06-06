@@ -40,6 +40,11 @@ const OG_IMAGE = {
   alt: siteConfig.meta.title,
 };
 
+export const viewport = {
+  width:        'device-width',
+  initialScale:  1,
+};
+
 export const metadata = {
   metadataBase: new URL(siteConfig.meta.url),
 
@@ -77,7 +82,7 @@ export const metadata = {
     card:        'summary_large_image',
     title:        siteConfig.meta.title,
     description:  siteConfig.meta.description,
-    images:       ['/og-image.jpg'],
+    images:       [{ url: '/og-image.jpg', alt: siteConfig.meta.title }],
   },
 
   robots: {
@@ -93,28 +98,51 @@ export const metadata = {
   },
 };
 
-const organizationSchema = {
-  '@context': 'https://schema.org',
-  '@type':    'Organization',
-  name:        siteConfig.agencyName,
-  url:         siteConfig.meta.url,
-  logo:       `${siteConfig.meta.url}/og-image.jpg`,
-  description: siteConfig.meta.description,
-  address: {
-    '@type':         'PostalAddress',
-    addressLocality: 'Tel Aviv',
-    addressCountry:  'IL',
+const BASE = siteConfig.meta.url;
+
+const siteSchema = [
+  {
+    '@context': 'https://schema.org',
+    '@type':    'WebSite',
+    '@id':      `${BASE}/#website`,
+    name:        siteConfig.agencyName,
+    url:         BASE,
+    inLanguage:  'he',
+    publisher: { '@id': `${BASE}/#organization` },
   },
-  contactPoint: {
-    '@type':      'ContactPoint',
-    email:         siteConfig.contact.email,
-    contactType:  'booking',
+  {
+    '@context': 'https://schema.org',
+    '@type':    'Organization',
+    '@id':      `${BASE}/#organization`,
+    name:        siteConfig.agencyName,
+    url:         BASE,
+    logo: {
+      '@type':  'ImageObject',
+      url:      `${BASE}/images/brand/logo3.png`,
+      width:    600,
+      height:   240,
+    },
+    description: siteConfig.meta.description,
+    founder: {
+      '@type': 'Person',
+      name:     siteConfig.about.founder.name,
+    },
+    address: {
+      '@type':         'PostalAddress',
+      addressLocality: 'Tel Aviv',
+      addressCountry:  'IL',
+    },
+    contactPoint: {
+      '@type':       'ContactPoint',
+      email:          siteConfig.contact.email,
+      contactType:   'booking',
+    },
+    sameAs: [
+      siteConfig.contact.instagram,
+      siteConfig.contact.tiktok,
+    ].filter(Boolean),
   },
-  sameAs: [
-    siteConfig.contact.instagram,
-    siteConfig.contact.tiktok,
-  ].filter(Boolean),
-};
+];
 
 export default function RootLayout({ children }) {
   const fontClasses = [
@@ -136,7 +164,7 @@ export default function RootLayout({ children }) {
         <main id="main-content">{children}</main>
         <Footer />
 
-        <JsonLd data={organizationSchema} />
+        <JsonLd data={siteSchema} />
       </body>
     </html>
   );

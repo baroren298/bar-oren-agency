@@ -5,21 +5,24 @@ import FeaturedTalent from '@/components/home/FeaturedTalent';
 import Collaborations from '@/components/home/Collaborations';
 import ContactInvite from '@/components/home/ContactInvite';
 
+const DESCRIPTION = 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים. סוכנות ייצוג בוטיק.';
+const OG_IMAGE    = { url: '/og-image.jpg', width: 1200, height: 630, alt: 'Bar Oren Talent Agency' };
+
 export const metadata = {
-  title: { absolute: 'Bar Oren Talent Agency' },
-  description: 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים. סוכנות ייצוג בוטיק.',
-  alternates: { canonical: '/' },
+  title:       { absolute: 'Bar Oren Talent Agency' },
+  description:  DESCRIPTION,
+  alternates:  { canonical: '/' },
   openGraph: {
     title:       'Bar Oren Talent Agency',
-    description: 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים.',
+    description:  DESCRIPTION,
     url:         '/',
-    images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Bar Oren Talent Agency' }],
+    images:      [OG_IMAGE],
   },
   twitter: {
     card:        'summary_large_image',
     title:       'Bar Oren Talent Agency',
-    description: 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים.',
-    images:      ['/og-image.jpg'],
+    description:  DESCRIPTION,
+    images:      [{ url: '/og-image.jpg', alt: 'Bar Oren Talent Agency' }],
   },
 };
 

@@ -87,6 +87,9 @@
   letter-spacing: 0.04em;
   color: var(--color-text-tertiary);
   transition: color var(--duration-fast) var(--ease-default);
+  /* Ensure tap target meets 44px minimum (WCAG 2.5.5) */
+  padding-block: var(--space-3);
+  padding-inline: var(--space-2);
 }
 
 .legalLink:hover {

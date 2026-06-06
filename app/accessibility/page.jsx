@@ -17,7 +17,7 @@ export const metadata = {
     card:        'summary_large_image',
     title:       'הצהרת נגישות | Bar Oren',
     description:  DESCRIPTION,
-    images:      ['/og-image.jpg'],
+    images:      [{ url: '/og-image.jpg', alt: 'Bar Oren — הצהרת נגישות' }],
   },
 };
 

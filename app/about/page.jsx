@@ -21,7 +21,7 @@ export const metadata = {
     card:        'summary_large_image',
     title:       'אודות | Bar Oren',
     description:  DESCRIPTION,
-    images:      ['/og-image.jpg'],
+    images:      [{ url: '/og-image.jpg', alt: 'Bar Oren Talent Agency — אודות' }],
   },
 };
 

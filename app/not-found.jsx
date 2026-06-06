@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import styles from './not-found.module.css';
 
+export const metadata = {
+  title:  '404 — הדף לא נמצא',
+  robots: { index: false, follow: false },
+};
+
 export default function NotFound() {
   return (
     <div className={styles.page}>
