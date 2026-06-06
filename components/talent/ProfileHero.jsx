@@ -1,35 +1,136 @@
+import Link from 'next/link';
 import TalentImage from '@/components/ui/TalentImage';
 import { siteConfig } from '@/data/site';
 import styles from './ProfileHero.module.css';
 
-function getCategoryLabel(categories) {
-  const cat = siteConfig.categories.find((c) => categories.includes(c.key) && c.key !== 'all');
-  return cat?.label ?? '';
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+
+function getCategories(categories) {
+  return siteConfig.categories
+    .filter((c) => categories.includes(c.key) && c.key !== 'all')
+    .map((c) => c.label)
+    .join(' · ');
 }
 
-export default function ProfileHero({ talent }) {
+/** First sentence only — keeps the hero brief; full bio lives in ProfileBio. */
+function getExcerpt(text) {
+  if (!text) return '';
+  const dot = text.indexOf('.');
+  if (dot > 0) return text.slice(0, dot + 1);
+  if (text.length <= 110) return text;
+  const cut = text.slice(0, 110);
+  return cut.slice(0, cut.lastIndexOf(' ')) + '…';
+}
+
+/* ── Icons ───────────────────────────────────────────────────────────────── */
+
+function InstagramIcon() {
   return (
-    <section className={styles.hero} aria-label={`${talent.name} — תמונת פרופיל`}>
-      {/* Background — TalentImage fills the absolute container */}
-      <div className={styles.bg}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="19"
+      height="19"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeWidth="2.5" />
+    </svg>
+  );
+}
+
+function TikTokIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M16.6 5.82a4.28 4.28 0 0 1-2.9-1.08V15.28a5.74 5.74 0 0 1-5.74 5.74 5.74 5.74 0 0 1-5.74-5.74 5.74 5.74 0 0 1 5.74-5.74c.27 0 .53.02.79.06v3.1a2.59 2.59 0 0 0-.79-.1 2.59 2.59 0 0 0-2.59 2.59 2.59 2.59 0 0 0 2.59 2.59 2.59 2.59 0 0 0 2.59-2.5V3h3.09a4.28 4.28 0 0 0 2.96 2.82V10a7.34 7.34 0 0 1-4.3-1.37v6.6a5.74 5.74 0 0 1-5.74 5.74V10a7.34 7.34 0 0 0 7.34-7.34h.7v3.16z" />
+    </svg>
+  );
+}
+
+/* ── Component ───────────────────────────────────────────────────────────── */
+
+export default function ProfileHero({ talent }) {
+  const categoryLine = getCategories(talent.category);
+  const excerpt      = getExcerpt(talent.bioHe);
+  const hasSocials   = talent.instagram || talent.tiktok;
+
+  return (
+    <section
+      className={styles.hero}
+      aria-label={`${talent.name} — פרופיל`}
+    >
+      {/* ── Content column (right in RTL, left in LTR) ─────────────────── */}
+      <div className={styles.content}>
+        <div className={styles.contentInner}>
+          {categoryLine && (
+            <p className={styles.categoryLabel}>{categoryLine}</p>
+          )}
+
+          <h1 className={styles.name}>{talent.name}</h1>
+
+          {excerpt && (
+            <p className={styles.excerpt}>{excerpt}</p>
+          )}
+
+          <div className={styles.footer}>
+            {hasSocials && (
+              <div className={styles.socials} aria-label="רשתות חברתיות">
+                {talent.instagram && (
+                  <a
+                    href={talent.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.socialLink}
+                    aria-label="Instagram"
+                  >
+                    <InstagramIcon />
+                  </a>
+                )}
+                {talent.tiktok && (
+                  <a
+                    href={talent.tiktok}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.socialLink}
+                    aria-label="TikTok"
+                  >
+                    <TikTokIcon />
+                  </a>
+                )}
+              </div>
+            )}
+
+            <Link href="/contact" className={styles.cta}>
+              צרו קשר
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Image column (left in RTL, right in LTR) ───────────────────── */}
+      <div className={styles.imageCol}>
         <TalentImage
           src={talent.profileImage || null}
           alt={talent.name}
           fallbackIndex={talent.sortOrder}
           priority
-          sizes="100vw"
+          sizes="(max-width: 768px) 100vw, 45vw"
           objectPosition="center top"
-          className={styles.bgImage}
+          className={styles.image}
         />
-        <div className={styles.overlay} aria-hidden="true" />
-      </div>
-
-      {/* Name block — anchored to bottom of hero */}
-      <div className={styles.inner}>
-        <div className={styles.nameBlock}>
-          <p className={styles.categoryLabel}>{getCategoryLabel(talent.category)}</p>
-          <h1 className={styles.name}>{talent.name}</h1>
-        </div>
       </div>
     </section>
   );

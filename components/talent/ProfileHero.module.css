@@ -1,64 +1,60 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ProfileHero — editorial split layout
+   Mobile  : image (top) → content (below), full-bleed dark panel
+   Desktop : content column (right in RTL) | image column (left in RTL)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Shell ──────────────────────────────────────────────────────────────── */
+
 .hero {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  min-height: 100svh;
+  background: #0c0a08;         /* warm near-black; shared by both columns */
   overflow: hidden;
 }
 
-/* ─── Background ──────────────────────────────────────────────────────────── */
+/* ─── Image column ───────────────────────────────────────────────────────── */
 
-/* position: relative so next/image fill mode works; also covers the gradient path */
-.bg {
-  position: absolute;
-  inset: 0;
+.imageCol {
+  position: relative;
+  width: 100%;
+  height: 62svh;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
-/* Applied to TalentImage via className prop */
-.bgImage {
+/* Applied to TalentImage via className */
+.image {
   object-fit: cover;
   object-position: center top;
 }
 
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0)    0%,
-    rgba(0, 0, 0, 0)    25%,
-    rgba(0, 0, 0, 0.15) 55%,
-    rgba(0, 0, 0, 0.7)  80%,
-    rgba(0, 0, 0, 0.88) 100%
-  );
-}
+/* ─── Content column ─────────────────────────────────────────────────────── */
 
-/* ─── Name block ──────────────────────────────────────────────────────────── */
-
-.inner {
-  position: relative;
-  z-index: var(--z-raised);
-  padding-inline: var(--container-padding);
-  padding-bottom: clamp(40px, 7vh, 80px);
-  max-width: var(--container-max);
-  width: 100%;
-  margin-inline: auto;
-}
-
-.nameBlock {
+.content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  justify-content: center;
+  padding: clamp(32px, 6vw, 56px) clamp(24px, 6vw, 56px);
 }
+
+/* Inner wrapper — limits max prose width for comfortable reading */
+.contentInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 520px;
+}
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
 
 .categoryLabel {
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--color-accent);
   line-height: 1;
@@ -66,64 +62,125 @@
 
 .name {
   font-family: var(--font-display);
-  font-size: clamp(48px, 8.5vw, 104px);
+  font-size: clamp(42px, 10vw, 88px);
   font-weight: var(--weight-light);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.015em;
   color: #faf8f5;
   line-height: 0.92;
+  margin: 0;
 }
 
-/* ─── Desktop: editorial split layout ────────────────────────────────────── */
+.excerpt {
+  font-family: var(--font-body);
+  font-size: clamp(14px, 1.8vw, 16px);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-relaxed);
+  color: rgba(250, 248, 245, 0.55);
+  max-width: 38ch;
+  margin: 0;
+}
+
+/* ─── Footer row: socials + CTA ──────────────────────────────────────────── */
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding-top: var(--space-3);
+}
+
+.socials {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.socialLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(250, 248, 245, 0.45);
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.socialLink:hover {
+  color: #faf8f5;
+}
+
+.cta {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(250, 248, 245, 0.55);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(196, 168, 130, 0.4);
+  padding-bottom: 2px;
+  transition:
+    color var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default);
+}
+
+.cta:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Desktop — editorial split
+   Content: right column (RTL first child = right)
+   Image:   left column  (RTL second child = left)
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (min-width: 769px) {
   .hero {
     flex-direction: row;
     align-items: stretch;
-    /* warm near-black fills the text column */
-    background: #0c0a08;
+    height: 100svh;
+    min-height: 600px;
   }
 
-  /* Text column — inline-start side (right in RTL, left in LTR) */
-  .inner {
-    order: 1;
+  /* Content column — anchored to bottom, generous padding */
+  .content {
     flex: 1 1 55%;
-    max-width: unset;
-    margin-inline: unset;
-    /* keep bottom-anchor within the column */
-    display: flex;
-    flex-direction: column;
     justify-content: flex-end;
+    padding-bottom: clamp(48px, 7vh, 80px);
+    padding-inline: var(--container-padding);
   }
 
-  /* Image column — inline-end side (left in RTL, right in LTR) */
-  .bg {
-    position: relative; /* override absolute */
-    inset: unset;
-    flex: 0 0 45%;
-    order: 2;
-    overflow: hidden;
-  }
-
-  /* Tighter, more natural crop — let the portrait breathe */
-  .bgImage {
-    object-fit: cover;
-    object-position: center top;
-  }
-
-  /* Subtle uniform scrim; no directional gradient needed on constrained column */
-  .overlay {
-    background: rgba(0, 0, 0, 0.08);
-  }
-}
-
-/* ─── Mobile ──────────────────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  .inner {
-    padding-bottom: clamp(32px, 8vh, 64px);
+  .contentInner {
+    gap: var(--space-6);
+    max-width: 460px;
   }
 
   .name {
-    font-size: clamp(40px, 12vw, 72px);
+    font-size: clamp(52px, 6.5vw, 100px);
+  }
+
+  /* Image column — constrained to 45 % of the viewport width.
+     Portrait images show naturally; no aggressive horizontal crop. */
+  .imageCol {
+    flex: 0 0 45%;
+    height: auto;       /* stretches to row height */
+    width: auto;
+  }
+
+  .excerpt {
+    font-size: clamp(14px, 1.1vw, 16px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Small mobile tweaks
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .imageCol {
+    height: 56svh;
+  }
+
+  .name {
+    font-size: clamp(38px, 12vw, 64px);
   }
 }
