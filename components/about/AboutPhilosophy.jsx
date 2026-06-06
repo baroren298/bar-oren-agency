@@ -9,7 +9,7 @@ export default function AboutPhilosophy() {
     <section className={`${styles.section} section`} aria-label="הסיפור שלנו">
       <div className={`${styles.inner} container`}>
         <ScrollReveal>
-          <p className={styles.sectionLabel}>הסיפור שלנו</p>
+          <h2 className={styles.sectionLabel}>הסיפור שלנו</h2>
         </ScrollReveal>
 
         <div className={styles.content}>

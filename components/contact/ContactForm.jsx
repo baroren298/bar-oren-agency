@@ -100,6 +100,7 @@ export default function ContactForm({ title }) {
             aria-invalid={hasErr ? 'true' : undefined}
             className={`${styles.input} ${styles.textarea} ${hasErr ? styles.inputError : ''}`}
             disabled={status === 'loading'}
+            required={inputProps.required !== false}
             {...inputProps}
           />
         ) : (
@@ -113,6 +114,7 @@ export default function ContactForm({ title }) {
             aria-invalid={hasErr ? 'true' : undefined}
             className={`${styles.input} ${hasErr ? styles.inputError : ''}`}
             disabled={status === 'loading'}
+            required={inputProps.required !== false}
             {...inputProps}
           />
         )}

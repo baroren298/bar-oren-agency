@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,7 +10,10 @@ import styles from './Header.module.css';
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const pathname = usePathname();
+  const pathname   = usePathname();
+  const toggleRef    = useRef(null);
+  const firstLinkRef = useRef(null);
+  const menuMounted  = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -25,6 +28,24 @@ export default function Header() {
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
+  /* ESC closes the mobile menu */
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleKey = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [menuOpen]);
+
+  /* Auto-focus first nav link when menu opens; restore focus to toggle on close */
+  useEffect(() => {
+    if (!menuMounted.current) { menuMounted.current = true; return; }
+    if (menuOpen) {
+      firstLinkRef.current?.focus();
+    } else {
+      toggleRef.current?.focus();
+    }
   }, [menuOpen]);
 
   const isHome = pathname === '/';
@@ -59,23 +80,27 @@ export default function Header() {
         </nav>
 
         <button
+          ref={toggleRef}
           className={`${styles.menuToggle} ${menuOpen ? styles.menuOpen : ''}`}
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={menuOpen ? 'סגור תפריט' : 'פתח תפריט'}
           aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          type="button"
         >
-          <span />
-          <span />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
         </button>
       </div>
 
       {menuOpen && (
-        <div className={styles.mobileMenu} role="dialog" aria-modal="true" aria-label="תפריט ניווט">
-          <nav>
+        <div id="mobile-menu" className={styles.mobileMenu} aria-label="תפריט ניווט">
+          <nav aria-label="ניווט ראשי — נייד">
             <ul className={styles.mobileNavList}>
-              {siteConfig.nav.links.map((link) => (
+              {siteConfig.nav.links.map((link, i) => (
                 <li key={link.href}>
                   <Link
+                    ref={i === 0 ? firstLinkRef : undefined}
                     href={link.href}
                     className={`${styles.mobileNavLink} ${pathname.startsWith(link.href) ? styles.active : ''}`}
                   >

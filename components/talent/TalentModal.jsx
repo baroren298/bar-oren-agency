@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TalentImage from '@/components/ui/TalentImage';
 import { siteConfig } from '@/data/site';
@@ -12,6 +12,8 @@ const SOCIAL_CHANNELS = [
   { key: 'youtube',   label: 'YouTube'   },
 ];
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 function getCategoryLabels(categories) {
   return siteConfig.categories
     .filter((c) => categories.includes(c.key) && c.key !== 'all')
@@ -19,6 +21,10 @@ function getCategoryLabels(categories) {
 }
 
 export default function TalentModal({ talent, onClose }) {
+  const panelRef   = useRef(null);
+  const closeBtnRef = useRef(null);
+  const titleId    = `modal-title-${talent.id}`;
+
   /* ESC key */
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -30,6 +36,35 @@ export default function TalentModal({ talent, onClose }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  /* Auto-focus close button on mount; restore focus to trigger on unmount */
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    closeBtnRef.current?.focus();
+    return () => { previouslyFocused?.focus(); };
+  }, []);
+
+  /* Focus trap — keep Tab/Shift+Tab inside the panel */
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const trap = (e) => {
+      if (e.key !== 'Tab') return;
+      const nodes = Array.from(panel.querySelectorAll(FOCUSABLE));
+      if (!nodes.length) return;
+      const first = nodes[0];
+      const last  = nodes[nodes.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+      }
+    };
+
+    panel.addEventListener('keydown', trap);
+    return () => panel.removeEventListener('keydown', trap);
   }, []);
 
   /* Close on backdrop click only */
@@ -51,9 +86,10 @@ export default function TalentModal({ talent, onClose }) {
       transition={{ duration: 0.22 }}
       role="dialog"
       aria-modal="true"
-      aria-label={`${talent.name} — פרופיל כישרון`}
+      aria-labelledby={titleId}
     >
       <motion.div
+        ref={panelRef}
         className={styles.panel}
         initial={{ opacity: 0, y: 36 }}
         animate={{ opacity: 1, y: 0 }}
@@ -62,6 +98,7 @@ export default function TalentModal({ talent, onClose }) {
       >
         {/* ── Close button ───────────────────────────────────────────────── */}
         <button
+          ref={closeBtnRef}
           className={styles.closeBtn}
           onClick={onClose}
           aria-label="סגור"
@@ -94,8 +131,8 @@ export default function TalentModal({ talent, onClose }) {
             </p>
           )}
 
-          {/* Name */}
-          <h2 className={styles.name}>{talent.name}</h2>
+          {/* Name — id referenced by aria-labelledby on the dialog */}
+          <h2 id={titleId} className={styles.name}>{talent.name}</h2>
 
           {/* Bio */}
           {talent.bioHe && (

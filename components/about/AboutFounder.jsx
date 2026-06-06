@@ -7,7 +7,7 @@ export default function AboutFounder() {
   const { founder } = siteConfig.about;
 
   return (
-    <section className={`${styles.section} section`} aria-label="המייסדת">
+    <section className={`${styles.section} section`} aria-label="המייסד">
       <div className={`${styles.inner} container`}>
 
         {/* Optional founder portrait */}
@@ -28,7 +28,7 @@ export default function AboutFounder() {
         {/* Text block */}
         <div className={`${styles.textCell} ${!founder.image ? styles.textCellFull : ''}`}>
           <ScrollReveal>
-            <p className={styles.sectionLabel}>המייסדת</p>
+            <h2 className={styles.sectionLabel}>המייסד</h2>
           </ScrollReveal>
 
           <ScrollReveal delay={0.08}>

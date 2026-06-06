@@ -12,7 +12,7 @@ export default function AboutServices() {
 
         <ScrollReveal>
           <div className={styles.header}>
-            <p className={styles.sectionLabel}>מה אנחנו עושים</p>
+            <h2 className={styles.sectionLabel}>מה אנחנו עושים</h2>
           </div>
         </ScrollReveal>
 
