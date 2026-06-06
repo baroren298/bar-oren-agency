@@ -3,8 +3,8 @@
 .hero {
   position: relative;
   width: 100%;
-  height: 78svh;
-  min-height: 480px;
+  height: 100vh;
+  height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,7 +19,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-12);
   text-align: center;
   padding-inline: var(--container-padding);
 }
