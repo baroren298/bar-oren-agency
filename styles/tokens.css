@@ -55,7 +55,7 @@
 
   /* ─── Layout ─────────────────────────────────────── */
   --container-max:          1320px;
-  --container-padding:      clamp(20px, 5vw, 72px);
+  --container-padding:      clamp(20px, 4vw, 56px);
   --section-gap:            clamp(56px, 8vw, 96px);
   --section-gap-lg:         clamp(72px, 10vw, 128px);
 
