@@ -73,7 +73,7 @@ function YouTubeIcon() {
 
 export default function ProfileHero({ talent }) {
   const categoryLine = getCategories(talent.category);
-  const hasSocials   = talent.instagram || talent.tiktok || talent.youtube;
+  const hasSocials   = talent.instagram || talent.tiktok || talent.youtube || talent.extraSocials?.length > 0;
 
   return (
     <section
@@ -131,6 +131,24 @@ export default function ProfileHero({ talent }) {
                   <YouTubeIcon />
                 </a>
               )}
+              {talent.extraSocials?.map((s, i) => (
+                <div key={`extra-${i}`} className={styles.socialLinkItem}>
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.socialLink}
+                    aria-label={s.displayLabel ? `${s.label} — ${s.displayLabel}` : s.label}
+                  >
+                    {s.label === 'TikTok'   ? <TikTokIcon />   :
+                     s.label === 'YouTube'  ? <YouTubeIcon />  :
+                                              <InstagramIcon />}
+                  </a>
+                  {s.displayLabel && (
+                    <span className={styles.socialDisplayLabel}>{s.displayLabel}</span>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
