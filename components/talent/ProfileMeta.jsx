@@ -10,9 +10,10 @@ const SOCIAL_CHANNELS = [
 ];
 
 export default function ProfileMeta({ talent }) {
-  const hasTags    = talent.tags?.length > 0;
-  const socials    = SOCIAL_CHANNELS.filter((ch) => Boolean(talent[ch.key]));
-  const hasSocials = socials.length > 0;
+  const hasTags      = talent.tags?.length > 0;
+  const socials      = SOCIAL_CHANNELS.filter((ch) => Boolean(talent[ch.key]));
+  const hasExtra     = talent.extraSocials?.length > 0;
+  const hasSocials   = socials.length > 0 || hasExtra;
 
   if (!hasTags && !hasSocials) return null;
 
@@ -52,6 +53,23 @@ export default function ProfileMeta({ talent }) {
                     {ch.label}
                     <span className={styles.socialArrow} aria-hidden="true">←</span>
                   </Link>
+                ))}
+                {talent.extraSocials?.map((s, i) => (
+                  <div key={`extra-${i}`} className={styles.socialLinkItem}>
+                    <Link
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.socialLink}
+                      aria-label={`${s.label} של ${talent.name}`}
+                    >
+                      {s.label}
+                      <span className={styles.socialArrow} aria-hidden="true">←</span>
+                    </Link>
+                    {s.displayLabel && (
+                      <span className={styles.socialDisplayLabel}>{s.displayLabel}</span>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>

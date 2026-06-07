@@ -202,6 +202,19 @@
 
 .socialLink:hover .socialArrow { transform: translateX(-3px); }
 
+.socialLinkItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.socialDisplayLabel {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary);
+}
+
 /* ─── WhatsApp CTA ────────────────────────────────────────────────────────── */
 
 .ctaBtn {

@@ -197,7 +197,7 @@ export default function TalentModal({ talent, onClose }) {
             )}
 
             {/* Social links */}
-            {socials.length > 0 && (
+            {(socials.length > 0 || talent.extraSocials?.length > 0) && (
               <div className={styles.socials} aria-label="רשתות חברתיות">
                 {socials.map((ch) => (
                   <a
@@ -211,6 +211,23 @@ export default function TalentModal({ talent, onClose }) {
                     {ch.label}
                     <span className={styles.socialArrow} aria-hidden="true">←</span>
                   </a>
+                ))}
+                {talent.extraSocials?.map((s, i) => (
+                  <div key={`extra-${i}`} className={styles.socialLinkItem}>
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.socialLink}
+                      aria-label={`${s.label} של ${talent.name}`}
+                    >
+                      {s.label}
+                      <span className={styles.socialArrow} aria-hidden="true">←</span>
+                    </a>
+                    {s.displayLabel && (
+                      <span className={styles.socialDisplayLabel}>{s.displayLabel}</span>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

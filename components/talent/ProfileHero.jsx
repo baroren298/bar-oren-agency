@@ -11,16 +11,6 @@ function getCategories(categories) {
     .join(' · ');
 }
 
-/** First sentence only — full bio lives in ProfileBio below. */
-function getExcerpt(text) {
-  if (!text) return '';
-  const dot = text.indexOf('.');
-  if (dot > 0) return text.slice(0, dot + 1);
-  if (text.length <= 110) return text;
-  const cut = text.slice(0, 110);
-  return cut.slice(0, cut.lastIndexOf(' ')) + '…';
-}
-
 /* ── Icons ───────────────────────────────────────────────────────────────── */
 
 function InstagramIcon() {
@@ -63,7 +53,6 @@ function TikTokIcon() {
 
 export default function ProfileHero({ talent }) {
   const categoryLine = getCategories(talent.category);
-  const excerpt      = getExcerpt(talent.bioHe);
   const hasSocials   = talent.instagram || talent.tiktok;
 
   return (
@@ -83,8 +72,8 @@ export default function ProfileHero({ talent }) {
 
           <h1 className={styles.name}>{talent.name}</h1>
 
-          {excerpt && (
-            <p className={styles.excerpt}>{excerpt}</p>
+          {talent.bioHe && (
+            <p className={styles.excerpt}>{talent.bioHe}</p>
           )}
 
           {hasSocials && (

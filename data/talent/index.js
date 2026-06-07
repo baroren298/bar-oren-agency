@@ -38,138 +38,7 @@
 
 export const talentList = [
 
-  // ─── 1 ─ Maya Cohen ────────────────────────────────────────────────────────
-  {
-    id: '1',
-    slug: 'maya-cohen',
-    name: 'מאיה כהן',
-    nameEn: 'Maya Cohen',
-
-    category: ['content', 'influencer'],
-    tags: ['אורח חיים', 'יצירת תוכן', 'פנאי'],
-
-    featured: true,
-    sortOrder: 1,
-
-    profileImage: null, // '/images/talent/maya-cohen/profile.jpg'
-    gallery:      [],
-
-    bioHe: 'יוצרת תוכן עם עין ייחודית לאסתטיקה ואורח חיים. מאיה בונה קהילה נאמנה מתוך אותנטיות וסיפור אמיתי — ושיתופי הפעולה שלה מצליחים כי הם מרגישים כמו חלק ממנה.',
-    bioEn: 'A content creator with a distinctive eye for aesthetics and lifestyle. Maya builds a loyal community through authenticity and real storytelling — her collaborations work because they feel genuinely hers.',
-
-    instagram: 'https://www.instagram.com/mayacohen',
-    tiktok:    'https://www.tiktok.com/@mayacohen',
-    youtube:   null,
-
-    // Internal — not rendered on the public site
-    followers: { instagram: 125_000, tiktok: 89_000, youtube: null },
-  },
-
-  // ─── 2 ─ Noa Levi ──────────────────────────────────────────────────────────
-  {
-    id: '2',
-    slug: 'noa-levi',
-    name: 'נועה לוי',
-    nameEn: 'Noa Levi',
-
-    category: ['model', 'influencer'],
-    tags: ['אופנה', 'יוקרה', 'ויז\'ואל'],
-
-    featured: true,
-    sortOrder: 2,
-
-    profileImage: null, // '/images/talent/noa-levi/profile.jpg'
-    gallery:      [],
-
-    bioHe: 'דוגמנית ויוצרת תוכן שמשלבת בין עולם האופנה לבין נוכחות דיגיטלית עמוקה. נועה עובדת עם מותגי אופנה ומוצרי יוקרה, ומביאה אסתטיקה ייחודית וסיפור ויז\'ואל חד לכל פרויקט.',
-    bioEn: 'A model and content creator bridging high fashion and digital presence. Noa collaborates with luxury and fashion brands, bringing a distinctive aesthetic and sharp visual storytelling to every project.',
-
-    instagram: 'https://www.instagram.com/noalevi',
-    tiktok:    null,
-    youtube:   null,
-
-    followers: { instagram: 210_000, tiktok: null, youtube: null },
-  },
-
-  // ─── 3 ─ Yarden Bar ────────────────────────────────────────────────────────
-  {
-    id: '3',
-    slug: 'yarden-bar',
-    name: 'ירדן בר',
-    nameEn: 'Yarden Bar',
-
-    category: ['actor', 'content'],
-    tags: ['משחק', 'פרסום', 'הפקה'],
-
-    featured: true,
-    sortOrder: 3,
-
-    profileImage: null, // '/images/talent/yarden-bar/profile.jpg'
-    gallery:      [],
-
-    bioHe: 'שחקן ויוצר תוכן בעל נוכחות כריזמטית ועוצמה טבעית. ירדן מביא עומק ואמינות לכל פרויקט — מפרסומות ועד הפקות דרמטיות — ומצליח לגעת בקהל מכל טווח גיל.',
-    bioEn: 'An actor and content creator with natural charisma and compelling screen presence. Yarden brings depth and authenticity to every project — from commercials to dramatic productions.',
-
-    instagram: 'https://www.instagram.com/yardenbar',
-    tiktok:    'https://www.tiktok.com/@yardenbar',
-    youtube:   null,
-
-    followers: { instagram: 78_000, tiktok: 145_000, youtube: null },
-  },
-
-  // ─── 4 ─ Dana Katz ─────────────────────────────────────────────────────────
-  {
-    id: '4',
-    slug: 'dana-katz',
-    name: 'דנה כץ',
-    nameEn: 'Dana Katz',
-
-    category: ['content', 'influencer'],
-    tags: ['ביוטי', 'אורח חיים', 'בריאות'],
-
-    featured: false,
-    sortOrder: 4,
-
-    profileImage: null, // '/images/talent/dana-katz/profile.jpg'
-    gallery:      [],
-
-    bioHe: 'יוצרת תוכן המתמחה בביוטי, בריאות ואורח חיים. דנה מאמינה שתוכן אמיתי מגיע מחיים אמיתיים — והקהל שלה מרגיש את זה. כל שיתוף פעולה שהיא בוחרת משקף את הערכים שהיא מייצגת.',
-    bioEn: 'A content creator specialising in beauty, wellness and lifestyle. Dana believes authentic content comes from authentic living — her audience feels the difference. Every partnership she chooses reflects the values she represents.',
-
-    instagram: 'https://www.instagram.com/danakatz',
-    tiktok:    'https://www.tiktok.com/@danakatz',
-    youtube:   'https://www.youtube.com/@danakatz',
-
-    followers: { instagram: 95_000, tiktok: 180_000, youtube: 42_000 },
-  },
-
-  // ─── 5 ─ Lior Ben-David ────────────────────────────────────────────────────
-  {
-    id: '5',
-    slug: 'lior-ben-david',
-    name: 'ליאור בן-דוד',
-    nameEn: 'Lior Ben-David',
-
-    category: ['model', 'influencer'],
-    tags: ['אופנה', 'מנסוויר', 'ספורט'],
-
-    featured: false,
-    sortOrder: 5,
-
-    profileImage: null, // '/images/talent/lior-ben-david/profile.jpg'
-    gallery:      [],
-
-    bioHe: 'דוגמן ומשפיען אופנה עם נוכחות ייחודית ומרשימה. ליאור עובד עם מותגי אופנה, ספורט ולייפסטייל מובילים, ומביא פרשנות עכשווית ואמינה לכל קמפיין.',
-    bioEn: 'A model and fashion influencer with a distinctive, commanding presence. Lior works with leading fashion, sport and lifestyle brands, bringing a contemporary and credible perspective to every campaign.',
-
-    instagram: 'https://www.instagram.com/liorbd',
-    tiktok:    'https://www.tiktok.com/@liorbd',
-    youtube:   null,
-
-    followers: { instagram: 160_000, tiktok: 95_000, youtube: null },
-  },
-
-  // ─── 6 ─ Kim Chorilov ──────────────────────────────────────────────────────
+  // ─── 1 ─ Kim Chorilov ──────────────────────────────────────────────────────
   {
     id: '6',
     slug: 'kim-chorilov',
@@ -192,11 +61,251 @@ export const talentList = [
       '/images/talent/kim-chorilov/gallery/06.jpg',
     ],
 
-    bioHe: 'קים צ׳ורילוב היא יוצרת תוכן ודוגמנית עם נוכחות טבעית, אסתטיקה נקייה וסגנון אישי שמתחבר לעולמות הלייף סטייל, האופנה והביוטי.',
+    bioHe: 'בת 23 מהרצליה, יוצרת תוכן ומשפיענית בתחום הביוטי האופנה והלייף סטייל. בתוכן שלה משתפת את חיי היום יום שלה. לקים יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
     bioEn: 'Kim Chorilov is a content creator and model with a natural presence, clean aesthetic and personal style rooted in lifestyle, fashion and beauty.',
 
     instagram: 'https://www.instagram.com/kimchourilov',
     tiktok:    'https://www.tiktok.com/@kimchourilov',
+    youtube:   'https://www.youtube.com/@kimchourilov',
+
+    followers: { instagram: null, tiktok: null, youtube: null },
+  },
+
+
+  // ─── 7 ─ Topaz Falah ───────────────────────────────────────────────────────
+  {
+    id: '7',
+    slug: 'topaz-falah',
+    name: 'טופז פלח',
+    nameEn: 'Topaz Falah',
+
+    category: ['content', 'influencer'],
+    tags: ['אמהות', 'לייף סטייל', 'יצירת תוכן'],
+
+    featured: false,
+    sortOrder: 7,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 29 ממושב יגל, יוצרת תוכן ומשפיענית בתחום האמהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה ״אבא ניסים״ ושני ילדיהם אריאן בן השלוש וחצי, ואילור בת החצי שנה.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/topaz_falah',
+    tiktok:    'https://www.tiktok.com/@topaz_falah',
+    youtube:   null,
+
+    followers: { instagram: 52_400, tiktok: 62_100, youtube: null },
+  },
+
+  // ─── 8 ─ Gal Azar ──────────────────────────────────────────────────────────
+  {
+    id: '8',
+    slug: 'gal-azar',
+    name: 'גל עזר',
+    nameEn: 'Gal Azar',
+
+    category: ['content', 'influencer'],
+    tags: ['לייף סטייל', 'אופנה', 'ביוטי', 'אוכל', 'טרוול'],
+
+    featured: false,
+    sortOrder: 8,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 22 מחולון, יוצרת תוכן ומשפיענית בתחום הלייף סטייל, אופנה, ASMR בתחום האוכל, ביוטי, וטרוול. בתוכן שלה משתפת את חיי היום יום שלה גם עם בן זוגה. לגל יש קהילה אדוקה של בנות שעוקבות אחרי ההמלצות שלה.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/gal__azar/',
+    tiktok:    'https://www.tiktok.com/@gal.azar',
+    youtube:   'https://www.youtube.com/@gal_azar',
+
+    followers: { instagram: 30_100, tiktok: 243_900, youtube: 14_700 },
+  },
+
+  // ─── 9 ─ Michal Ben David ──────────────────────────────────────────────────
+  {
+    id: '9',
+    slug: 'michal-ben-david',
+    name: 'מיכל בן דוד',
+    nameEn: 'Michal Ben David',
+
+    category: ['content', 'influencer'],
+    tags: ['ביוטי', 'אופנה', 'לייף סטייל'],
+
+    featured: false,
+    sortOrder: 9,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 22 מהוד השרון, יוצרת תוכן ומשפיענית בתחום הביוטי, האופנה והלייפסטייל. עולה חדשה מאטלנטה ודוברת אנגלית שוטפת. בתוכן שלה משתפת רגעים מהיום-יום, סטייל אישי, והמלצות.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/michalbd1/',
+    tiktok:    'https://www.tiktok.com/@michalbd1',
+    youtube:   null,
+
+    followers: { instagram: 38_000, tiktok: 284_200, youtube: null },
+  },
+
+  // ─── 10 ─ Emma Weinberg ─────────────────────────────────────────────────────
+  {
+    id: '10',
+    slug: 'emma-weinberg',
+    name: 'אמה וינברג',
+    nameEn: 'Emma Weinberg',
+
+    category: ['content', 'influencer'],
+    tags: ['ביוטי', 'אופנה', 'לייף סטייל'],
+
+    featured: false,
+    sortOrder: 10,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 18 מהרצליה, יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/emma_weinberg/',
+    tiktok:    'https://www.tiktok.com/@emmush_xoxo',
+    youtube:   null,
+
+    followers: { instagram: 16_200, tiktok: 76_800, youtube: null },
+  },
+
+  // ─── 11 ─ Ordan Nahari ──────────────────────────────────────────────────────
+  {
+    id: '11',
+    slug: 'ordan-nahari',
+    name: 'אורדן נהרי',
+    nameEn: 'Ordan Nahari',
+
+    category: ['content', 'influencer'],
+    tags: ['אמהות', 'לייף סטייל', 'יצירת תוכן'],
+
+    featured: false,
+    sortOrder: 11,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 29 מבאר יעקב, יוצרת תוכן משפיענית האימהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה אורי ושני ילדיהם קורן בן השש, ואריאן בן השנתיים וחצי.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/ordan__n/',
+    tiktok:    'https://www.tiktok.com/@ordan__n',
+    youtube:   null,
+
+    followers: { instagram: 47_400, tiktok: 81_700, youtube: null },
+  },
+
+  // ─── 12 ─ Alma Weizman ──────────────────────────────────────────────────────
+  {
+    id: '12',
+    slug: 'alma-weizman',
+    name: 'עלמא ויצמן',
+    nameEn: 'Alma Weizman',
+
+    category: ['content', 'influencer'],
+    tags: ['ספורט', 'לייף סטייל', 'יצירת תוכן'],
+
+    featured: false,
+    sortOrder: 12,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 23 מחדרה, יוצרת תוכן ומשפיענית בתחום האקטיב והלייף סטייל. בתוכן שלה משתפת את חיי היום יום שלה. לעלמא יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/almavay',
+    tiktok:    'https://www.tiktok.com/@almavay',
+    youtube:   null,
+
+    // Extra social links rendered after the main links (supports optional displayLabel)
+    extraSocials: [
+      { url: 'https://www.instagram.com/almachillz', label: 'Instagram', displayLabel: 'Spam' },
+    ],
+
+    followers: { instagram: 17_600, tiktok: 42_300, youtube: null },
+  },
+
+  // ─── 13 ─ Shilav Jurin ──────────────────────────────────────────────────────
+  {
+    id: '13',
+    slug: 'shilav-jurin',
+    name: 'שילב חורין',
+    nameEn: 'Shilav Jurin',
+
+    category: ['content', 'influencer'],
+    tags: ['אופנה', 'לייף סטייל', 'זוגיות'],
+
+    featured: false,
+    sortOrder: 13,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 28 מקיבוץ דבירה, משפיענית ויוצרת תוכן שמשלבת חיי יום-יום, אופנה וזוגיות. משתפת את הקהל ברגעים האישיים שלה, באאוטפיטים, בחוויות עם בעלה ובבחירות היום-יומיות שמרכיבות את הסגנון הייחודי שלה.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/shilav_jurin',
+    tiktok:    'https://www.tiktok.com/@shilshillllll',
+    youtube:   null,
+
+    followers: { instagram: 32_700, tiktok: 66_200, youtube: null },
+  },
+
+  // ─── 14 ─ Shaked Hodra ──────────────────────────────────────────────────────
+  {
+    id: '14',
+    slug: 'shaked-hodra',
+    name: 'שקד חודרה',
+    nameEn: 'Shaked Hodra',
+
+    category: ['content', 'influencer'],
+    tags: ['לייף סטייל', 'תיירות', 'אוכל'],
+
+    featured: false,
+    sortOrder: 14,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בת 26 מבת ים, יוצרת תוכן בתחום הלייף סטייל תיירות ופודי. בתוכן שלה משתפת את חיי היום יום שלה. לשקד יש קהילת בנות שעוקבת אחרי התוכן שלה. בנוסף יוצרת תוכן UGC למגוון מותגים.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/shaked__h/',
+    tiktok:    'https://www.tiktok.com/@shaked__h',
+    youtube:   null,
+
+    followers: { instagram: 16_800, tiktok: 20_400, youtube: null },
+  },
+
+  // ─── 15 ─ Gal Arad ──────────────────────────────────────────────────────────
+  {
+    id: '15',
+    slug: 'gal-arad',
+    name: 'גל ארד',
+    nameEn: 'Gal Arad',
+
+    category: ['content', 'influencer'],
+    tags: ['לייף סטייל', 'הומור', 'ספורט'],
+
+    featured: false,
+    sortOrder: 15,
+
+    profileImage: null,
+    gallery:      [],
+
+    bioHe: 'בן 24 מחולון, יוצר תוכן בתחום הלייף סטייל, הומור, וספורט. בנוסף יוצר תוכן UGC למגוון מותגים.',
+    bioEn: null,
+
+    instagram: 'https://www.instagram.com/galarad33/',
+    tiktok:    'https://www.tiktok.com/@galarad',
     youtube:   null,
 
     followers: { instagram: null, tiktok: null, youtube: null },
