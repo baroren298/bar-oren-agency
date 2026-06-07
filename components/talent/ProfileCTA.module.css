@@ -29,6 +29,7 @@
 .ctaBtn {
   display: inline-flex;
   align-items: center;
+  align-self: center;
   /* padding-inline matches ContactForm .submitBtn exactly */
   padding: var(--space-4) var(--space-10);
   border: 1px solid var(--color-text-primary);
