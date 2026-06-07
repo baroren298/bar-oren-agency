@@ -49,11 +49,31 @@ function TikTokIcon() {
   );
 }
 
+function YouTubeIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+    </svg>
+  );
+}
+
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function ProfileHero({ talent }) {
   const categoryLine = getCategories(talent.category);
-  const hasSocials   = talent.instagram || talent.tiktok;
+  const hasSocials   = talent.instagram || talent.tiktok || talent.youtube;
 
   return (
     <section
@@ -98,6 +118,17 @@ export default function ProfileHero({ talent }) {
                   aria-label="TikTok"
                 >
                   <TikTokIcon />
+                </a>
+              )}
+              {talent.youtube && (
+                <a
+                  href={talent.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.socialLink}
+                  aria-label="YouTube"
+                >
+                  <YouTubeIcon />
                 </a>
               )}
             </div>
