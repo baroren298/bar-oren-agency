@@ -1,11 +1,16 @@
 .section {
   border-top: 1px solid var(--color-border);
   background-color: var(--color-surface);
+  /* Compact padding — matches ContactInvite proportions */
+  padding-block-start: clamp(20px, 2.5vw, 32px);
+  padding-block-end:   clamp(40px, 5vw, 64px);
 }
 
 .inner {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: var(--space-8);
   max-width: 640px;
 }
@@ -14,9 +19,10 @@
 
 .prompt {
   font-family: var(--font-display);
-  font-size: clamp(22px, 3vw, 36px);
+  font-size: clamp(28px, 4vw, 48px);
   font-weight: var(--weight-light);
-  line-height: 1.25;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
   color: var(--color-text-primary);
 }
 
@@ -27,10 +33,8 @@
 /* ─── CTA button ──────────────────────────────────────────────────────────── */
 
 .ctaBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  margin-inline: auto;
-  /* padding-inline matches ContactForm .submitBtn exactly */
   padding: var(--space-4) var(--space-10);
   border: 1px solid var(--color-text-primary);
   font-family: var(--font-body);
@@ -42,8 +46,7 @@
   background-color: transparent;
   transition:
     background-color var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default);
-  width: fit-content;
+    color            var(--duration-base) var(--ease-default);
 }
 
 .ctaBtn:hover {
