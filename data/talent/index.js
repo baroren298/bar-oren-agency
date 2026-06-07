@@ -49,6 +49,7 @@ export const talentList = [
     tags: ['לייף סטייל', 'אופנה', 'ביוטי'],
 
     featured: true,
+    featuredOrder: 2,
     sortOrder: 0,
 
     profileImage: '/images/talent/kim-chorilov/profile.jpg',
@@ -108,7 +109,8 @@ export const talentList = [
     category: ['content', 'influencer'],
     tags: ['לייף סטייל', 'אופנה', 'ביוטי', 'אוכל', 'טרוול'],
 
-    featured: false,
+    featured: true,
+    featuredOrder: 1,
     sortOrder: 8,
 
     profileImage: null,
@@ -134,7 +136,8 @@ export const talentList = [
     category: ['content', 'influencer'],
     tags: ['ביוטי', 'אופנה', 'לייף סטייל'],
 
-    featured: false,
+    featured: true,
+    featuredOrder: 3,
     sortOrder: 9,
 
     profileImage: null,
@@ -322,7 +325,11 @@ export function getTalentBySlug(slug) {
 export function getFeaturedTalent(limit = 3) {
   return talentList
     .filter((t) => t.featured)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .sort((a, b) => {
+      const ao = a.featuredOrder ?? a.sortOrder;
+      const bo = b.featuredOrder ?? b.sortOrder;
+      return ao - bo;
+    })
     .slice(0, limit);
 }
 
