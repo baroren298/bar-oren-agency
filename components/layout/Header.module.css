@@ -165,8 +165,9 @@
   background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   padding-inline: var(--container-padding);
+  padding-block-start: var(--space-12);
   z-index: calc(var(--z-header) - 1);
 }
 
