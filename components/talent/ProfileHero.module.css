@@ -181,8 +181,12 @@
   .inner {
     flex-direction: row;
     align-items: center;
-    min-height: 90vh;
-    /* Clear the desktop fixed header (88px) + comfortable breathing room */
+    /* No fixed min-height here on purpose: the row now sizes to its tallest
+       child, which is the image column (its aspect-ratio drives a tall,
+       premium portrait box on its own). A forced min-height (e.g. 90vh)
+       would make the row taller than the image on big/tall monitors,
+       leaving empty space above/below it once centered — exactly what
+       we're avoiding. */
     padding-block-start: calc(88px + clamp(32px, 4vh, 52px));
     padding-block-end: clamp(40px, 6vh, 72px);
     gap: clamp(40px, 5vw, 80px);
