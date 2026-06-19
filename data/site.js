@@ -64,7 +64,7 @@ export const siteConfig = {
         'הסוכנות שלי היא בית ליוצרים, משפיענים ושחקנים שמחפשים ליווי אישי, מקצועי ואמין עם יחס בגובה העיניים ודרך משותפת שנבנית יחד.',
         'ברוכים הבאים.',
       ],
-      image: '/images/about/bar-oren.jpg',
+      image: '/images/about/profile.jpg',
     },
   },
 
