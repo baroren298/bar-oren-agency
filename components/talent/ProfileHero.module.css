@@ -213,11 +213,13 @@
     margin-top: var(--space-6);
   }
 
-  /* Image: fixed proportion of viewport, fills full row height */
+  /* Image: fixed proportion of column width. A stable aspect-ratio (same 3/4
+     used on mobile) keeps the crop consistent across viewport heights — the
+     previous "stretch to fill the 90vh row" behavior made the box taller and
+     narrower on tall viewports, cropping far more of the original portrait
+     than the roster cards do. */
   .imageCol {
     flex: 0 0 44%;
-    aspect-ratio: unset;      /* let flex height take over on desktop */
-    align-self: stretch;      /* fills the full row height */
     border-radius: 8px;
     order: 0;                 /* reset mobile order — RTL flex-row handles visual position */
   }
