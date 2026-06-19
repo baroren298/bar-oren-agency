@@ -55,7 +55,7 @@ export const talentList = [
     location: 'הרצליה',
     birthDate: '2002-07-23',
 
-    profileImage: '/images/talent/kim-chorilov/profile.jpg',
+    profileImage: '/images/talent/kim-chorilov/profile-2026-06.jpg',
     gallery: [
       '/images/talent/kim-chorilov/gallery/01.jpg',
       '/images/talent/kim-chorilov/gallery/02.jpg',
