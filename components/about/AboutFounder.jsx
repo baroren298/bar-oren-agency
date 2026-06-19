@@ -27,10 +27,6 @@ export default function AboutFounder() {
 
         {/* Text block */}
         <div className={`${styles.textCell} ${!founder.image ? styles.textCellFull : ''}`}>
-          <ScrollReveal>
-            <h2 className={styles.sectionLabel}>המייסד</h2>
-          </ScrollReveal>
-
           <div className={styles.bio}>
             {founder.bio.map((paragraph, i) => (
               <ScrollReveal key={i} delay={0.06 + i * 0.05}>
