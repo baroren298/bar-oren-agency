@@ -1,11 +1,9 @@
 import AboutHero from '@/components/about/AboutHero';
-import AboutPhilosophy from '@/components/about/AboutPhilosophy';
 import AboutFounder from '@/components/about/AboutFounder';
-import AboutServices from '@/components/about/AboutServices';
 import ContactInvite from '@/components/home/ContactInvite';
 import styles from './about.module.css';
 
-const DESCRIPTION = 'בר אורן טאלנט אייג׳נסי — סוכנות ייצוג בוטיק לניהול אישי ומקצועי של מיוצגים. הכירו את הסוכנות, הגישה שלנו והשירותים שאנו מציעים.';
+const DESCRIPTION = 'בר אורן טאלנט אייג׳נסי — סוכנות ייצוג בוטיק לניהול אישי ומקצועי של מיוצגים. הכירו את בר אורן והגישה האישית שמובילה את הסוכנות.';
 
 export const metadata = {
   title:       'אודות',
@@ -29,9 +27,7 @@ export default function AboutPage() {
   return (
     <div className={styles.page}>
       <AboutHero />
-      <AboutPhilosophy />
       <AboutFounder />
-      <AboutServices />
       <ContactInvite />
     </div>
   );

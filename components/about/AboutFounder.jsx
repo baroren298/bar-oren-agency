@@ -10,7 +10,7 @@ export default function AboutFounder() {
     <section className={`${styles.section} section`} aria-label="המייסד">
       <div className={`${styles.inner} container`}>
 
-        {/* Optional founder portrait */}
+        {/* Founder portrait */}
         {founder.image && (
           <ScrollReveal className={styles.imageCell}>
             <div className={styles.imageWrapper}>
@@ -18,7 +18,7 @@ export default function AboutFounder() {
                 src={founder.image}
                 alt={founder.name}
                 fill
-                sizes="(max-width: 768px) 100vw, 400px"
+                sizes="(max-width: 860px) 100vw, 480px"
                 className={styles.image}
               />
             </div>
@@ -31,20 +31,23 @@ export default function AboutFounder() {
             <h2 className={styles.sectionLabel}>המייסד</h2>
           </ScrollReveal>
 
-          <ScrollReveal delay={0.08}>
-            <blockquote className={styles.statement}>
-              <p className={styles.statementText}>
-                &ldquo;{founder.statement}&rdquo;
-              </p>
-            </blockquote>
-          </ScrollReveal>
-
-          <ScrollReveal delay={0.16}>
-            <div className={styles.attribution}>
-              <p className={styles.founderName}>{founder.name}</p>
-              <p className={styles.founderTitle}>{founder.title}</p>
-            </div>
-          </ScrollReveal>
+          <div className={styles.bio}>
+            {founder.bio.map((paragraph, i) => (
+              <ScrollReveal key={i} delay={0.06 + i * 0.05}>
+                <p
+                  className={
+                    i === 0
+                      ? styles.leadParagraph
+                      : i === founder.bio.length - 1
+                      ? styles.closingParagraph
+                      : styles.paragraph
+                  }
+                >
+                  {paragraph}
+                </p>
+              </ScrollReveal>
+            ))}
+          </div>
         </div>
 
       </div>

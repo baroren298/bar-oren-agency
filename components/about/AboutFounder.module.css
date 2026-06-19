@@ -1,13 +1,12 @@
 .section {
   border-top: 1px solid var(--color-border);
-  background-color: var(--color-surface);
 }
 
 /* ─── Layout ──────────────────────────────────────────────────────────────── */
 
 .inner {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
+  grid-template-columns: 1fr 1.3fr;
   gap: clamp(var(--space-12), 6vw, var(--space-20));
   align-items: center;
 }
@@ -16,6 +15,10 @@
 .textCellFull {
   grid-column: 1 / -1;
   max-width: 720px;
+}
+
+.textCell {
+  max-width: 640px;
 }
 
 /* ─── Founder image ───────────────────────────────────────────────────────── */
@@ -27,7 +30,9 @@
 .imageWrapper {
   position: relative;
   aspect-ratio: 3/4;
+  max-width: 440px;
   overflow: hidden;
+  border-radius: var(--radius-md);
   background-color: #1a1410;
 }
 
@@ -48,47 +53,35 @@
   margin-bottom: var(--space-8);
 }
 
-/* ─── Statement (blockquote) ──────────────────────────────────────────────── */
+/* ─── Bio copy ────────────────────────────────────────────────────────────── */
 
-.statement {
-  margin: 0;
-  margin-bottom: var(--space-10);
-  padding-inline-start: var(--space-6);
-  border-inline-start: 2px solid var(--color-accent);
-}
-
-.statementText {
-  font-family: var(--font-display);
-  font-size: clamp(18px, 2.2vw, 26px);
-  font-weight: var(--weight-light);
-  line-height: 1.6;
-  color: var(--color-text-primary);
-  font-style: italic;
-}
-
-/* ─── Attribution ─────────────────────────────────────────────────────────── */
-
-.attribution {
+.bio {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-6);
 }
 
-.founderName {
+.leadParagraph {
   font-family: var(--font-display);
-  font-size: clamp(20px, 2vw, 28px);
+  font-size: clamp(22px, 2.6vw, 32px);
   font-weight: var(--weight-light);
-  letter-spacing: 0.02em;
+  line-height: 1.4;
   color: var(--color-text-primary);
-  line-height: 1;
 }
 
-.founderTitle {
+.paragraph {
   font-family: var(--font-body);
-  font-size: var(--text-small);
-  font-weight: var(--weight-regular);
-  letter-spacing: 0.06em;
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-loose);
   color: var(--color-text-secondary);
+}
+
+.closingParagraph {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: var(--weight-light);
+  font-style: italic;
+  color: var(--color-text-primary);
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────────────── */
@@ -99,8 +92,13 @@
     gap: var(--space-10);
   }
 
+  .textCell {
+    max-width: none;
+  }
+
   .imageWrapper {
-    aspect-ratio: 4/3;
-    max-width: 480px;
+    aspect-ratio: 4/5;
+    max-width: none;
+    width: 100%;
   }
 }

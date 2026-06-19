@@ -162,7 +162,9 @@
      bottom edge rather than the viewport bottom, collapsing the menu to zero height. */
   height: calc(100dvh - 88px);
   overflow-y: auto;
-  background-color: var(--color-bg);
+  /* Hardcoded (not var(--color-bg)) so the mobile nav panel matches the
+     header's own tone, independent of the main content background token. */
+  background-color: #EDEDED;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

@@ -1,6 +1,8 @@
 .footer {
   border-top: 1px solid var(--color-border);
-  background-color: var(--color-bg);
+  /* Hardcoded (not var(--color-bg)) so the footer tone stays fixed
+     regardless of the main content background-color token. */
+  background-color: #EDEDED;
   padding-block: var(--space-6);
 }
 
