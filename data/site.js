@@ -2,7 +2,7 @@ export const siteConfig = {
   name: 'Bar Oren',
   agencyName: 'Bar Oren Talent Agency',
   tagline: 'Talent Agency',
-  descriptor: 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים.',
+  descriptor: 'סוכנות בוטיק לייצוג וניהול אישי\nליוצרי תוכן, משפיענים ושחקנים',
   descriptorEn: 'Personal and professional management for content creators, influencers, models and actors.',
 
   contact: {

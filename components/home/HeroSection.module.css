@@ -41,6 +41,7 @@
   color: var(--color-text-secondary);
   max-width: 480px;
   letter-spacing: 0.03em;
+  white-space: pre-line;
 }
 
 /* ─── Scroll indicator ────────────────────────────────────────────────────── */

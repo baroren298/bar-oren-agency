@@ -53,7 +53,7 @@ export const talentList = [
     sortOrder: 0,
 
     location: 'הרצליה',
-    birthDate: '2003-01-01',
+    birthDate: '2002-07-23',
 
     profileImage: '/images/talent/kim-chorilov/profile.jpg',
     gallery: [
@@ -90,7 +90,7 @@ export const talentList = [
     sortOrder: 7,
 
     location: 'מושב יגל',
-    birthDate: '1997-01-01',
+    birthDate: '1997-02-23',
 
     profileImage: null,
     gallery:      [],
@@ -120,7 +120,7 @@ export const talentList = [
     sortOrder: 8,
 
     location: 'חולון',
-    birthDate: '2004-01-01',
+    birthDate: '2003-06-02',
 
     profileImage: null,
     gallery:      [],
@@ -150,7 +150,7 @@ export const talentList = [
     sortOrder: 9,
 
     location: 'הוד השרון',
-    birthDate: '2004-01-01',
+    birthDate: '2003-10-24',
 
     profileImage: null,
     gallery:      [],
@@ -179,7 +179,7 @@ export const talentList = [
     sortOrder: 10,
 
     location: 'הרצליה',
-    birthDate: '2008-01-01',
+    birthDate: '2008-01-21',
 
     profileImage: null,
     gallery:      [],
@@ -208,7 +208,7 @@ export const talentList = [
     sortOrder: 11,
 
     location: 'באר יעקב',
-    birthDate: '1997-01-01',
+    birthDate: '1996-10-10',
 
     profileImage: null,
     gallery:      [],
@@ -237,7 +237,7 @@ export const talentList = [
     sortOrder: 12,
 
     location: 'חדרה',
-    birthDate: '2003-01-01',
+    birthDate: '2003-04-01',
 
     profileImage: null,
     gallery:      [],
@@ -271,7 +271,7 @@ export const talentList = [
     sortOrder: 13,
 
     location: 'קיבוץ דבירה',
-    birthDate: '1998-01-01',
+    birthDate: '1997-08-18',
 
     profileImage: null,
     gallery:      [],
@@ -300,7 +300,7 @@ export const talentList = [
     sortOrder: 14,
 
     location: 'בת ים',
-    birthDate: '2000-01-01',
+    birthDate: '1999-05-19',
 
     profileImage: null,
     gallery:      [],
@@ -329,7 +329,7 @@ export const talentList = [
     sortOrder: 15,
 
     location: 'חולון',
-    birthDate: '2002-01-01',
+    birthDate: '2002-03-03',
 
     profileImage: null,
     gallery:      [],
