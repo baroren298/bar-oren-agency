@@ -50,7 +50,7 @@ export const talentList = [
 
     featured: true,
     featuredOrder: 2,
-    sortOrder: 0,
+    sortOrder: 1,
 
     location: 'הרצליה',
     birthDate: '2002-07-23',
@@ -87,12 +87,12 @@ export const talentList = [
     tags: ['אמהות', 'לייף סטייל', 'יצירת תוכן'],
 
     featured: false,
-    sortOrder: 7,
+    sortOrder: 3,
 
     location: 'מושב יגל',
     birthDate: '1997-02-23',
 
-    profileImage: null,
+    profileImage: '/images/talent/topaz-falah/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום האמהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה ״אבא ניסים״ ושני ילדיהם אריאן בן השלוש וחצי, ואילור בת החצי שנה.',
@@ -117,12 +117,12 @@ export const talentList = [
 
     featured: true,
     featuredOrder: 1,
-    sortOrder: 8,
+    sortOrder: 0,
 
     location: 'חולון',
     birthDate: '2003-06-02',
 
-    profileImage: null,
+    profileImage: '/images/talent/gal-azar/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הלייף סטייל, אופנה, ASMR בתחום האוכל, ביוטי, וטרוול. בתוכן שלה משתפת את חיי היום יום שלה גם עם בן זוגה. לגל יש קהילה אדוקה של בנות שעוקבות אחרי ההמלצות שלה.',
@@ -147,12 +147,12 @@ export const talentList = [
 
     featured: true,
     featuredOrder: 3,
-    sortOrder: 9,
+    sortOrder: 2,
 
     location: 'הוד השרון',
     birthDate: '2003-10-24',
 
-    profileImage: null,
+    profileImage: '/images/talent/michal-bendavid/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי, האופנה והלייפסטייל. עולה חדשה מאטלנטה ודוברת אנגלית שוטפת. בתוכן שלה משתפת רגעים מהיום-יום, סטייל אישי, והמלצות.',
@@ -176,12 +176,12 @@ export const talentList = [
     tags: ['ביוטי', 'אופנה', 'לייף סטייל'],
 
     featured: false,
-    sortOrder: 10,
+    sortOrder: 4,
 
     location: 'הרצליה',
     birthDate: '2008-01-21',
 
-    profileImage: null,
+    profileImage: '/images/talent/emma-weinberg/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
@@ -205,12 +205,12 @@ export const talentList = [
     tags: ['אמהות', 'לייף סטייל', 'יצירת תוכן'],
 
     featured: false,
-    sortOrder: 11,
+    sortOrder: 5,
 
     location: 'באר יעקב',
     birthDate: '1996-10-10',
 
-    profileImage: null,
+    profileImage: '/images/talent/ordan-nahari/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן משפיענית האימהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה אורי ושני ילדיהם קורן בן השש, ואריאן בן השנתיים וחצי.',
@@ -234,12 +234,12 @@ export const talentList = [
     tags: ['ספורט', 'לייף סטייל', 'יצירת תוכן'],
 
     featured: false,
-    sortOrder: 12,
+    sortOrder: 6,
 
     location: 'חדרה',
     birthDate: '2003-04-01',
 
-    profileImage: null,
+    profileImage: '/images/talent/alma-weizman/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום האקטיב והלייף סטייל. בתוכן שלה משתפת את חיי היום יום שלה. לעלמא יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
@@ -268,7 +268,7 @@ export const talentList = [
     tags: ['אופנה', 'לייף סטייל', 'זוגיות'],
 
     featured: false,
-    sortOrder: 13,
+    sortOrder: 7,
 
     location: 'קיבוץ דבירה',
     birthDate: '1997-08-18',
@@ -297,12 +297,12 @@ export const talentList = [
     tags: ['לייף סטייל', 'תיירות', 'אוכל'],
 
     featured: false,
-    sortOrder: 14,
+    sortOrder: 8,
 
     location: 'בת ים',
     birthDate: '1999-05-19',
 
-    profileImage: null,
+    profileImage: '/images/talent/shaked-hudra/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן בתחום הלייף סטייל תיירות ופודי. בתוכן שלה משתפת את חיי היום יום שלה. לשקד יש קהילת בנות שעוקבת אחרי התוכן שלה. בנוסף יוצרת תוכן UGC למגוון מותגים.',
@@ -326,12 +326,12 @@ export const talentList = [
     tags: ['לייף סטייל', 'הומור', 'ספורט'],
 
     featured: false,
-    sortOrder: 15,
+    sortOrder: 9,
 
     location: 'חולון',
     birthDate: '2002-03-03',
 
-    profileImage: null,
+    profileImage: '/images/talent/gal-arad/profile.jpg',
     gallery:      [],
 
     bioHe: 'יוצר תוכן בתחום הלייף סטייל, הומור, וספורט. בנוסף יוצר תוכן UGC למגוון מותגים.',
