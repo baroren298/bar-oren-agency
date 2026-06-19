@@ -157,7 +157,7 @@ export default function TalentModal({ talent, onClose }) {
               fallbackIndex={talent.sortOrder}
               priority
               sizes="(max-width: 768px) 100vw, 360px"
-              objectPosition="center top"
+              objectPosition={talent.imagePosition || 'center top'}
             />
           </div>
         </div>

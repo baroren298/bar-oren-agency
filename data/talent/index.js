@@ -210,7 +210,11 @@ export const talentList = [
     location: 'באר יעקב',
     birthDate: '1996-10-10',
 
-    profileImage: '/images/talent/ordan-nahari/profile.jpg',
+    profileImage: '/images/talent/ordan-nahari/profile-2026-06.jpg',
+    // Crop focus override — source photo has excess empty space above the
+    // head; shift the visible window down to bring her higher in the frame.
+    // All other talents keep the TalentImage default ('center top').
+    imagePosition: 'center 25%',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן מעוררת השראה בתחום האמהות והלייף סטייל. בעמודיה היא מציגה תוכן משפחתי, יום-יומי ואסתטי במיוחד, המשלב את בעלה אורי ושני בניהם. התוכן של אורדן מאופיין בוויב חם, נעים ומזמין, המדגיש את החיבור המשפחתי האמיתי והרגעים הקטנים של החיים בסטייל בלתי מתפשר. בזכות שילוב של אותנטיות ואסתטיקה גבוהה, אורדן מייצרת חיבור עמוק עם קהל של אמהות ונשים.',

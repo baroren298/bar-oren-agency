@@ -33,6 +33,7 @@ export default function TalentCard({ talent, className = '', aspectRatio = '2/3'
           alt={talent.name}
           fallbackIndex={talent.sortOrder}
           sizes="(max-width: 479px) 100vw, (max-width: 1023px) 50vw, 33vw"
+          objectPosition={talent.imagePosition || 'center top'}
           className={styles.cardImage}
         />
         <div className={styles.hoverOverlay} aria-hidden="true" />

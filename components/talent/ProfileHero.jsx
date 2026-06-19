@@ -223,7 +223,7 @@ export default function ProfileHero({ talent }) {
             fallbackIndex={talent.sortOrder}
             priority
             sizes="(max-width: 768px) 90vw, 44vw"
-            objectPosition="center top"
+            objectPosition={talent.imagePosition || 'center top'}
             className={styles.image}
           />
         </div>
