@@ -8,7 +8,7 @@ import { siteConfig } from '@/data/site';
 
 const frankRuhlLibre = Frank_Ruhl_Libre({
   subsets: ['latin', 'hebrew'],
-  weight: ['300', '400', '500'],
+  weight: ['300', '400', '500', '700', '900'],
   variable: '--loaded-frank-ruhl',
   display: 'swap',
 });

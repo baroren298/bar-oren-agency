@@ -52,6 +52,9 @@ export const talentList = [
     featuredOrder: 2,
     sortOrder: 0,
 
+    location: 'הרצליה',
+    birthDate: '2003-01-01',
+
     profileImage: '/images/talent/kim-chorilov/profile.jpg',
     gallery: [
       '/images/talent/kim-chorilov/gallery/01.jpg',
@@ -62,7 +65,7 @@ export const talentList = [
       '/images/talent/kim-chorilov/gallery/06.jpg',
     ],
 
-    bioHe: 'בת 23 מהרצליה, יוצרת תוכן ומשפיענית בתחום הביוטי האופנה והלייף סטייל. בתוכן שלה משתפת את חיי היום יום שלה. לקים יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
+    bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי האופנה והלייף סטייל. בתוכן שלה משתפת את חיי היום יום שלה. לקים יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
     bioEn: 'Kim Chorilov is a content creator and model with a natural presence, clean aesthetic and personal style rooted in lifestyle, fashion and beauty.',
 
     instagram: 'https://www.instagram.com/kimchourilov',
@@ -86,10 +89,13 @@ export const talentList = [
     featured: false,
     sortOrder: 7,
 
+    location: 'מושב יגל',
+    birthDate: '1997-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 29 ממושב יגל, יוצרת תוכן ומשפיענית בתחום האמהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה ״אבא ניסים״ ושני ילדיהם אריאן בן השלוש וחצי, ואילור בת החצי שנה.',
+    bioHe: 'יוצרת תוכן ומשפיענית בתחום האמהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה ״אבא ניסים״ ושני ילדיהם אריאן בן השלוש וחצי, ואילור בת החצי שנה.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/topaz_falah',
@@ -113,10 +119,13 @@ export const talentList = [
     featuredOrder: 1,
     sortOrder: 8,
 
+    location: 'חולון',
+    birthDate: '2004-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 22 מחולון, יוצרת תוכן ומשפיענית בתחום הלייף סטייל, אופנה, ASMR בתחום האוכל, ביוטי, וטרוול. בתוכן שלה משתפת את חיי היום יום שלה גם עם בן זוגה. לגל יש קהילה אדוקה של בנות שעוקבות אחרי ההמלצות שלה.',
+    bioHe: 'יוצרת תוכן ומשפיענית בתחום הלייף סטייל, אופנה, ASMR בתחום האוכל, ביוטי, וטרוול. בתוכן שלה משתפת את חיי היום יום שלה גם עם בן זוגה. לגל יש קהילה אדוקה של בנות שעוקבות אחרי ההמלצות שלה.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/gal__azar/',
@@ -140,10 +149,13 @@ export const talentList = [
     featuredOrder: 3,
     sortOrder: 9,
 
+    location: 'הוד השרון',
+    birthDate: '2004-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 22 מהוד השרון, יוצרת תוכן ומשפיענית בתחום הביוטי, האופנה והלייפסטייל. עולה חדשה מאטלנטה ודוברת אנגלית שוטפת. בתוכן שלה משתפת רגעים מהיום-יום, סטייל אישי, והמלצות.',
+    bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי, האופנה והלייפסטייל. עולה חדשה מאטלנטה ודוברת אנגלית שוטפת. בתוכן שלה משתפת רגעים מהיום-יום, סטייל אישי, והמלצות.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/michalbd1/',
@@ -166,10 +178,13 @@ export const talentList = [
     featured: false,
     sortOrder: 10,
 
+    location: 'הרצליה',
+    birthDate: '2008-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 18 מהרצליה, יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
+    bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/emma_weinberg/',
@@ -192,10 +207,13 @@ export const talentList = [
     featured: false,
     sortOrder: 11,
 
+    location: 'באר יעקב',
+    birthDate: '1997-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 29 מבאר יעקב, יוצרת תוכן משפיענית האימהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה אורי ושני ילדיהם קורן בן השש, ואריאן בן השנתיים וחצי.',
+    bioHe: 'יוצרת תוכן משפיענית האימהות והלייף סטייל. משתפת ביום יום את החיבור המשפחתי עם בעלה אורי ושני ילדיהם קורן בן השש, ואריאן בן השנתיים וחצי.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/ordan__n/',
@@ -218,10 +236,13 @@ export const talentList = [
     featured: false,
     sortOrder: 12,
 
+    location: 'חדרה',
+    birthDate: '2003-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 23 מחדרה, יוצרת תוכן ומשפיענית בתחום האקטיב והלייף סטייל. בתוכן שלה משתפת את חיי היום יום שלה. לעלמא יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
+    bioHe: 'יוצרת תוכן ומשפיענית בתחום האקטיב והלייף סטייל. בתוכן שלה משתפת את חיי היום יום שלה. לעלמא יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/almavay',
@@ -249,10 +270,13 @@ export const talentList = [
     featured: false,
     sortOrder: 13,
 
+    location: 'קיבוץ דבירה',
+    birthDate: '1998-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 28 מקיבוץ דבירה, משפיענית ויוצרת תוכן שמשלבת חיי יום-יום, אופנה וזוגיות. משתפת את הקהל ברגעים האישיים שלה, באאוטפיטים, בחוויות עם בעלה ובבחירות היום-יומיות שמרכיבות את הסגנון הייחודי שלה.',
+    bioHe: 'משפיענית ויוצרת תוכן שמשלבת חיי יום-יום, אופנה וזוגיות. משתפת את הקהל ברגעים האישיים שלה, באאוטפיטים, בחוויות עם בעלה ובבחירות היום-יומיות שמרכיבות את הסגנון הייחודי שלה.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/shilav_jurin',
@@ -275,10 +299,13 @@ export const talentList = [
     featured: false,
     sortOrder: 14,
 
+    location: 'בת ים',
+    birthDate: '2000-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בת 26 מבת ים, יוצרת תוכן בתחום הלייף סטייל תיירות ופודי. בתוכן שלה משתפת את חיי היום יום שלה. לשקד יש קהילת בנות שעוקבת אחרי התוכן שלה. בנוסף יוצרת תוכן UGC למגוון מותגים.',
+    bioHe: 'יוצרת תוכן בתחום הלייף סטייל תיירות ופודי. בתוכן שלה משתפת את חיי היום יום שלה. לשקד יש קהילת בנות שעוקבת אחרי התוכן שלה. בנוסף יוצרת תוכן UGC למגוון מותגים.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/shaked__h/',
@@ -301,10 +328,13 @@ export const talentList = [
     featured: false,
     sortOrder: 15,
 
+    location: 'חולון',
+    birthDate: '2002-01-01',
+
     profileImage: null,
     gallery:      [],
 
-    bioHe: 'בן 24 מחולון, יוצר תוכן בתחום הלייף סטייל, הומור, וספורט. בנוסף יוצר תוכן UGC למגוון מותגים.',
+    bioHe: 'יוצר תוכן בתחום הלייף סטייל, הומור, וספורט. בנוסף יוצר תוכן UGC למגוון מותגים.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/galarad33/',
@@ -341,4 +371,21 @@ export function getTalentByCategory(category) {
 
 export function getAllSlugs() {
   return talentList.map((t) => t.slug);
+}
+
+/**
+ * Calculates current age from a birthDate ('YYYY-MM-DD').
+ * Recomputed at render time, so the displayed age updates automatically
+ * every year without any content edit.
+ */
+export function getAge(birthDate) {
+  if (!birthDate) return null;
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const hadBirthdayThisYear =
+    today.getMonth() > birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if (!hadBirthdayThisYear) age -= 1;
+  return age;
 }

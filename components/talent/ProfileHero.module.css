@@ -60,7 +60,6 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: var(--space-4);
 }
 
 /* ─── Typography ─────────────────────────────────────────────────────────── */
@@ -78,12 +77,45 @@
 
 .name {
   font-family: var(--font-display);
-  font-size: clamp(42px, 9vw, 80px);
-  font-weight: var(--weight-regular);
+  font-size: clamp(47px, 10vw, 90px);
+  font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--color-text-primary);
   line-height: 0.95;
   margin: 0;
+}
+
+/* ─── Metadata row (location · age) ──────────────────────────────────────── */
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--color-text-secondary);
+  line-height: 1;
+  margin-top: var(--space-2);
+  direction: ltr; /* override page RTL so each item reads icon→value, location→age */
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.metaItem svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.metaItem:not(:last-child)::after {
+  content: '·';
+  margin-inline-start: var(--space-2);
+  color: var(--color-text-tertiary);
 }
 
 .excerpt {
@@ -92,8 +124,9 @@
   font-weight: var(--weight-regular);
   line-height: var(--leading-relaxed);
   color: var(--color-text-secondary);
-  max-width: 38ch;
+  max-width: 50ch;
   margin: 0;
+  margin-top: var(--space-5);
 }
 
 /* ─── Social icons ───────────────────────────────────────────────────────── */
@@ -103,7 +136,7 @@
   align-items: flex-start;
   justify-content: center;
   gap: var(--space-4);
-  margin-top: var(--space-4);
+  margin-top: var(--space-6);
   direction: ltr; /* override page RTL so icons read left→right: IG | TT | YT */
 }
 
@@ -160,16 +193,24 @@
     flex: 1;
     align-items: center;
     align-self: center;
-    gap: var(--space-5);
   }
 
   .name {
-    font-size: clamp(52px, 5.9vw, 86px);
+    font-size: clamp(58px, 6.6vw, 96px);
+  }
+
+  .meta {
+    margin-top: var(--space-3);
   }
 
   .excerpt {
     font-size: clamp(15px, 1.1vw, 17px);
-    max-width: 34ch;
+    max-width: 46ch;
+    margin-top: var(--space-6);
+  }
+
+  .socials {
+    margin-top: var(--space-6);
   }
 
   /* Image: fixed proportion of viewport, fills full row height */
@@ -188,7 +229,7 @@
 
 @media (max-width: 480px) {
   .name {
-    font-size: clamp(36px, 11vw, 56px);
+    font-size: clamp(40px, 12vw, 63px);
   }
 
   .imageCol {
