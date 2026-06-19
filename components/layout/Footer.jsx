@@ -9,6 +9,28 @@ export default function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
+        <span className={styles.copy}>
+          © {siteConfig.agencyName} {year}
+        </span>
+
+        <nav className={styles.links} aria-label="קישורי footer">
+          <Link href={siteConfig.contact.instagram} target="_blank" rel="noopener noreferrer" className={styles.link}>
+            Instagram
+          </Link>
+          <span className={styles.dot} aria-hidden="true">·</span>
+          <Link href="/accessibility" className={styles.link}>
+            נגישות
+          </Link>
+          <span className={styles.dot} aria-hidden="true">·</span>
+          <Link href="/privacy-policy" className={styles.link}>
+            מדיניות פרטיות
+          </Link>
+          <span className={styles.dot} aria-hidden="true">·</span>
+          <Link href={`mailto:${siteConfig.contact.email}`} className={styles.link}>
+            {siteConfig.contact.email}
+          </Link>
+        </nav>
+
         <div className={styles.wordmark}>
           <Link href="/" aria-label="Bar Oren Talent Agency — דף הבית">
             <Image
@@ -20,30 +42,6 @@ export default function Footer() {
             />
           </Link>
         </div>
-
-
-        <nav className={styles.links} aria-label="קישורי footer">
-          <Link href={`mailto:${siteConfig.contact.email}`} className={styles.link}>
-            {siteConfig.contact.email}
-          </Link>
-          <span className={styles.dot} aria-hidden="true">·</span>
-          <Link href={siteConfig.contact.instagram} target="_blank" rel="noopener noreferrer" className={styles.link}>
-            Instagram
-          </Link>
-        </nav>
-
-        <p className={styles.copy}>
-          © {year} {siteConfig.agencyName}
-        </p>
-      </div>
-
-      <div className={styles.legalRow}>
-        <Link href="/accessibility" className={styles.legalLink}>
-          נגישות
-        </Link>
-        <Link href="/privacy-policy" className={styles.legalLink}>
-          מדיניות פרטיות
-        </Link>
       </div>
     </footer>
   );
