@@ -181,7 +181,7 @@ export const talentList = [
     location: 'הרצליה',
     birthDate: '2008-01-21',
 
-    profileImage: '/images/talent/emma-weinberg/profile.jpg',
+    profileImage: '/images/talent/emma-weinberg/profile-v2.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
@@ -243,7 +243,7 @@ export const talentList = [
     location: 'חדרה',
     birthDate: '2003-04-01',
 
-    profileImage: '/images/talent/alma-weizman/profile.jpg',
+    profileImage: '/images/talent/alma-weizman/profile-v2.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן בתחומי האופנה, הביוטי, והלייף סטייל. עלמא משלבת בתוכן שלה סטייל אישי, יצירתיות ואסתטיקה חזקה, לצד רגעים מחיי היום-יום.',
