@@ -306,7 +306,7 @@ export const talentList = [
     location: 'בת ים',
     birthDate: '1999-05-19',
 
-    profileImage: '/images/talent/shaked-hudra/profile.jpg',
+    profileImage: '/images/talent/shaked-hudra/profile-v2.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחומי הלייף סטייל, האופנה וה-UGC. שקד מתמחה ביצירת תוכן אותנטי ומדויק עבור מותגים, לצד שיתוף חוויות, המלצות ותוכן יומיומי.',
