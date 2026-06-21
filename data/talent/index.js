@@ -105,7 +105,17 @@ export const talentList = [
     // head; shift the visible window down to bring her higher in the frame.
     // All other talents keep the TalentImage default ('center top').
     imagePosition: 'center 25%',
-    gallery:      [],
+    gallery: [
+      '/images/talent/topaz-falah/gallery/01.jpg',
+      '/images/talent/topaz-falah/gallery/02.JPEG',
+      '/images/talent/topaz-falah/gallery/03.jpg',
+      '/images/talent/topaz-falah/gallery/04.jpeg',
+      // Source photo has excess empty space above the family at the default
+      // 'center top' crop; shift the visible window down so the subjects
+      // sit higher in the frame (same technique used for gal-azar's gallery).
+      { src: '/images/talent/topaz-falah/gallery/05.jpeg', position: 'center bottom' },
+      '/images/talent/topaz-falah/gallery/06.jpg',
+    ],
 
     bioHe: 'יוצרת תוכן מובילה בתחום האמהות והלייף סטייל, המביאה למסך את חיי המשפחה האמיתיים בגובה העיניים. בעמודיה היא משתפת ברגעים יום-יומיים ואותנטיים לצד בעלה ניסים והילדים, ומציעה הצצה לשגרת הורות מעוררת השראה, טיפים לחיים ומתכונים ביתיים ונגישים. בזכות אנרגיה חמה וחיבור אמיתי, טופז סחפה אחריה קהילה נאמנה של אמהות ונשים שמחפשות השראה יום-יומית.',
     bioEn: null,
