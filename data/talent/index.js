@@ -155,7 +155,7 @@ export const talentList = [
     profileImage: '/images/talent/michal-bendavid/profile.jpg',
     gallery:      [],
 
-    bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי, האופנה והלייפסטייל. עולה חדשה מאטלנטה ודוברת אנגלית שוטפת. בתוכן שלה משתפת רגעים מהיום-יום, סטייל אישי, והמלצות.',
+    bioHe: 'יוצרת תוכן ומשפיענית בתחומי הביוטי, האופנה והלייף סטייל, עם זווית בינלאומית ייחודית שמחברת בין התרבות הישראלית לאמריקאית. מיכל מביאה למסך שילוב של סטייל אישי, אותנטיות, הומור ורגעים אמיתיים מחיי היום יום.\nבנוסף, מיכל יוצרת תוכן גם בשפה האנגלית ומנחה את הפודקאסט “Hetzi חצי”, שצבר מיליוני צפיות ברשתות.',
     bioEn: null,
 
     instagram: 'https://www.instagram.com/michalbd1/',
@@ -210,7 +210,7 @@ export const talentList = [
     location: 'באר יעקב',
     birthDate: '1996-10-10',
 
-    profileImage: '/images/talent/ordan-nahari/profile-2026-06.jpg',
+    profileImage: '/images/talent/ordan-nahari/profile.jpg',
     // Crop focus override — source photo has excess empty space above the
     // head; shift the visible window down to bring her higher in the frame.
     // All other talents keep the TalentImage default ('center top').
