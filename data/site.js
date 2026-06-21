@@ -17,7 +17,7 @@ export const siteConfig = {
 
   meta: {
     title: 'Bar Oren Talent Agency',
-    description: 'ניהול אישי ומקצועי ליוצרי תוכן, משפיענים, דוגמנים ושחקנים.',
+    description: 'סוכנות בוטיק לייצוג וניהול אישי ליוצרי תוכן, משפיענים ושחקנים.',
     descriptionEn: 'Personal and professional talent management. Content creators, influencers, models and actors.',
     url: 'https://baroren.co.il',
     locale: 'he_IL',
