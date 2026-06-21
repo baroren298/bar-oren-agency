@@ -3,10 +3,10 @@ import AboutFounder from '@/components/about/AboutFounder';
 import ContactInvite from '@/components/home/ContactInvite';
 import styles from './about.module.css';
 
-const DESCRIPTION = 'בר אורן טאלנט אייג׳נסי — סוכנות ייצוג בוטיק לניהול אישי ומקצועי של מיוצגים. הכירו את בר אורן והגישה האישית שמובילה את הסוכנות.';
+const DESCRIPTION = 'סוכנות בוטיק לייצוג וניהול אישי של יוצרי תוכן, משפיענים ושחקנים. הכירו את בר אורן ואת הגישה האישית שמובילה את הסוכנות.';
 
 export const metadata = {
-  title:       'אודות',
+  title:       'אודות | Bar Oren Talent Agency',
   description:  DESCRIPTION,
   alternates:  { canonical: '/about' },
   openGraph: {
