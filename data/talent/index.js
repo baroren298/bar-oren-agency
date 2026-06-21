@@ -153,7 +153,11 @@ export const talentList = [
     birthDate: '2003-10-24',
 
     profileImage: '/images/talent/michal-bendavid/profile.jpg',
-    gallery:      [],
+    gallery: [
+      '/images/talent/michal-bendavid/gallery/01.jpg',
+      '/images/talent/michal-bendavid/gallery/02.jpg',
+      '/images/talent/michal-bendavid/gallery/03.jpg',
+    ],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחומי הביוטי, האופנה והלייף סטייל, עם זווית בינלאומית ייחודית שמחברת בין התרבות הישראלית לאמריקאית. מיכל מביאה למסך שילוב של סטייל אישי, אותנטיות, הומור ורגעים אמיתיים מחיי היום יום.\nבנוסף, מיכל יוצרת תוכן גם בשפה האנגלית ומנחה את הפודקאסט “Hetzi חצי”, שצבר מיליוני צפיות ברשתות.',
     bioEn: null,
