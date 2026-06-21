@@ -3,6 +3,7 @@ import { talentList, getTalentBySlug } from '@/data/talent';
 import { siteConfig } from '@/data/site';
 import ProfileHero from '@/components/talent/ProfileHero';
 import ProfileGallery from '@/components/talent/ProfileGallery';
+import PodcastSection from '@/components/talent/PodcastSection';
 /* ProfileMeta import removed for launch — component kept at
    components/talent/ProfileMeta.jsx for future reuse when
    tag/category filtering is reactivated on the roster page. */
@@ -127,6 +128,10 @@ export default async function TalentProfilePage({ params }) {
     <>
       <ProfileHero    talent={talent} />
       <ProfileGallery talent={talent} />
+      {/* Podcast section is data-driven: it renders only when talent.podcast
+          exists (currently only on Michal Ben David's profile), so it has
+          no effect on any other talent page. */}
+      <PodcastSection talent={talent} />
       {/* ProfileMeta hidden for launch — tags/categories kept in data/talent
           for future filtering; removed from profile UI until roster filters
           are reactivated. */}

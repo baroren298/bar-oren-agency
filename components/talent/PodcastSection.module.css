@@ -1,0 +1,177 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PodcastSection — editorial two-column block + centered video
+   Desktop : artwork (left, small/square) | text (right), video centered below
+   Mobile  : section title → artwork → podcast title → description → video
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.section {
+  border-top: 1px solid var(--color-border);
+  /* Tighter than the default --section-gap so the block doesn't feel
+     spread out relative to the gallery above and CTA below. */
+  padding-block: clamp(32px, 4vw, 56px);
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ─── Heading ─────────────────────────────────────────────────────────────── */
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* ─── Row: artwork + text ─────────────────────────────────────────────────── */
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "title image"
+    "desc  image";
+  column-gap: clamp(var(--space-8), 5vw, var(--space-12));
+  row-gap: var(--space-3);
+  align-items: center;
+}
+
+/* Title/description cells — right column in RTL desktop */
+.titleCell {
+  grid-area: title;
+  max-width: 600px;
+}
+
+.descCell {
+  grid-area: desc;
+  /* Width is governed by .paragraph (matches the bio excerpt's ch-based
+     measure below) rather than the fixed px cap used by the title cell. */
+  width: 100%;
+}
+
+.podcastTitle {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  margin: 0;
+}
+
+/* Matches ProfileHero's .excerpt (Michal's bio paragraph) exactly:
+   same font, size, weight, line-height, ch-based width and centering. */
+.paragraph {
+  font-family: var(--font-body);
+  font-size: clamp(15px, 1.8vw, 17px);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+  max-width: 50ch;
+  margin: 0 auto;
+  text-align: center;
+  /* Render as one continuous block: preserve the \n line breaks from the
+     data string without introducing separate <p> tags or paragraph gaps. */
+  white-space: pre-line;
+}
+
+@media (min-width: 769px) {
+  .paragraph {
+    font-size: clamp(15px, 1.1vw, 17px);
+    max-width: 46ch;
+  }
+}
+
+/* Artwork — left column in RTL desktop; small, square, fixed size */
+.imageCell {
+  grid-area: image;
+  justify-self: center;
+}
+
+.imageWrapper {
+  position: relative;
+  width: clamp(120px, 12vw, 160px);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-accent-subtle);
+}
+
+.image {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ─── Video ───────────────────────────────────────────────────────────────── */
+
+.videoCell {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.videoWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-accent-subtle);
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Mobile — stack: heading/text → image → video
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 860px) {
+  /* Mobile order: section title → artwork → podcast title → description → video.
+     Switch from the desktop grid to a single flex column and reorder the
+     individual pieces (rather than the old text-block/image grouping) so
+     the artwork can sit between the section title and the podcast title. */
+  .row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .imageCell {
+    order: -1; /* artwork first, right after the section title */
+    align-self: center;
+    margin-bottom: var(--space-6); /* same gap the row used to have */
+  }
+
+  .titleCell {
+    order: 0;
+    max-width: none;
+  }
+
+  .descCell {
+    order: 1;
+    max-width: none;
+    margin-top: var(--space-3); /* same gap title↔description had before */
+  }
+}
+
+@media (max-width: 480px) {
+  .heading {
+    font-size: clamp(24px, 7vw, 30px);
+  }
+
+  .podcastTitle {
+    font-size: clamp(18px, 5.5vw, 21px);
+  }
+}

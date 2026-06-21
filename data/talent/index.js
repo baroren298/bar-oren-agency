@@ -93,6 +93,10 @@ export const talentList = [
     birthDate: '1997-02-23',
 
     profileImage: '/images/talent/topaz-falah/profile-v2.jpg',
+    // Crop focus override — source photo has excess empty space above the
+    // head; shift the visible window down to bring her higher in the frame.
+    // All other talents keep the TalentImage default ('center top').
+    imagePosition: 'center 25%',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן מובילה בתחום האמהות והלייף סטייל, המביאה למסך את חיי המשפחה האמיתיים בגובה העיניים. בעמודיה היא משתפת ברגעים יום-יומיים ואותנטיים לצד בעלה ניסים והילדים, ומציעה הצצה לשגרת הורות מעוררת השראה, טיפים לחיים ומתכונים ביתיים ונגישים. בזכות אנרגיה חמה וחיבור אמיתי, טופז סחפה אחריה קהילה נאמנה של אמהות ונשים שמחפשות השראה יום-יומית.',
@@ -167,6 +171,15 @@ export const talentList = [
     youtube:   null,
 
     followers: { instagram: 38_000, tiktok: 284_200, youtube: null },
+
+    // Podcast section — shown only on Michal's profile page.
+    // Leave podcastVideoEmbedUrl empty/null to hide the video block.
+    podcast: {
+      title:       'Hetzi | חצי',
+      description: 'מקום שבו האנגלית והעברית נפגשים, כל הבלאגן של חו״ל והארץ הופך לסיפור מעניין, מצחיק וקורע.\nהפודקאסט כבש את הרשת עם מיליוני צפיות והפך לשיחת היום בקרב קהילת העולים הצעירים וגם הישראלים.\nמיכל מארחת בכל שבוע את האנשים הכי מעניינים ברשת לשיחה על המעבר, החיים בישראל, ג׳וס, בלי פילטרים, עם המון הומור ובווייב הכי קליל וכיפי שיש.',
+      image:       '/images/talent/michal-bendavid/podcast.jpg',
+      videoEmbedUrl: 'https://www.youtube.com/embed/uSUlHPMywXM',
+    },
   },
 
   // ─── 10 ─ Emma Weinberg ─────────────────────────────────────────────────────
