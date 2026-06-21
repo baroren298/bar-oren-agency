@@ -225,7 +225,14 @@ export const talentList = [
     birthDate: '2008-01-21',
 
     profileImage: '/images/talent/emma-weinberg/profile-v2.jpg',
-    gallery:      [],
+    gallery: [
+      '/images/talent/emma-weinberg/gallery/01.jpg',
+      '/images/talent/emma-weinberg/gallery/02.jpg',
+      '/images/talent/emma-weinberg/gallery/03.jpg',
+      '/images/talent/emma-weinberg/gallery/04.jpg',
+      '/images/talent/emma-weinberg/gallery/05.jpg',
+      '/images/talent/emma-weinberg/gallery/06.jpg',
+    ],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
     bioEn: null,
