@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    PodcastSection — editorial two-column block + centered video
+   No section heading — the artwork itself opens the section.
    Desktop : artwork (left, small/square) | text (right), video centered below
-   Mobile  : section title → artwork → podcast title → description → video
+   Mobile  : artwork → podcast title → description → video
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .section {
@@ -15,18 +16,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-}
-
-/* ─── Heading ─────────────────────────────────────────────────────────────── */
-
-.heading {
-  font-family: var(--font-display);
-  font-size: var(--text-h2);
-  font-weight: var(--weight-light);
-  letter-spacing: 0.01em;
-  color: var(--color-text-primary);
-  line-height: 1.2;
-  margin: 0;
 }
 
 /* ─── Row: artwork + text ─────────────────────────────────────────────────── */
@@ -88,6 +77,26 @@
   }
 }
 
+/* ─── Desktop-only composition ───────────────────────────────────────────────
+   Compact, editorial grouping: the image+text row gets a narrower, centered
+   measure (matches the About page's tighter feel) and a much smaller gap so
+   the artwork and text read as one unit. Text goes back to right-aligned
+   instead of centered. The video block (a sibling of .row, not inside it)
+   is untouched — it keeps its own independent width.
+   Scoped above the mobile breakpoint (860px) so mobile is untouched. */
+@media (min-width: 861px) {
+  .row {
+    max-width: 760px;
+    margin-inline: auto;
+    column-gap: var(--space-5);
+  }
+
+  .paragraph {
+    text-align: right;
+    margin: 0;
+  }
+}
+
 /* Artwork — left column in RTL desktop; small, square, fixed size */
 .imageCell {
   grid-area: image;
@@ -135,14 +144,13 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Mobile — stack: heading/text → image → video
+   Mobile — stack: artwork → podcast title → description → video
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 860px) {
-  /* Mobile order: section title → artwork → podcast title → description → video.
-     Switch from the desktop grid to a single flex column and reorder the
-     individual pieces (rather than the old text-block/image grouping) so
-     the artwork can sit between the section title and the podcast title. */
+  /* Mobile order: artwork → podcast title → description → video. Switch
+     from the desktop grid to a single flex column and reorder the pieces
+     so the artwork opens the section. */
   .row {
     display: flex;
     flex-direction: column;
@@ -167,10 +175,6 @@
 }
 
 @media (max-width: 480px) {
-  .heading {
-    font-size: clamp(24px, 7vw, 30px);
-  }
-
   .podcastTitle {
     font-size: clamp(18px, 5.5vw, 21px);
   }

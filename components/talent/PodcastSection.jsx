@@ -23,19 +23,15 @@ export default function PodcastSection({ talent }) {
   return (
     <section className={`${styles.section} section`} aria-label="הפודקאסט">
       <div className={`${styles.inner} container`}>
-        <ScrollReveal>
-          <h2 className={styles.heading}>הפודקאסט של {talent.name.split(' ')[0]}</h2>
-        </ScrollReveal>
-
         <div className={styles.row}>
-          {/* ── Podcast title — right in RTL desktop; between section title
-                 and artwork on mobile ───────────────────────────────────── */}
+          {/* ── Podcast title — right in RTL desktop; after the artwork
+                 on mobile ──────────────────────────────────────────────── */}
           <ScrollReveal delay={0.05} className={styles.titleCell}>
             <p className={styles.podcastTitle}>{podcast.title}</p>
           </ScrollReveal>
 
-          {/* ── Artwork — left in RTL desktop; right after the section
-                 title on mobile ───────────────────────────────────────────── */}
+          {/* ── Artwork — left in RTL desktop; opens the section on mobile,
+                 acting as its visual introduction ─────────────────────────── */}
           {podcast.image && (
             <ScrollReveal delay={0.05} className={styles.imageCell}>
               <div className={styles.imageWrapper}>
