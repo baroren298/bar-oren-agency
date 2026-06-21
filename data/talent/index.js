@@ -294,7 +294,11 @@ export const talentList = [
     birthDate: '2003-04-01',
 
     profileImage: '/images/talent/alma-weizman/profile-v2.jpg',
-    gallery:      [],
+    gallery: [
+      '/images/talent/alma-weizman/gallery/01.jpg',
+      '/images/talent/alma-weizman/gallery/02.jpg',
+      '/images/talent/alma-weizman/gallery/03.jpg',
+    ],
 
     bioHe: 'יוצרת תוכן בתחומי האופנה, הביוטי, והלייף סטייל. עלמא משלבת בתוכן שלה סטייל אישי, יצירתיות ואסתטיקה חזקה, לצד רגעים מחיי היום-יום.',
     bioEn: null,
