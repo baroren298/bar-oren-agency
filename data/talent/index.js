@@ -56,10 +56,18 @@ export const talentList = [
     birthDate: '2002-07-23',
 
     profileImage: '/images/talent/kim-chorilov/profile.jpg',
+    // 02 (center) and 03 (right) keep a per-image object-position override
+    // to trim excess headroom — the crop window shifts down slightly so the
+    // subject sits a bit higher in the 4:5 card. 01 (left) is back on the
+    // TalentImage default ('center top') per the earlier revert.
+    // 02 also gets a subtle static zoom (--img-scale) layered under the
+    // existing hover zoom, independent of its vertical position.
+    // 03's upward shift has been re-applied twice more at the same +12pt
+    // step (12% → 24% → 36%) to further reduce headroom.
     gallery: [
       '/images/talent/kim-chorilov/gallery/01.jpg',
-      '/images/talent/kim-chorilov/gallery/02.jpg',
-      '/images/talent/kim-chorilov/gallery/03.jpg',
+      { src: '/images/talent/kim-chorilov/gallery/02.jpg', position: 'center 20%', scale: 1.05 },
+      { src: '/images/talent/kim-chorilov/gallery/03.jpg', position: 'center 36%' },
       '/images/talent/kim-chorilov/gallery/04.jpg',
       '/images/talent/kim-chorilov/gallery/05.jpg',
       '/images/talent/kim-chorilov/gallery/06.jpg',
