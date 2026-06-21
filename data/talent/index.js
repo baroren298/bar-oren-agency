@@ -122,7 +122,7 @@ export const talentList = [
     location: 'חולון',
     birthDate: '2003-06-02',
 
-    profileImage: '/images/talent/gal-azar/profile.jpg',
+    profileImage: '/images/talent/gal-azar/profile-v2.jpg',
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הלייף סטייל, אופנה, ביוטי וטרוול. גל ידועה בזכות סרטוני ASMR וטרנדים קולינריים ייחודיים שמתפוצצים ברשת וגורפים מיליוני צפיות. התוכן שלה קריאטיבי, אסתטי ומעורר השראה, והיא מתאפיינת בחשיבה מחוץ לקופסה ורמת הפקה גבוהה שיוצרת חיבור מיידי עם הקהל.',
