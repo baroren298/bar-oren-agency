@@ -113,6 +113,6 @@
 
   .ctaLinkMobileRow {
     display: flex;
-    justify-content: flex-start; /* RTL: flex-start is the right edge */
+    justify-content: flex-end; /* RTL: flex-end is the left edge — sets this apart from the right-aligned card above it */
   }
 }
