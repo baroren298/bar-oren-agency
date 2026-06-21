@@ -394,7 +394,11 @@ export const talentList = [
     birthDate: '2002-03-03',
 
     profileImage: '/images/talent/gal-arad/profile-v2.jpg',
-    gallery:      [],
+    gallery: [
+      '/images/talent/gal-arad/gallery/01.jpg',
+      '/images/talent/gal-arad/gallery/02.jpg',
+      '/images/talent/gal-arad/gallery/03.jpg',
+    ],
 
     bioHe: 'יוצר תוכן מבטיח ומרענן בעולמות הלייף סטייל והספורט. גל מביא אל הרשת חשיבה מחוץ לקופסה, קריאייטיב מקורי וסרטונים הומוריסטיים שאי אפשר להישאר אליהם אדישים. התוכן שלו מאופיין בוויב סוחף, קליל ומעניין, המשלב בין עולם הספורט לחיי היום-יום בצורה חכמה ומצחיקה. בזכות האנרגיה הייחודית שלו, גל מייצר חיבור מיידי עם הקהל ומסתמן כהבטחה גדולה ברשת.',
     bioEn: null,
