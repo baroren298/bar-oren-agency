@@ -3,6 +3,7 @@ import '../styles/globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FloatingWhatsApp from '@/components/ui/FloatingWhatsApp';
+import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import JsonLd from '@/components/ui/JsonLd';
 import { siteConfig } from '@/data/site';
 
@@ -182,6 +183,8 @@ export default function RootLayout({ children }) {
         <Header />
         <main id="main-content">{children}</main>
         <Footer />
+        {/* Scroll-to-top sits directly above WhatsApp, which stays the primary, lowest CTA */}
+        <ScrollToTopButton />
         {/* Single site-wide WhatsApp entry point — rendered once, available on every page */}
         <FloatingWhatsApp />
 

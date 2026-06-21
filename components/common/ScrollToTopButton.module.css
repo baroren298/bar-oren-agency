@@ -1,0 +1,106 @@
+.btn {
+  position: fixed;
+  /* Sits directly above FloatingWhatsApp (52px, bottom: space-6) with a
+     14px gap — WhatsApp stays the lowest, primary CTA. */
+  bottom: calc(var(--space-6) + 52px + 14px + env(safe-area-inset-bottom, 0px));
+  right: var(--space-6);
+  left: unset;
+
+  /* Above header (100), below the WhatsApp button's own hover states and
+     below the modal overlay (200) — same layer as WhatsApp. */
+  z-index: 150;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  /* Same premium dark mark as FloatingWhatsApp */
+  background-color: var(--color-text-primary);
+  color: var(--color-bg);
+
+  box-shadow:
+    0 2px 8px  rgba(10, 7, 4, 0.18),
+    0 6px 24px rgba(10, 7, 4, 0.14);
+
+  -webkit-tap-highlight-color: transparent;
+
+  /* Hidden by default: faded out and nudged down, no pointer events */
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-default);
+}
+
+.btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.btn:hover {
+  transform: scale(1.09);
+  box-shadow:
+    0 4px 12px  rgba(10, 7, 4, 0.22),
+    0 12px 40px rgba(10, 7, 4, 0.18);
+  background-color: #2a2520;
+}
+
+.btn.visible:hover {
+  transform: scale(1.09);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* Keyboard focus — clean accent ring, consistent with FloatingWhatsApp */
+.btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ─── Mobile tweaks ───────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .btn {
+    /* FloatingWhatsApp shrinks to 48px on mobile — keep the 14px gap above it */
+    bottom: calc(var(--space-6) + 48px + 14px + env(safe-area-inset-bottom, 0px));
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* ─── Reduced motion ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: opacity var(--duration-fast) linear;
+    transform: none;
+  }
+
+  .btn.visible {
+    transform: none;
+  }
+
+  .btn:hover,
+  .btn.visible:hover,
+  .btn:active {
+    transform: none;
+  }
+}
