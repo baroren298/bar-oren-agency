@@ -89,7 +89,7 @@ export const talentList = [
     featured: false,
     sortOrder: 3,
 
-    location: 'מושב יגל',
+    location: 'אזור המרכז',
     birthDate: '1997-02-23',
 
     profileImage: '/images/talent/topaz-falah/profile-v2.jpg',
