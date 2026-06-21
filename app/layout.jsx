@@ -74,15 +74,7 @@ export const metadata = {
   },
   description: siteConfig.meta.description,
 
-  keywords: [
-    'סוכנות כישרונות',
-    'ניהול כישרונות',
-    'יוצרי תוכן',
-    'משפיענים',
-    'talent agency Israel',
-    'influencer management',
-    'content creator',
-  ],
+  keywords: siteConfig.meta.keywords,
 
   authors:   [{ name: siteConfig.name }],
   creator:    siteConfig.name,
