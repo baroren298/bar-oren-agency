@@ -361,7 +361,11 @@ export const talentList = [
     birthDate: '1999-05-19',
 
     profileImage: '/images/talent/shaked-hudra/profile-v2.jpg',
-    gallery:      [],
+    gallery: [
+      '/images/talent/shaked-hudra/gallery/01.jpg',
+      '/images/talent/shaked-hudra/gallery/02.jpg',
+      '/images/talent/shaked-hudra/gallery/03.jpg',
+    ],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחומי הלייף סטייל, האופנה וה-UGC. שקד מתמחה ביצירת תוכן אותנטי ומדויק עבור מותגים, לצד שיתוף חוויות, המלצות ותוכן יומיומי.',
     bioEn: null,
