@@ -1,0 +1,22 @@
+
+> bar-oren-agency@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.7 (Turbopack)
+- Local:         http://localhost:3000
+✓ Ready in 706ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+⚠ Attempted to load /sessions/serene-epic-fermat/mnt/bar-oren-agency/node_modules/next/next-swc-fallback/@next/swc-linux-arm64-gnu/next-swc.linux-arm64-gnu.node, but it was not installed
+⚠ Attempted to load /sessions/serene-epic-fermat/mnt/bar-oren-agency/node_modules/next/next-swc-fallback/@next/swc-linux-arm64-musl/next-swc.linux-arm64-musl.node, but it was not installed
+⚠ Attempted to load @next/swc-linux-arm64-gnu, but it was not installed
+⚠ Attempted to load @next/swc-linux-arm64-musl, but it was not installed
+⚠ Attempted to load @next/swc-wasm-nodejs, but it was not installed
+⚠ Attempted to load @next/swc-wasm-web, but it was not installed
+⨯ Failed to load SWC binary for linux/arm64, see more info here: https://nextjs.org/docs/messages/failed-loading-swc
+Error: Failed to load SWC binary for linux/arm64, see more info here: https://nextjs.org/docs/messages/failed-loading-swc
+    at ignore-listed frames
+[?25h

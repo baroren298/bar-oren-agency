@@ -127,7 +127,15 @@ export const talentList = [
     birthDate: '2003-06-02',
 
     profileImage: '/images/talent/gal-azar/profile-v2.jpg',
-    gallery:      [],
+    // Gallery photos have generous empty headroom above the subject at the
+    // default 'center top' crop; shifting the object-position toward the
+    // bottom trims that empty space so subjects sit higher in the 4:5 cards
+    // (most noticeable on the 3rd / right-most image in the desktop grid).
+    gallery: [
+      { src: '/images/talent/gal-azar/gallery/01.jpg', position: 'center bottom' },
+      { src: '/images/talent/gal-azar/gallery/02.jpg', position: 'center bottom' },
+      { src: '/images/talent/gal-azar/gallery/03.jpg', position: 'center bottom' },
+    ],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הלייף סטייל, אופנה, ביוטי וטרוול. גל ידועה בזכות סרטוני ASMR וטרנדים קולינריים ייחודיים שמתפוצצים ברשת וגורפים מיליוני צפיות. התוכן שלה קריאטיבי, אסתטי ומעורר השראה, והיא מתאפיינת בחשיבה מחוץ לקופסה ורמת הפקה גבוהה שיוצרת חיבור מיידי עם הקהל.',
     bioEn: null,
