@@ -54,6 +54,13 @@
   transform: translateX(-4px); /* RTL: ← moves right on hover */
 }
 
+/* Mobile-only CTA row, rendered below the featured cards. Hidden by default
+   (desktop/tablet); shown only at the mobile breakpoint, where the header's
+   copy of the link is hidden instead. See @media (max-width: 767px) below. */
+.ctaLinkMobileRow {
+  display: none;
+}
+
 /* ─── Uniform portfolio grid ──────────────────────────────────────────────── */
 
 .grid {
@@ -94,5 +101,18 @@
      Combined with section padding: ~48px tighter than before. */
   .inner {
     gap: var(--space-6);
+  }
+}
+
+/* Mobile: move the "לכל המיוצגים" link from the header to below the third
+   (last) featured card, so it's visible right after scrolling the cards. */
+@media (max-width: 767px) {
+  .ctaLinkHeader {
+    display: none;
+  }
+
+  .ctaLinkMobileRow {
+    display: flex;
+    justify-content: flex-start; /* RTL: flex-start is the right edge */
   }
 }

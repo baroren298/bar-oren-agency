@@ -12,7 +12,7 @@ export default function FeaturedTalent({ talent = [] }) {
         <ScrollReveal>
           <div className={styles.header}>
             <h2 className={styles.title}>{siteConfig.homepage.featuredTitle}</h2>
-            <Link href="/talent" className={styles.ctaLink} aria-label="לכל המיוצגים">
+            <Link href="/talent" className={`${styles.ctaLink} ${styles.ctaLinkHeader}`} aria-label="לכל המיוצגים">
               <span>{siteConfig.homepage.featuredCta}</span>
               <span className={styles.arrow} aria-hidden="true">←</span>
             </Link>
@@ -27,6 +27,18 @@ export default function FeaturedTalent({ talent = [] }) {
                 <TalentCard talent={t} aspectRatio="3/4" />
               </ScrollReveal>
             ))}
+          </div>
+        )}
+
+        {/* Mobile-only: CTA link repeated below the featured cards so it's
+            visible right after scrolling through them, without needing to
+            scroll back up to the header row. Hidden on desktop. */}
+        {talent.length > 0 && (
+          <div className={styles.ctaLinkMobileRow}>
+            <Link href="/talent" className={styles.ctaLink} aria-label="לכל המיוצגים">
+              <span>{siteConfig.homepage.featuredCta}</span>
+              <span className={styles.arrow} aria-hidden="true">←</span>
+            </Link>
           </div>
         )}
       </div>
