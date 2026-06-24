@@ -265,7 +265,14 @@ export const talentList = [
     // head; shift the visible window down to bring her higher in the frame.
     // All other talents keep the TalentImage default ('center top').
     imagePosition: 'center 25%',
-    gallery:      [],
+    gallery: [
+      '/images/talent/ordan-nahari/gallery/01.jpg',
+      '/images/talent/ordan-nahari/gallery/02.JPG',
+      '/images/talent/ordan-nahari/gallery/03.JPG',
+      '/images/talent/ordan-nahari/gallery/04.jpg',
+      '/images/talent/ordan-nahari/gallery/05.jpg',
+      '/images/talent/ordan-nahari/gallery/06.JPG',
+    ],
 
     bioHe: 'יוצרת תוכן מעוררת השראה בתחום האמהות והלייף סטייל. בעמודיה היא מציגה תוכן משפחתי, יום-יומי ואסתטי במיוחד, המשלב את בעלה אורי ושני בניהם. התוכן של אורדן מאופיין בוויב חם, נעים ומזמין, המדגיש את החיבור המשפחתי האמיתי והרגעים הקטנים של החיים בסטייל בלתי מתפשר. בזכות שילוב של אותנטיות ואסתטיקה גבוהה, אורדן מייצרת חיבור עמוק עם קהל של אמהות ונשים.',
     bioEn: null,
