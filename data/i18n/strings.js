@@ -1,10 +1,11 @@
 /*
- * UI string dictionary — chrome/navigation copy only (Header, Footer,
- * language switcher, skip link). This intentionally does NOT cover page
- * content (About bio, talent profiles, contact copy, etc.) — that is a
- * separate phase. Hebrew strings here are verbatim copies of what was
- * previously hardcoded inline in each component, so the Hebrew render
- * stays byte-for-byte identical after wiring components to this file.
+ * UI string dictionary — chrome/navigation copy (Header, Footer,
+ * language switcher, skip link) plus the 404 page. This intentionally
+ * does NOT cover page content (About bio, talent profiles, contact copy,
+ * etc.) — that is a separate phase. Hebrew strings here are verbatim
+ * copies of what was previously hardcoded inline in each component, so
+ * the Hebrew render stays byte-for-byte identical after wiring
+ * components to this file.
  */
 export const strings = {
   he: {
@@ -29,6 +30,10 @@ export const strings = {
       switchToHebrew: 'עבור לעברית',
       switchToEnglish: 'עבור לאנגלית',
     },
+    notFound: {
+      title: 'הדף לא נמצא',
+      link: 'חזרה לדף הבית',
+    },
   },
   en: {
     skipLink: 'Skip to main content',
@@ -51,6 +56,10 @@ export const strings = {
     languageSwitcher: {
       switchToHebrew: 'Switch to Hebrew',
       switchToEnglish: 'Switch to English',
+    },
+    notFound: {
+      title: 'Page Not Found',
+      link: 'Back to Homepage',
     },
   },
 };

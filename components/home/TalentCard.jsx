@@ -31,7 +31,7 @@ export default function TalentCard({ talent, className = '', aspectRatio = '2/3'
     <Link
       href={profileHref}
       className={`${styles.card} ${className}`}
-      aria-label={`${talent.name} — עמוד כישרון`}
+      aria-label={locale === 'en' ? `${talent.name} — Talent Profile` : `${talent.name} — עמוד כישרון`}
       onClick={handleClick}
     >
       {/* Portrait */}

@@ -6,8 +6,9 @@ import { motion } from 'framer-motion';
 import { siteConfig } from '@/data/site';
 import styles from './HeroSection.module.css';
 
-export default function HeroSection() {
+export default function HeroSection({ locale = 'he' }) {
   const [mounted, setMounted] = useState(false);
+  const isEnglish = locale === 'en';
 
   useEffect(() => {
     setMounted(true);
@@ -18,8 +19,10 @@ export default function HeroSection() {
     if (next) next.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const descriptor = isEnglish ? siteConfig.descriptorEn : siteConfig.descriptor;
+
   return (
-    <section className={styles.hero} aria-label="כותרת ראשית">
+    <section className={styles.hero} aria-label={isEnglish ? 'Main heading' : 'כותרת ראשית'}>
       {/* Content */}
       <motion.div
         className={styles.inner}
@@ -36,14 +39,14 @@ export default function HeroSection() {
           className={styles.logo}
         />
 
-        <p className={styles.descriptor}>{siteConfig.descriptor}</p>
+        <p className={styles.descriptor}>{descriptor}</p>
       </motion.div>
 
       {/* Scroll indicator */}
       <motion.button
         className={styles.scrollBtn}
         onClick={scrollDown}
-        aria-label="גלול לתוכן"
+        aria-label={isEnglish ? 'Scroll to content' : 'גלול לתוכן'}
         initial={{ opacity: 0 }}
         animate={mounted ? { opacity: 1 } : {}}
         transition={{ duration: 0.6, delay: 1.2 }}

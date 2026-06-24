@@ -16,6 +16,20 @@ export async function generateStaticParams() {
   return talentList.map((t) => ({ slug: t.slug }));
 }
 
+/*
+ * TODO(404 architecture, QA/hardening pass): unknown talent slugs (and
+ * unmatched paths generally) currently render Next.js's built-in default
+ * 404 instead of app/[locale]/not-found.jsx. Root cause: there is no
+ * root-level app/not-found.js (or app/layout.js) — only app/[locale]/
+ * versions exist — and Next's custom-404 pipeline appears to require a
+ * root not-found.js to activate at all; a nested one alone isn't
+ * sufficient (notFound() in this page already fires correctly, this was
+ * verified directly). Fixing this properly means promoting a thin
+ * app/layout.jsx to the true root, demoting app/[locale]/layout.jsx to a
+ * normal nested layout, and adding a root app/not-found.jsx. Deferred
+ * until then — not blocking the current i18n translation work.
+ */
+
 /* Per-profile SEO metadata */
 export async function generateMetadata({ params }) {
   const { slug } = await params;

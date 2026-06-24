@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getLocaleFromPathname, getStrings, homeHref } from '@/lib/i18n';
 import styles from './not-found.module.css';
 
 /*
@@ -24,28 +25,22 @@ import styles from './not-found.module.css';
  * current path via usePathname() — Next's own docs call this out as the
  * supported way to make a not-found page path-aware.
  *
- * TODO(i18n): replace this inline he/en copy map with the shared UI
- * string dictionary once it lands (see task: "Add LocaleProvider/
- * useLocale + UI string dictionary").
+ * Copy now comes from the shared UI string dictionary (data/i18n/strings.js)
+ * via getStrings(), same as Header/Footer.
  */
-const COPY = {
-  he: { title: 'הדף לא נמצא', link: 'חזרה לדף הבית', home: '/' },
-  en: { title: 'Page not found', link: 'Back to homepage', home: '/en' },
-};
-
 export default function NotFound() {
   const pathname = usePathname() || '';
-  const locale = pathname.startsWith('/en') ? 'en' : 'he';
+  const locale = getLocaleFromPathname(pathname);
   const dir = locale === 'he' ? 'rtl' : 'ltr';
-  const copy = COPY[locale];
+  const t = getStrings(locale);
 
   return (
     <div className={styles.page} dir={dir}>
       <div className="container">
         <p className={styles.code}>404</p>
-        <h1 className={styles.title}>{copy.title}</h1>
-        <Link href={copy.home} className={styles.link}>
-          {copy.link}
+        <h1 className={styles.title}>{t.notFound.title}</h1>
+        <Link href={homeHref(locale)} className={styles.link}>
+          {t.notFound.link}
         </Link>
       </div>
     </div>
