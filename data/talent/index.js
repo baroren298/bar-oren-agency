@@ -73,7 +73,7 @@ export const talentList = [
       '/images/talent/kim-chorilov/gallery/06.jpg',
     ],
 
-    bioHe: 'יוצרת תוכן ומשפיענית בתחומי הביוטי, האופנה והלייף סטייל. קים משלבת בין תוכן יומיומי, המלצות אותנטיות וטרנדים, תוך יצירת חיבור אישי עם קהילת העוקבות שלה. התוכן שלה מאופיין באסתטיקה נקייה, נוכחות טבעית ויכולת לייצר אמון ומעורבות גבוהה.',
+    bioHe: 'יוצרת תוכן, משפיענית ושחקנית. קים פועלת בתחומי הביוטי, האופנה והלייף סטייל ומשלבת בין תוכן יומיומי, המלצות אותנטיות וטרנדים, תוך יצירת חיבור אישי עם קהילת העוקבות שלה. התוכן שלה מאופיין באסתטיקה נקייה, נוכחות טבעית ויכולת לייצר אמון ומעורבות גבוהה.',
     bioEn: 'Kim Chorilov is a content creator and model with a natural presence, clean aesthetic and personal style rooted in lifestyle, fashion and beauty.',
 
     instagram: 'https://www.instagram.com/kimchourilov',
