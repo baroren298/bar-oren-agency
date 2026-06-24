@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/data/site';
+import { getLocaleFromPathname, getStrings, homeHref, localizeHref } from '@/lib/i18n';
+import LanguageSwitcher from './LanguageSwitcher';
 import styles from './Header.module.css';
 
 export default function Header() {
@@ -48,7 +50,10 @@ export default function Header() {
     }
   }, [menuOpen]);
 
-  const isHome = pathname === '/';
+  const locale = getLocaleFromPathname(pathname);
+  const t = getStrings(locale);
+  const home = homeHref(locale);
+  const isHome = pathname === home;
 
   const handleLogoClick = (e) => {
     if (!isHome) return;            // other pages: let Link navigate normally
@@ -59,38 +64,44 @@ export default function Header() {
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''} ${isHome ? styles.onHero : ''}`}>
       <div className={styles.inner}>
-        <Link href="/" className={styles.wordmark} aria-label="Bar Oren Talent Agency — דף הבית" onClick={handleLogoClick}>
-          <Image
-            src="/images/brand/logo3.png"
-            alt="Bar Oren Talent Agency"
-            width={600}
-            height={240}
-            priority
-            className={styles.logo}
-          />
-        </Link>
+        <div className={styles.logoGroup}>
+          <Link href={home} className={styles.wordmark} aria-label={t.aria.logoHome} onClick={handleLogoClick}>
+            <Image
+              src="/images/brand/logo3.png"
+              alt="Bar Oren Talent Agency"
+              width={600}
+              height={240}
+              priority
+              className={styles.logo}
+            />
+          </Link>
+          <LanguageSwitcher />
+        </div>
 
-        <nav className={styles.nav} aria-label="ניווט ראשי">
+        <nav className={styles.nav} aria-label={t.aria.mainNav}>
           <ul className={styles.navList}>
-            {/* Home — active only on exact "/" so /talent doesn't light it up */}
+            {/* Home — active only on exact home path so /talent doesn't light it up */}
             <li>
               <Link
-                href="/"
-                className={`${styles.navLink} ${pathname === '/' ? styles.active : ''}`}
+                href={home}
+                className={`${styles.navLink} ${pathname === home ? styles.active : ''}`}
               >
-                דף הבית
+                {t.nav.home}
               </Link>
             </li>
-            {siteConfig.nav.links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className={`${styles.navLink} ${pathname.startsWith(link.href) ? styles.active : ''}`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {siteConfig.nav.links.map((link) => {
+              const href = localizeHref(link.href, locale);
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={href}
+                    className={`${styles.navLink} ${pathname.startsWith(href) ? styles.active : ''}`}
+                  >
+                    {locale === 'he' ? link.label : link.labelEn}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
@@ -98,7 +109,7 @@ export default function Header() {
           ref={toggleRef}
           className={`${styles.menuToggle} ${menuOpen ? styles.menuOpen : ''}`}
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? 'סגור תפריט' : 'פתח תפריט'}
+          aria-label={menuOpen ? t.aria.closeMenu : t.aria.openMenu}
           aria-expanded={menuOpen}
           aria-controls="mobile-menu"
           type="button"
@@ -109,29 +120,32 @@ export default function Header() {
       </div>
 
       {menuOpen && (
-        <div id="mobile-menu" className={styles.mobileMenu} aria-label="תפריט ניווט">
-          <nav aria-label="ניווט ראשי — נייד">
+        <div id="mobile-menu" className={styles.mobileMenu} aria-label={t.aria.mobileMenu}>
+          <nav aria-label={t.aria.mobileNav}>
             <ul className={styles.mobileNavList}>
-              {/* Home link — always first, active only on exact "/" */}
+              {/* Home link — always first, active only on exact home path */}
               <li>
                 <Link
                   ref={firstLinkRef}
-                  href="/"
-                  className={`${styles.mobileNavLink} ${pathname === '/' ? styles.active : ''}`}
+                  href={home}
+                  className={`${styles.mobileNavLink} ${pathname === home ? styles.active : ''}`}
                 >
-                  דף הבית
+                  {t.nav.home}
                 </Link>
               </li>
-              {siteConfig.nav.links.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className={`${styles.mobileNavLink} ${pathname.startsWith(link.href) ? styles.active : ''}`}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              {siteConfig.nav.links.map((link) => {
+                const href = localizeHref(link.href, locale);
+                return (
+                  <li key={link.href}>
+                    <Link
+                      href={href}
+                      className={`${styles.mobileNavLink} ${pathname.startsWith(href) ? styles.active : ''}`}
+                    >
+                      {locale === 'he' ? link.label : link.labelEn}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
         </div>

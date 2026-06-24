@@ -114,18 +114,26 @@ function YouTubeIcon() {
 
 /* ── Component ───────────────────────────────────────────────────────────── */
 
-export default function ProfileHero({ talent }) {
+export default function ProfileHero({ talent, locale = 'he' }) {
   const categoryLine = getCategories(talent.category);
   const hasSocials   = talent.instagram || talent.tiktok || talent.youtube || talent.extraSocials?.length > 0;
   const age          = getAge(talent.birthDate);
   const hasMeta       = Boolean(talent.location) || age !== null;
+  /* English desktop layout mirrors the RTL column order (image right,
+     content left) via an explicit locale-driven class instead of a
+     CSS ancestor-attribute selector. Hebrew (locale !== 'en') never
+     gets this class, so its layout/order/spacing is untouched. */
+  const isEnglish      = locale === 'en';
+  const innerClassName = isEnglish
+    ? `${styles.inner} ${styles.englishLayout}`
+    : styles.inner;
 
   return (
     <section
       className={styles.hero}
       aria-label={`${talent.name} — פרופיל`}
     >
-      <div className={styles.inner}>
+      <div className={innerClassName}>
 
         {/* ── Content column — right in RTL ──────────────────────────── */}
         <div className={styles.content}>

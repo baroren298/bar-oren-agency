@@ -1,11 +1,40 @@
 import { Frank_Ruhl_Libre, Heebo, Cormorant_Garamond, DM_Sans } from 'next/font/google';
-import '../styles/globals.css';
+import '@/styles/globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FloatingWhatsApp from '@/components/ui/FloatingWhatsApp';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import JsonLd from '@/components/ui/JsonLd';
 import { siteConfig } from '@/data/site';
+import { getStrings } from '@/lib/i18n';
+
+/*
+ * Supported locales:
+ *   he — Hebrew, primary language, served unprefixed at "/" via the
+ *        next.config.mjs rewrites (public URL has no "/he").
+ *   en — English, served at "/en".
+ *
+ * generateStaticParams pre-renders both locale trees at build time. Any
+ * other first path segment would otherwise also match this [locale]
+ * route (Next.js dynamic segments match any string) — `dynamicParams =
+ * false` below tells Next to treat any locale NOT returned here as a
+ * standard unmatched route (Next's generic 404), instead of rendering it.
+ *
+ * We deliberately do NOT call notFound() inside this layout to reject bad
+ * locales: this layout owns <html>/<body> as the de-facto root layout
+ * (there's no app/layout.jsx above it), and throwing notFound() from the
+ * component that owns the document shell creates an ambiguous "who
+ * renders <html> now" situation. `dynamicParams = false` avoids that
+ * entirely — invalid locales are 404'd at the routing layer, before this
+ * component ever runs.
+ */
+const SUPPORTED_LOCALES = ['he', 'en'];
+
+export function generateStaticParams() {
+  return SUPPORTED_LOCALES.map((locale) => ({ locale }));
+}
+
+export const dynamicParams = false;
 
 const frankRuhlLibre = Frank_Ruhl_Libre({
   subsets: ['latin', 'hebrew'],
@@ -156,7 +185,14 @@ const siteSchema = [
   },
 ];
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children, params }) {
+  const { locale } = await params;
+
+  /* dynamicParams = false above guarantees `locale` is always 'he' or
+   * 'en' here — anything else 404s before this component runs. */
+  const dir = locale === 'he' ? 'rtl' : 'ltr';
+  const t = getStrings(locale);
+
   const fontClasses = [
     frankRuhlLibre.variable,
     heebo.variable,
@@ -165,11 +201,11 @@ export default function RootLayout({ children }) {
   ].join(' ');
 
   return (
-    <html lang="he" dir="rtl" className={fontClasses}>
+    <html lang={locale} dir={dir} className={fontClasses}>
       <body>
-        {/* Accessibility: skip past fixed nav directly to content */}
+        {/* Accessibility: skip past fixed nav directly to content. */}
         <a href="#main-content" className="skip-link">
-          דלג לתוכן הראשי
+          {t.skipLink}
         </a>
 
         <Header />

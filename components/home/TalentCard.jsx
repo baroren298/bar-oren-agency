@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import TalentImage from '@/components/ui/TalentImage';
 import { siteConfig } from '@/data/site';
+import { getLocaleFromPathname, localizeHref } from '@/lib/i18n';
 import styles from './TalentCard.module.css';
 
 function getCategoryLabel(categories) {
@@ -12,6 +14,12 @@ function getCategoryLabel(categories) {
 
 export default function TalentCard({ talent, className = '', aspectRatio = '2/3', onOpen }) {
   const imageSrc = talent.profileImage || null;
+  /* Keep the current locale when navigating from a roster card to the
+     individual profile page: on /en/talent this must link to
+     /en/talent/[slug], on Hebrew it stays /talent/[slug] (unchanged). */
+  const pathname = usePathname() || '/';
+  const locale   = getLocaleFromPathname(pathname);
+  const profileHref = localizeHref(`/talent/${talent.slug}`, locale);
 
   /* If onOpen is provided (roster page), intercept left-click to open modal.
    * The href is kept for SEO, right-click → open in new tab, middle-click. */
@@ -21,7 +29,7 @@ export default function TalentCard({ talent, className = '', aspectRatio = '2/3'
 
   return (
     <Link
-      href={`/talent/${talent.slug}`}
+      href={profileHref}
       className={`${styles.card} ${className}`}
       aria-label={`${talent.name} — עמוד כישרון`}
       onClick={handleClick}

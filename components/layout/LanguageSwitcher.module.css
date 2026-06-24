@@ -1,0 +1,46 @@
+/*
+ * Brand-chrome language toggle, not a UI control: no border, no
+ * background, no pill. Shares the nav links' font/letter-spacing so it
+ * reads as part of the header rather than a separate widget.
+ */
+.switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Keep LTR order ("HE | EN") regardless of page direction so the
+     switcher itself never visually flips between Hebrew/English pages. */
+  direction: ltr;
+}
+
+.switcher a {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  letter-spacing: 0.1em;
+  /* Slightly larger hit area without any visible box — padding only,
+     no border/background, so the click target is comfortable but the
+     control still reads as plain text. */
+  padding-block: 2px;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+.active {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-medium);
+}
+
+.inactive {
+  /* --color-text-secondary (not the lighter --color-text-tertiary) so the
+     inactive language stays legible rather than fading to near-invisible. */
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-regular);
+}
+
+.inactive:hover {
+  color: var(--color-text-primary);
+}
+
+.divider {
+  color: var(--color-border-strong);
+  font-size: var(--text-small);
+  user-select: none;
+}

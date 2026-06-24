@@ -192,6 +192,19 @@
     gap: clamp(40px, 5vw, 80px);
   }
 
+  /* English desktop: explicit layout for the locale-driven class (set in
+     ProfileHero.jsx). DOM order is content, then image. `row` renders the
+     first DOM child (content) on the left and the second (image) on the
+     right — confirmed via DOM/computed-style inspection to be the value
+     that actually produces content-left/image-right; `row-reverse` was
+     tried first but rendered image-left/content-right instead.
+     Specificity (0,2,0) — two classes on the same element — already beats
+     the bare `.inner` rule above (0,1,0) and is declared later in source
+     order too, so no !important is needed for this rule to win. */
+  .inner.englishLayout {
+    flex-direction: row;
+  }
+
   /* Content: flex-grow, vertically centered */
   .content {
     flex: 1;

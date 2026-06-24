@@ -36,6 +36,15 @@
 
 /* ─── Wordmark / Logo ─────────────────────────────────────────────────────── */
 
+/* Groups the logo with the language switcher so they move together as a
+   single unit at the inline-start of the header — switcher placement only,
+   doesn't otherwise change header spacing/layout. */
+.logoGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .wordmark {
   display: flex;
   align-items: center;

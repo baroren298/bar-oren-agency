@@ -113,7 +113,7 @@ function buildProfileSchemas(talent) {
 }
 
 export default async function TalentProfilePage({ params }) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
   const talent = getTalentBySlug(slug);
 
   if (!talent) notFound();
@@ -126,7 +126,7 @@ export default async function TalentProfilePage({ params }) {
 
   return (
     <>
-      <ProfileHero    talent={talent} />
+      <ProfileHero    talent={talent} locale={locale} />
       <ProfileGallery talent={talent} />
       {/* Podcast section is data-driven: it renders only when talent.podcast
           exists (currently only on Michal Ben David's profile), so it has
@@ -136,7 +136,7 @@ export default async function TalentProfilePage({ params }) {
           for future filtering; removed from profile UI until roster filters
           are reactivated. */}
       <ProfileCTA     talent={talent} />
-      <ProfileNav     prev={prev} next={next} />
+      <ProfileNav     prev={prev} next={next} locale={locale} />
       <JsonLd data={buildProfileSchemas(talent)} />
     </>
   );

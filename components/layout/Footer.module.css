@@ -81,6 +81,31 @@
   justify-self: start;
 }
 
+/* ─── English desktop: mirror column sides, single row guaranteed ─────────
+   All three children get an explicit grid-column AND grid-row here — not
+   just two — so none of them is left to the auto-placement algorithm.
+   That's what produced the second row last time (copy/wordmark pinned,
+   links auto-placed). Pinning all three removes that ambiguity entirely.
+   Hebrew (no .englishLayout class) is untouched: the unscoped .copy/
+   .wordmark/.links rules above still apply exactly as before. */
+.inner.englishLayout .wordmark {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+
+.inner.englishLayout .links {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.inner.englishLayout .copy {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
 /* ─── Responsive — mobile centered layout ────────────────────────────────── */
 
 @media (max-width: 640px) {
@@ -105,6 +130,14 @@
     text-align: center;
     width: 100%;
     gap: var(--space-6);
+  }
+
+  /* English mobile: natural LTR text direction. Hebrew never gets this
+     class, so its rule above is completely unaffected. Only `direction`
+     changes here — stacking order, spacing, and sizing all stay the
+     same regardless of locale. */
+  .inner.englishLayout {
+    direction: ltr;
   }
 
   /* Wordmark link becomes a block so it centers via text-align.
