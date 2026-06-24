@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import TalentCard from '@/components/home/TalentCard';
 import CategoryFilter from './CategoryFilter';
+import { localizeHref } from '@/lib/i18n';
 import styles from './TalentRoster.module.css';
 
-export default function TalentRoster({ talent = [], mode = 'page' }) {
+export default function TalentRoster({ talent = [], mode = 'page', locale = 'he' }) {
+  const isEnglish = locale === 'en';
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPage = mode === 'page';
@@ -32,9 +34,10 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
         params.set('category', category);
       }
       const query = params.toString();
-      router.replace(`/talent${query ? `?${query}` : ''}`, { scroll: false });
+      const base  = localizeHref('/talent', locale);
+      router.replace(`${base}${query ? `?${query}` : ''}`, { scroll: false });
     },
-    [router, searchParams, isPage]
+    [router, searchParams, isPage, locale]
   );
 
   const filtered =
@@ -80,7 +83,9 @@ export default function TalentRoster({ talent = [], mode = 'page' }) {
         </AnimatePresence>
 
         {filtered.length === 0 && (
-          <p className={styles.empty}>אין מיוצגים בקטגוריה זו כרגע.</p>
+          <p className={styles.empty}>
+            {isEnglish ? 'There is currently no talent in this category.' : 'אין מיוצגים בקטגוריה זו כרגע.'}
+          </p>
         )}
       </div>
     </div>

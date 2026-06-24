@@ -9,12 +9,16 @@ export default function ContactInvite({ locale = 'he' }) {
   const { contactHeadline, contactHeadlineEn } = siteConfig.homepage;
   const headline    = isEnglish ? contactHeadlineEn : contactHeadline;
   const contactHref = localizeHref('/contact', locale);
+  /* English copy is longer than the Hebrew headline and wraps at the same
+     size — apply a smaller English-only font-size class. Hebrew keeps the
+     base .headline class unchanged. */
+  const headlineClassName = isEnglish ? `${styles.headline} ${styles.headlineEn}` : styles.headline;
 
   return (
     <section className={`${styles.section} section-lg`} aria-label={isEnglish ? 'Contact Us' : 'צור קשר'}>
       <div className={`${styles.inner} container`}>
         <ScrollReveal>
-          <p className={styles.headline}>{headline}</p>
+          <p className={headlineClassName}>{headline}</p>
         </ScrollReveal>
 
         <ScrollReveal delay={0.1}>

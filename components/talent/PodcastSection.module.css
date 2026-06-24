@@ -77,6 +77,17 @@
   }
 }
 
+/* English reads LTR — the paragraph should read as normal left-aligned
+   English body copy instead of the Hebrew-oriented center/right alignment,
+   and its box should sit flush left (no auto-centering margin) so it lines
+   up with the podcast title above it. Higher specificity than .paragraph
+   and the desktop override above, so it applies at every breakpoint.
+   Hebrew (no lang="en") is completely unaffected. */
+html[lang="en"] .paragraph {
+  text-align: left;
+  margin: 0;
+}
+
 /* ─── Desktop-only composition ───────────────────────────────────────────────
    Compact, editorial grouping: the image+text row gets a narrower, centered
    measure (matches the About page's tighter feel) and a much smaller gap so

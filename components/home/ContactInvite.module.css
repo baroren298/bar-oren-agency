@@ -28,6 +28,14 @@
   color: var(--color-text-primary);
 }
 
+/* English headline is longer than the Hebrew copy and wraps to two lines
+   at the same max size. Only the upper clamp bound is lowered (48px → 36px)
+   so it fits one line on desktop; the lower bound (mobile) is unchanged,
+   preserving responsive behavior. Hebrew (.headline alone) is untouched. */
+.headlineEn {
+  font-size: clamp(28px, 4vw, 36px);
+}
+
 /* ─── CTA button — matches ContactForm .submitBtn and ProfileCTA .ctaBtn ─── */
 
 .ctaBtn {

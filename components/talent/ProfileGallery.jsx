@@ -2,11 +2,13 @@ import Image from 'next/image';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import styles from './ProfileGallery.module.css';
 
-export default function ProfileGallery({ talent }) {
+export default function ProfileGallery({ talent, locale = 'he' }) {
   if (!talent.gallery || talent.gallery.length === 0) return null;
 
+  const isEnglish = locale === 'en';
+
   return (
-    <section className={`${styles.section} section`} aria-label="גלריה">
+    <section className={`${styles.section} section`} aria-label={isEnglish ? 'Gallery' : 'גלריה'}>
       <div className={styles.grid}>
         {talent.gallery.map((img, i) => {
           /* Accept both plain string paths and { src, alt, position, scale }
@@ -16,9 +18,10 @@ export default function ProfileGallery({ talent }) {
              via the --img-scale custom property so it composes with (rather
              than overrides) the existing hover zoom transform. */
           const src = typeof img === 'string' ? img : img.src;
+          const fallbackAlt = isEnglish ? `${talent.name} — Image ${i + 1}` : `${talent.name} — תמונה ${i + 1}`;
           const alt = typeof img === 'string'
-            ? `${talent.name} — תמונה ${i + 1}`
-            : (img.alt || `${talent.name} — תמונה ${i + 1}`);
+            ? fallbackAlt
+            : (img.alt || fallbackAlt);
           const position = typeof img === 'string' ? null : img.position;
           const scale    = typeof img === 'string' ? null : img.scale;
           const style = {

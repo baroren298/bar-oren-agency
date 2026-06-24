@@ -45,6 +45,24 @@
   color: var(--color-text-primary);
 }
 
+/* English uses the site's dedicated English body font (DM Sans, via
+   --font-body-en) instead of Heebo. This mirrors the existing
+   html[lang="en"] body-font override in styles/typography.css, applied
+   here directly because .title/.ctaLink set font-family on the element
+   itself rather than inheriting it. Hebrew (default, no lang="en") is
+   unaffected. */
+html[lang="en"] .title,
+html[lang="en"] .ctaLink {
+  font-family: var(--font-body-en);
+}
+
+/* Match the eyebrow's letter-spacing to the CTA link's so both read with
+   the same typographic "feel" in English (Hebrew keeps its own design,
+   0.14em, untouched — this only overrides the English title). */
+html[lang="en"] .title {
+  letter-spacing: 0.1em;
+}
+
 .arrow {
   display: inline-block;
   transition: transform var(--duration-base) var(--ease-default);

@@ -5,10 +5,10 @@ import styles from './ProfileHero.module.css';
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
-function getCategories(categories) {
+function getCategories(categories, isEnglish) {
   return siteConfig.categories
     .filter((c) => categories.includes(c.key) && c.key !== 'all')
-    .map((c) => c.label)
+    .map((c) => (isEnglish ? c.labelEn : c.label))
     .join(' · ');
 }
 
@@ -115,15 +115,19 @@ function YouTubeIcon() {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function ProfileHero({ talent, locale = 'he' }) {
-  const categoryLine = getCategories(talent.category);
-  const hasSocials   = talent.instagram || talent.tiktok || talent.youtube || talent.extraSocials?.length > 0;
-  const age          = getAge(talent.birthDate);
-  const hasMeta       = Boolean(talent.location) || age !== null;
   /* English desktop layout mirrors the RTL column order (image right,
      content left) via an explicit locale-driven class instead of a
      CSS ancestor-attribute selector. Hebrew (locale !== 'en') never
      gets this class, so its layout/order/spacing is untouched. */
   const isEnglish      = locale === 'en';
+  const categoryLine = getCategories(talent.category, isEnglish);
+  const hasSocials   = talent.instagram || talent.tiktok || talent.youtube || talent.extraSocials?.length > 0;
+  const age          = getAge(talent.birthDate);
+  const hasMeta       = Boolean(talent.location) || age !== null;
+  /* English field may be missing on a given talent — fall back to the
+     Hebrew bio/name rather than rendering nothing. */
+  const bio             = isEnglish ? (talent.bioEn || talent.bioHe) : talent.bioHe;
+  const displayName     = isEnglish ? (talent.nameEn || talent.name) : talent.name;
   const innerClassName = isEnglish
     ? `${styles.inner} ${styles.englishLayout}`
     : styles.inner;
@@ -131,7 +135,7 @@ export default function ProfileHero({ talent, locale = 'he' }) {
   return (
     <section
       className={styles.hero}
-      aria-label={`${talent.name} — פרופיל`}
+      aria-label={isEnglish ? `${displayName} — Profile` : `${displayName} — פרופיל`}
     >
       <div className={innerClassName}>
 
@@ -143,10 +147,10 @@ export default function ProfileHero({ talent, locale = 'he' }) {
             <p className={styles.categoryLabel}>{categoryLine}</p>
           )} */}
 
-          <h1 className={styles.name}>{talent.name}</h1>
+          <h1 className={styles.name}>{displayName}</h1>
 
           {hasMeta && (
-            <div className={styles.meta} aria-label="פרטים">
+            <div className={styles.meta} aria-label={isEnglish ? 'Details' : 'פרטים'}>
               {talent.location && (
                 <span className={styles.metaItem}>
                   <LocationIcon />
@@ -162,12 +166,12 @@ export default function ProfileHero({ talent, locale = 'he' }) {
             </div>
           )}
 
-          {talent.bioHe && (
-            <p className={styles.excerpt}>{talent.bioHe}</p>
+          {bio && (
+            <p className={styles.excerpt}>{bio}</p>
           )}
 
           {hasSocials && (
-            <div className={styles.socials} aria-label="רשתות חברתיות">
+            <div className={styles.socials} aria-label={isEnglish ? 'Social Media' : 'רשתות חברתיות'}>
               {talent.instagram && (
                 <a
                   href={talent.instagram}
@@ -227,7 +231,7 @@ export default function ProfileHero({ talent, locale = 'he' }) {
         <div className={styles.imageCol}>
           <TalentImage
             src={talent.profileImage || null}
-            alt={talent.name}
+            alt={displayName}
             fallbackIndex={talent.sortOrder}
             priority
             sizes="(max-width: 768px) 90vw, 44vw"

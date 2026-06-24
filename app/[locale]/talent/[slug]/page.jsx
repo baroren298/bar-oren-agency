@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { talentList, getTalentBySlug } from '@/data/talent';
 import { siteConfig } from '@/data/site';
+import { localizeHref } from '@/lib/i18n';
 import ProfileHero from '@/components/talent/ProfileHero';
 import ProfileGallery from '@/components/talent/ProfileGallery';
 import PodcastSection from '@/components/talent/PodcastSection';
@@ -32,35 +33,40 @@ export async function generateStaticParams() {
 
 /* Per-profile SEO metadata */
 export async function generateMetadata({ params }) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const talent = getTalentBySlug(slug);
   if (!talent) return {};
 
-  const title       = talent.name;
-  const description = talent.bioHe || talent.bioEn || '';
-  const canonical   = `/talent/${slug}`;
+  const isEnglish = locale === 'en';
+  /* English name/bio fall back to the Hebrew field when missing for a
+     given talent, so the page never renders blank metadata. */
+  const name        = isEnglish ? (talent.nameEn || talent.name) : talent.name;
+  const description = isEnglish
+    ? (talent.bioEn || talent.bioHe || '')
+    : (talent.bioHe || talent.bioEn || '');
+  const canonical   = localizeHref(`/talent/${slug}`, locale);
 
   /* Use profile image when available; fall back to the branded OG image.
    * Profile images are portrait — omit explicit dimensions so crawlers
    * measure the real size. Fallback og-image.jpg is known 1200×630. */
   const ogImage = talent.profileImage
-    ? { url: talent.profileImage, alt: talent.name }
-    : { url: '/og-image.jpg', width: 1200, height: 630, alt: talent.name };
+    ? { url: talent.profileImage, alt: name }
+    : { url: '/og-image.jpg', width: 1200, height: 630, alt: name };
 
   return {
-    title,
+    title: name,
     description,
     alternates: { canonical },
     openGraph: {
       type:        'profile',
-      title:       `${talent.name} | Bar Oren`,
+      title:       `${name} | Bar Oren`,
       description,
       url:          canonical,
       images:      [ogImage],
     },
     twitter: {
       card:        'summary_large_image',
-      title:       `${talent.name} | Bar Oren`,
+      title:       `${name} | Bar Oren`,
       description,
       images:      [ogImage],
     },
@@ -68,9 +74,10 @@ export async function generateMetadata({ params }) {
 }
 
 /* Person + BreadcrumbList structured data */
-function buildProfileSchemas(talent) {
+function buildProfileSchemas(talent, locale = 'he') {
+  const isEnglish = locale === 'en';
   const BASE = siteConfig.meta.url;
-  const pageUrl = `${BASE}/talent/${talent.slug}`;
+  const pageUrl = `${BASE}${localizeHref(`/talent/${talent.slug}`, locale)}`;
 
   const categoryLabels = siteConfig.categories
     .filter((c) => talent.category.includes(c.key) && c.key !== 'all')
@@ -105,19 +112,19 @@ function buildProfileSchemas(talent) {
       {
         '@type':  'ListItem',
         position:  1,
-        name:     'דף הבית',
-        item:      BASE,
+        name:      isEnglish ? 'Home' : 'דף הבית',
+        item:      `${BASE}${localizeHref('/', locale)}`,
       },
       {
         '@type':  'ListItem',
         position:  2,
-        name:     'מיוצגים',
-        item:     `${BASE}/talent`,
+        name:      isEnglish ? 'Talent' : 'מיוצגים',
+        item:     `${BASE}${localizeHref('/talent', locale)}`,
       },
       {
         '@type':  'ListItem',
         position:  3,
-        name:      talent.name,
+        name:      isEnglish ? (talent.nameEn || talent.name) : talent.name,
         item:      pageUrl,
       },
     ],
@@ -141,17 +148,17 @@ export default async function TalentProfilePage({ params }) {
   return (
     <>
       <ProfileHero    talent={talent} locale={locale} />
-      <ProfileGallery talent={talent} />
+      <ProfileGallery talent={talent} locale={locale} />
       {/* Podcast section is data-driven: it renders only when talent.podcast
           exists (currently only on Michal Ben David's profile), so it has
           no effect on any other talent page. */}
-      <PodcastSection talent={talent} />
+      <PodcastSection talent={talent} locale={locale} />
       {/* ProfileMeta hidden for launch — tags/categories kept in data/talent
           for future filtering; removed from profile UI until roster filters
           are reactivated. */}
-      <ProfileCTA     talent={talent} />
+      <ProfileCTA     talent={talent} locale={locale} />
       <ProfileNav     prev={prev} next={next} locale={locale} />
-      <JsonLd data={buildProfileSchemas(talent)} />
+      <JsonLd data={buildProfileSchemas(talent, locale)} />
     </>
   );
 }

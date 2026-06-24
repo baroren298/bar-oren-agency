@@ -80,7 +80,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצרת תוכן, משפיענית ושחקנית. קים פועלת בתחומי הביוטי, האופנה והלייף סטייל ומשלבת בין תוכן יומיומי, המלצות אותנטיות וטרנדים, תוך יצירת חיבור אישי עם קהילת העוקבות שלה. התוכן שלה מאופיין באסתטיקה נקייה, נוכחות טבעית ויכולת לייצר אמון ומעורבות גבוהה.',
-    bioEn: 'Kim Chorilov is a content creator and model with a natural presence, clean aesthetic and personal style rooted in lifestyle, fashion and beauty.',
+    bioEn: 'A content creator, influencer, and actress specializing in beauty, fashion, and lifestyle. Kim combines authentic recommendations, everyday storytelling, and emerging trends to create meaningful connections with her audience. Her content is defined by a clean aesthetic, natural on-screen presence, and strong audience engagement.',
 
     instagram: 'https://www.instagram.com/kimchourilov',
     tiktok:    'https://www.tiktok.com/@kimchourilov',
@@ -124,7 +124,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצרת תוכן מובילה בתחום האמהות והלייף סטייל, המביאה למסך את חיי המשפחה האמיתיים בגובה העיניים. בעמודיה היא משתפת ברגעים יום-יומיים ואותנטיים לצד בעלה ניסים והילדים, ומציעה הצצה לשגרת הורות מעוררת השראה, טיפים לחיים ומתכונים ביתיים ונגישים. בזכות אנרגיה חמה וחיבור אמיתי, טופז סחפה אחריה קהילה נאמנה של אמהות ונשים שמחפשות השראה יום-יומית.',
-    bioEn: null,
+    bioEn: 'A leading motherhood and lifestyle content creator, Topaz shares the realities of family life with authenticity, warmth, and relatability. Through everyday moments with her husband Nissim and their children, she offers parenting inspiration, practical life tips, and easy-to-follow home recipes. Her genuine personality and strong connection with her audience have helped her build a loyal community of mothers and women looking for everyday inspiration.',
 
     instagram: 'https://www.instagram.com/topaz_falah',
     tiktok:    'https://www.tiktok.com/@topaz_falah',
@@ -162,7 +162,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הלייף סטייל, אופנה, ביוטי וטרוול. גל ידועה בזכות סרטוני ASMR וטרנדים קולינריים ייחודיים שמתפוצצים ברשת וגורפים מיליוני צפיות. התוכן שלה קריאטיבי, אסתטי ומעורר השראה, והיא מתאפיינת בחשיבה מחוץ לקופסה ורמת הפקה גבוהה שיוצרת חיבור מיידי עם הקהל.',
-    bioEn: null,
+    bioEn: 'A lifestyle, fashion, beauty, and travel content creator, Gal is best known for her viral ASMR content and unique food trends that have generated millions of views across social media. Her content blends creativity, strong visual storytelling, and high production value, reflecting an innovative approach that consistently captures audience attention and engagement.',
 
     instagram: 'https://www.instagram.com/gal__azar/',
     tiktok:    'https://www.tiktok.com/@gal.azar',
@@ -196,7 +196,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחומי הביוטי, האופנה והלייף סטייל, עם זווית בינלאומית ייחודית שמחברת בין התרבות הישראלית לאמריקאית. מיכל מביאה למסך שילוב של סטייל אישי, אותנטיות, הומור ורגעים אמיתיים מחיי היום יום.\nבנוסף, מיכל יוצרת תוכן גם בשפה האנגלית ומנחה את הפודקאסט “Hetzi חצי”, שצבר מיליוני צפיות ברשתות.',
-    bioEn: null,
+    bioEn: 'Michal is a content creator and influencer in beauty, fashion, and lifestyle, with a distinctive international perspective that bridges Israeli and American culture. Her content blends personal style, authenticity, humor, and genuine everyday moments. In addition to her Hebrew content, Michal also creates content in English and hosts the podcast Hetzi | חצי, which has amassed millions of views across social media.',
 
     instagram: 'https://www.instagram.com/michalbd1/',
     tiktok:    'https://www.tiktok.com/@michalbd1',
@@ -206,9 +206,12 @@ export const talentList = [
 
     // Podcast section — shown only on Michal's profile page.
     // Leave podcastVideoEmbedUrl empty/null to hide the video block.
+    // titleEn intentionally omitted: the show title "Hetzi | חצי" is a
+    // proper noun and stays the same in both locales (per translation doc).
     podcast: {
       title:       'Hetzi | חצי',
       description: 'מקום שבו האנגלית והעברית נפגשים, כל הבלאגן של חו״ל והארץ הופך לסיפור מעניין, מצחיק וקורע.\nהפודקאסט כבש את הרשת עם מיליוני צפיות והפך לשיחת היום בקרב קהילת העולים הצעירים וגם הישראלים.\nמיכל מארחת בכל שבוע את האנשים הכי מעניינים ברשת לשיחה על המעבר, החיים בישראל, ג׳וס, בלי פילטרים, עם המון הומור ובווייב הכי קליל וכיפי שיש.',
+      descriptionEn: 'Where English meets Hebrew and life abroad meets life in Israel. What starts as culture shock, awkward moments, and everyday chaos quickly turns into stories that are funny, relatable, and endlessly entertaining.\nWith millions of views across social media, Hetzi | חצי has become a cultural phenomenon among young immigrants and Israelis alike.\nEvery week, Michal hosts some of the internet’s most interesting personalities for honest conversations about moving to Israel, life between cultures, relationships, hot topics, and all the juicy details, delivered with no filters, plenty of humor, and the most easygoing vibe around.',
       image:       '/images/talent/michal-bendavid/podcast.jpg',
       videoEmbedUrl: 'https://www.youtube.com/embed/uSUlHPMywXM',
     },
@@ -248,7 +251,7 @@ export const talentList = [
     galleryMobileOrder: [0, 1, 2, 4, 3, 5],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
-    bioEn: null,
+    bioEn: 'A beauty, fashion, and lifestyle content creator, Emma shares everyday tips, styling inspiration, humor, and authentic moments from her daily life. Her relatable approach and genuine connection with her audience have helped her build a loyal community of young women who regularly engage with her content and recommendations.',
 
     instagram: 'https://www.instagram.com/emma_weinberg/',
     tiktok:    'https://www.tiktok.com/@emmush_xoxo',
@@ -288,7 +291,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצרת תוכן מעוררת השראה בתחום האמהות והלייף סטייל. בעמודיה היא מציגה תוכן משפחתי, יום-יומי ואסתטי במיוחד, המשלב את בעלה אורי ושני בניהם. התוכן של אורדן מאופיין בוויב חם, נעים ומזמין, המדגיש את החיבור המשפחתי האמיתי והרגעים הקטנים של החיים בסטייל בלתי מתפשר. בזכות שילוב של אותנטיות ואסתטיקה גבוהה, אורדן מייצרת חיבור עמוק עם קהל של אמהות ונשים.',
-    bioEn: null,
+    bioEn: 'An inspiring motherhood and lifestyle content creator, Ordan shares beautifully curated family life through authentic and aesthetically driven content. Featuring her husband Uri and their two sons, her content captures the warmth of family connection and the beauty of everyday moments. Defined by a refined aesthetic and genuine storytelling, Ordan has built a meaningful connection with a community of mothers and women who relate to her lifestyle and values.',
 
     instagram: 'https://www.instagram.com/ordan__n/',
     tiktok:    'https://www.tiktok.com/@ordan__n',
@@ -321,7 +324,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצרת תוכן בתחומי האופנה, הביוטי, והלייף סטייל. עלמא משלבת בתוכן שלה סטייל אישי, יצירתיות ואסתטיקה חזקה, לצד רגעים מחיי היום-יום.',
-    bioEn: null,
+    bioEn: 'A fashion, beauty, and lifestyle content creator, Alma combines personal style, creativity, and a distinctive visual aesthetic with authentic moments from everyday life.',
 
     instagram: 'https://www.instagram.com/almavay',
     tiktok:    'https://www.tiktok.com/@almavay',
@@ -355,7 +358,7 @@ export const talentList = [
     gallery:      [],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום לייף סטייל, אופנה וזוגיות. בעמודיה היא משתפת את הקהל ברגעים אישיים, לצד סרטוני סיטואציות קריאטיביים והומוריסטיים המציגים את הכימיה המטורפת עם בעלה עידן. שילב מייצרת תוכן זוגי, אותנטי וסוחף בגובה העיניים, שיוצר חיבור מיידי ועמוק עם הקהל שלה.',
-    bioEn: null,
+    bioEn: 'A lifestyle, fashion, and couples content creator, Shilav shares personal moments alongside creative and humorous videos that highlight the unique chemistry she shares with her husband, Idan. Through authentic, relatable, and engaging content, she offers an honest glimpse into everyday life and relationships, building a strong connection with her audience.',
 
     instagram: 'https://www.instagram.com/shilav_jurin',
     tiktok:    'https://www.tiktok.com/@shilshillllll',
@@ -369,7 +372,7 @@ export const talentList = [
     id: '14',
     slug: 'shaked-hodra',
     name: 'שקד חודרה',
-    nameEn: 'Shaked Hodra',
+    nameEn: 'Shaked Hodara',
 
     category: ['content', 'influencer'],
     tags: ['לייף סטייל', 'תיירות', 'אוכל'],
@@ -388,7 +391,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחומי הלייף סטייל, האופנה וה-UGC. שקד מתמחה ביצירת תוכן אותנטי ומדויק עבור מותגים, לצד שיתוף חוויות, המלצות ותוכן יומיומי.',
-    bioEn: null,
+    bioEn: 'A lifestyle, fashion, and UGC content creator, Shaked specializes in producing authentic and engaging content for brands. Alongside her commercial work, she shares everyday experiences, recommendations, and lifestyle content that resonates with her audience.',
 
     instagram: 'https://www.instagram.com/shaked__h/',
     tiktok:    'https://www.tiktok.com/@shaked__h',
@@ -421,7 +424,7 @@ export const talentList = [
     ],
 
     bioHe: 'יוצר תוכן מבטיח ומרענן בעולמות הלייף סטייל והספורט. גל מביא אל הרשת חשיבה מחוץ לקופסה, קריאייטיב מקורי וסרטונים הומוריסטיים שאי אפשר להישאר אליהם אדישים. התוכן שלו מאופיין בוויב סוחף, קליל ומעניין, המשלב בין עולם הספורט לחיי היום-יום בצורה חכמה ומצחיקה. בזכות האנרגיה הייחודית שלו, גל מייצר חיבור מיידי עם הקהל ומסתמן כהבטחה גדולה ברשת.',
-    bioEn: null,
+    bioEn: 'A rising content creator in the lifestyle and sports space, Gal brings a fresh perspective, original creativity, and a strong sense of humor to his content. His videos combine sports, everyday life, and entertaining storytelling in a way that feels both engaging and relatable. With his distinctive energy and natural on-screen presence, Gal has quickly built a strong connection with his audience and continues to establish himself as an emerging talent in the digital space.',
 
     instagram: 'https://www.instagram.com/galarad33/',
     tiktok:    'https://www.tiktok.com/@galarad',

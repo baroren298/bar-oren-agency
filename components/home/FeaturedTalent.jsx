@@ -8,10 +8,14 @@ import styles from './FeaturedTalent.module.css';
 export default function FeaturedTalent({ talent = [], locale = 'he' }) {
   const isEnglish = locale === 'en';
   const sectionLabel = isEnglish ? 'Represented Talent' : 'מיוצגים';
-  const ctaLabel     = isEnglish ? 'View All Talent' : 'לכל המיוצגים';
+  const ctaLabel     = isEnglish ? 'View All Talents' : 'לכל המיוצגים';
   const title         = isEnglish ? siteConfig.homepage.featuredTitleEn : siteConfig.homepage.featuredTitle;
   const ctaText       = isEnglish ? siteConfig.homepage.featuredCtaEn   : siteConfig.homepage.featuredCta;
   const talentHref    = localizeHref('/talent', locale);
+  /* Hebrew reads right-to-left, so the arrow points left (←) — the
+     direction of forward motion in RTL. English reads left-to-right, so
+     the arrow points right (→) to match normal LTR reading flow. */
+  const arrow         = isEnglish ? '→' : '←';
 
   return (
     <section className={`${styles.section} section`} aria-label={sectionLabel}>
@@ -22,7 +26,7 @@ export default function FeaturedTalent({ talent = [], locale = 'he' }) {
             <h2 className={styles.title}>{title}</h2>
             <Link href={talentHref} className={`${styles.ctaLink} ${styles.ctaLinkHeader}`} aria-label={ctaLabel}>
               <span>{ctaText}</span>
-              <span className={styles.arrow} aria-hidden="true">←</span>
+              <span className={styles.arrow} aria-hidden="true">{arrow}</span>
             </Link>
           </div>
         </ScrollReveal>
@@ -45,7 +49,7 @@ export default function FeaturedTalent({ talent = [], locale = 'he' }) {
           <div className={styles.ctaLinkMobileRow}>
             <Link href={talentHref} className={styles.ctaLink} aria-label={ctaLabel}>
               <span>{ctaText}</span>
-              <span className={styles.arrow} aria-hidden="true">←</span>
+              <span className={styles.arrow} aria-hidden="true">{arrow}</span>
             </Link>
           </div>
         )}

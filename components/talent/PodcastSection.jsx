@@ -16,18 +16,26 @@ import styles from './PodcastSection.module.css';
  *     videoEmbedUrl:  string | null,  // manually configured YouTube embed URL
  *   }
  */
-export default function PodcastSection({ talent }) {
+export default function PodcastSection({ talent, locale = 'he' }) {
   const { podcast } = talent;
   if (!podcast) return null;
 
+  const isEnglish = locale === 'en';
+  const fallbackLabel = isEnglish ? 'The Podcast' : 'הפודקאסט';
+  /* Show title is the same proper noun in both locales (do not translate).
+     Description has no English field in the data yet for any current
+     talent — fall back to the Hebrew copy rather than hiding the section. */
+  const title       = podcast.title;
+  const description = isEnglish ? (podcast.descriptionEn || podcast.description) : podcast.description;
+
   return (
-    <section className={`${styles.section} section`} aria-label="הפודקאסט">
+    <section className={`${styles.section} section`} aria-label={fallbackLabel}>
       <div className={`${styles.inner} container`}>
         <div className={styles.row}>
           {/* ── Podcast title — right in RTL desktop; after the artwork
                  on mobile ──────────────────────────────────────────────── */}
           <ScrollReveal delay={0.05} className={styles.titleCell}>
-            <p className={styles.podcastTitle}>{podcast.title}</p>
+            <p className={styles.podcastTitle}>{title}</p>
           </ScrollReveal>
 
           {/* ── Artwork — left in RTL desktop; opens the section on mobile,
@@ -37,7 +45,7 @@ export default function PodcastSection({ talent }) {
               <div className={styles.imageWrapper}>
                 <Image
                   src={podcast.image}
-                  alt={podcast.title || 'הפודקאסט'}
+                  alt={title || fallbackLabel}
                   fill
                   sizes="160px"
                   className={styles.image}
@@ -47,9 +55,9 @@ export default function PodcastSection({ talent }) {
           )}
 
           {/* ── Description — right in RTL desktop; last on mobile ──────── */}
-          {podcast.description && (
+          {description && (
             <ScrollReveal delay={0.1} className={styles.descCell}>
-              <p className={styles.paragraph}>{podcast.description}</p>
+              <p className={styles.paragraph}>{description}</p>
             </ScrollReveal>
           )}
         </div>
@@ -60,7 +68,7 @@ export default function PodcastSection({ talent }) {
             <div className={styles.videoWrapper}>
               <iframe
                 src={podcast.videoEmbedUrl}
-                title={podcast.title || 'הפודקאסט'}
+                title={title || fallbackLabel}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 loading="lazy"

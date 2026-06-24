@@ -3,7 +3,7 @@ export const siteConfig = {
   agencyName: 'Bar Oren Talent Agency',
   tagline: 'Talent Agency',
   descriptor: 'סוכנות בוטיק לייצוג וניהול אישי\nליוצרי תוכן, משפיענים ושחקנים.',
-  descriptorEn: 'A boutique agency for personal representation and management —\nfor content creators, influencers, and actors.',
+  descriptorEn: 'A boutique agency for personal representation and management for content creators, influencers, and actors.',
 
   contact: {
     whatsapp: 'https://wa.me/972548311818',
@@ -46,15 +46,22 @@ export const siteConfig = {
     voiceBody: 'אנחנו מייצגים אנשים שאי אפשר להתעלם מהם.',
     voiceBodyEn: 'We represent talent impossible to ignore.',
     featuredTitle: 'מיוצגים',
-    featuredTitleEn: 'Our Talent',
+    featuredTitleEn: 'Our Talents',
     featuredCta: 'לכל המיוצגים',
-    featuredCtaEn: 'View All Talent',
+    featuredCtaEn: 'View All Talents',
     collaborationsTitle: 'שיתופי פעולה נבחרים',
     collaborationsTitleEn: 'Selected Collaborations',
     contactHeadline: 'מעוניינים בשיתוף פעולה?',
     contactHeadlineEn: 'Interested in Working Together?',
     contactBody: 'צרו קשר ישירות עם בר אורן.',
     contactBodyEn: 'Get in touch directly with Bar Oren.',
+  },
+
+  talentPage: {
+    title: 'מיוצגי הסוכנות',
+    titleEn: 'Our Talent',
+    description: 'מיוצגים בניהולו האישי של בר אורן — יוצרי תוכן, משפיענים, דוגמנים ושחקנים.',
+    descriptionEn: "Talent under Bar Oren's personal management — content creators, influencers, models, and actors.",
   },
 
   categories: [

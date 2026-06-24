@@ -19,7 +19,11 @@ export default function TalentCard({ talent, className = '', aspectRatio = '2/3'
      /en/talent/[slug], on Hebrew it stays /talent/[slug] (unchanged). */
   const pathname = usePathname() || '/';
   const locale   = getLocaleFromPathname(pathname);
+  const isEnglish = locale === 'en';
   const profileHref = localizeHref(`/talent/${talent.slug}`, locale);
+  /* English field may be missing on a given talent — fall back to the
+     Hebrew name rather than rendering nothing. */
+  const displayName = isEnglish ? (talent.nameEn || talent.name) : talent.name;
 
   /* If onOpen is provided (roster page), intercept left-click to open modal.
    * The href is kept for SEO, right-click → open in new tab, middle-click. */
@@ -31,14 +35,14 @@ export default function TalentCard({ talent, className = '', aspectRatio = '2/3'
     <Link
       href={profileHref}
       className={`${styles.card} ${className}`}
-      aria-label={locale === 'en' ? `${talent.name} — Talent Profile` : `${talent.name} — עמוד כישרון`}
+      aria-label={isEnglish ? `${displayName} — Talent Profile` : `${displayName} — עמוד כישרון`}
       onClick={handleClick}
     >
       {/* Portrait */}
       <div className={styles.imageWrapper} style={{ aspectRatio }}>
         <TalentImage
           src={imageSrc}
-          alt={talent.name}
+          alt={displayName}
           fallbackIndex={talent.sortOrder}
           sizes="(max-width: 479px) 100vw, (max-width: 1023px) 50vw, 33vw"
           objectPosition={talent.imagePosition || 'center top'}
@@ -49,7 +53,7 @@ export default function TalentCard({ talent, className = '', aspectRatio = '2/3'
 
       {/* Text */}
       <div className={styles.info}>
-        <p className={styles.name}>{talent.name}</p>
+        <p className={styles.name}>{displayName}</p>
         {/* Category hidden for launch — restore when roster filters return.
         <p className={styles.category}>{getCategoryLabel(talent.category)}</p> */}
       </div>
