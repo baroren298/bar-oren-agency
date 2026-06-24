@@ -25,19 +25,27 @@ export default function ProfileGallery({ talent }) {
             ...(position ? { objectPosition: position } : null),
             ...(scale ? { '--img-scale': scale } : null),
           };
+          // Optional per-talent mobile-only visual reorder (see data file).
+          // Sets a CSS custom property consumed by `.item { order: ... }`
+          // inside the mobile media query only — desktop/tablet layout,
+          // spacing and DOM order are untouched.
+          const mobileOrder = talent.galleryMobileOrder?.[i];
+          const itemStyle = mobileOrder !== undefined ? { '--mobile-order': mobileOrder } : undefined;
           return (
-            <ScrollReveal key={i} delay={i * 0.07} className={styles.item}>
-              <div className={styles.imageWrapper}>
-                <Image
-                  src={src}
-                  alt={alt}
-                  fill
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
-                  className={styles.image}
-                  style={Object.keys(style).length ? style : undefined}
-                />
-              </div>
-            </ScrollReveal>
+            <div key={i} className={styles.item} style={itemStyle}>
+              <ScrollReveal delay={i * 0.07}>
+                <div className={styles.imageWrapper}>
+                  <Image
+                    src={src}
+                    alt={alt}
+                    fill
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 50vw, 33vw"
+                    className={styles.image}
+                    style={Object.keys(style).length ? style : undefined}
+                  />
+                </div>
+              </ScrollReveal>
+            </div>
           );
         })}
       </div>

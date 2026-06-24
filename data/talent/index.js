@@ -24,6 +24,12 @@
  *   profileImage  — path relative to /public  e.g. '/images/talent/slug/profile.jpg'
  *                   set to null to show warm gradient placeholder
  *   gallery       — array of { src, alt } objects
+ *   galleryMobileOrder — optional, per-talent. Array same length as gallery;
+ *                   galleryMobileOrder[i] is the CSS `order` value applied to
+ *                   gallery[i] only at the mobile breakpoint (≤640px), to
+ *                   visually re-pair images in the 2-column mobile grid
+ *                   without changing the desktop/tablet order or the
+ *                   underlying data order.
  *
  *   bioHe         — Hebrew biography (editorial tone, 2–4 sentences)
  *   bioEn         — English biography
@@ -233,6 +239,13 @@ export const talentList = [
       '/images/talent/emma-weinberg/gallery/05.jpg',
       '/images/talent/emma-weinberg/gallery/06.jpg',
     ],
+    // Mobile-only visual reorder (≤640px): pairs the two beige/tan-backdrop
+    // shots (04 + 06) into the same grid row on the 2-column mobile layout.
+    // Desktop/tablet order above is untouched — this only feeds the CSS
+    // `order` property at the mobile breakpoint (see ProfileGallery).
+    // galleryMobileOrder[i] = the order value assigned to gallery[i] on mobile;
+    // resulting visual sequence: 01, 02, 03, 05, 04, 06.
+    galleryMobileOrder: [0, 1, 2, 4, 3, 5],
 
     bioHe: 'יוצרת תוכן ומשפיענית בתחום הביוטי פאשן ולייף סטייל. משתפת טיפים יום יומיים, סטיילינג, תוכן הומוריסטי ואת חיי היום יום. לאמה יש קהילת בנות שעוקבות אחרי ההמלצות שלה.',
     bioEn: null,

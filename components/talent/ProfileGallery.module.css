@@ -65,4 +65,12 @@
   .section {
     padding-block: clamp(28px, 5vw, 48px);
   }
+
+  /* Opt-in per-talent visual reorder, mobile only. Unset for every talent
+     except where --mobile-order is provided (see ProfileGallery.jsx) — all
+     unset items resolve to order: 0 and keep their natural DOM order, so
+     this has no effect unless a talent explicitly opts in. */
+  .item {
+    order: var(--mobile-order, 0);
+  }
 }
