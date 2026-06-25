@@ -111,7 +111,7 @@ export const siteConfig = {
          translations-english-draft.docx → "About Page" → "Founder Section". */
       bioEn: [
         "Hi, I'm Bar Oren.",
-        'I founded this agency on the belief that great representation starts with people. Before the numbers, before the views, and before the campaigns. I believe in getting to know the person behind the content, understanding their ambitions, and building a path that reflects who they are and where they want to go.',
+        'I founded this agency on the belief that great representation starts with people. Before the numbers, before the views, and before the campaigns. I believe in getting to know the person behind the content, understanding their ambitions, and building a path that reflects who they are and what they want to achieve.',
         'The agency operates as a boutique talent agency, representing content creators, influencers, and actors across a variety of fields. I intentionally work with a select roster of talent to provide each individual with personal guidance, dedicated attention, and long-term strategic support.',
         'My work combines commercial representation, personal brand development, and long-term career growth, while preserving the authenticity and values that make each talent unique.',
         "I believe that not every collaboration is the right fit, and not every opportunity is worth pursuing. That's why I focus on meaningful partnerships, long-term relationships, and sustainable growth.",
