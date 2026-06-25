@@ -35,7 +35,7 @@ export const siteConfig = {
 
   nav: {
     links: [
-      { label: 'מיוצגים', labelEn: 'Talent',  href: '/talent'  },
+      { label: 'מיוצגים', labelEn: 'Talent', mobileLabelEn: 'Talents', href: '/talent'  },
       { label: 'אודות',    labelEn: 'About',   href: '/about'   },
       { label: 'צור קשר',  labelEn: 'Contact', href: '/contact' },
     ],

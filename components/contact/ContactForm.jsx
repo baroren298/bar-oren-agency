@@ -16,6 +16,7 @@ function validate(fields, errs) {
   if (!fields.name.trim())               errors.name    = errs.name;
   if (!fields.email.trim())              errors.email   = errs.email;
   else if (!EMAIL_RE.test(fields.email)) errors.email   = errs.emailInvalid;
+  if (!fields.phone.trim())              errors.phone   = errs.phone;
   if (!fields.message.trim())            errors.message = errs.message;
   if (!fields.consent)                   errors.consent = errs.consent;
   return errors;
@@ -175,9 +176,9 @@ export default function ContactForm({ title, locale = 'he' }) {
           {field('phone', t.labels.phone, {
             type: 'tel',
             autoComplete: 'tel',
+            inputMode: 'tel',
             placeholder: t.placeholders.phone,
             dir: 'ltr',
-            required: false,
           })}
         </div>
 

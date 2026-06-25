@@ -40,6 +40,7 @@ export async function POST(request) {
     const errors = {};
     if (!name?.trim())    errors.name    = errs.name;
     if (!email?.trim())   errors.email   = errs.email;
+    if (!phone?.trim())   errors.phone   = errs.phone;
     if (!message?.trim()) errors.message = errs.message;
 
     if (email?.trim() && !EMAIL_REGEX.test(email.trim())) {

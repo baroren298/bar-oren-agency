@@ -141,7 +141,7 @@ export default function Header() {
                       href={href}
                       className={`${styles.mobileNavLink} ${pathname.startsWith(href) ? styles.active : ''}`}
                     >
-                      {locale === 'he' ? link.label : link.labelEn}
+                      {locale === 'he' ? link.label : (link.mobileLabelEn ?? link.labelEn)}
                     </Link>
                   </li>
                 );
