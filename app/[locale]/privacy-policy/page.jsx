@@ -1,134 +1,132 @@
 import { siteConfig } from '@/data/site';
+import PageHeader from '@/components/common/PageHeader';
+import { localizeHref } from '@/lib/i18n';
 import styles from '@/styles/legal.module.css';
 
-const DESCRIPTION = 'מדיניות הפרטיות של Bar Oren Talent Agency — מה נאסף, כיצד נשמר, ומהן זכויותיכם בהתאם לחוק הגנת הפרטיות הישראלי.';
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const isEnglish = locale === 'en';
+  const { privacyPage: p } = siteConfig;
+  const title       = isEnglish ? p.metaTitleEn       : p.metaTitle;
+  const description = isEnglish ? p.metaDescriptionEn : p.metaDescription;
+  const ogTitle      = isEnglish ? p.ogTitleEn         : p.ogTitle;
+  const ogAlt         = isEnglish ? p.ogAltEn           : p.ogAlt;
+  const canonical     = localizeHref('/privacy-policy', locale);
 
-export const metadata = {
-  title: 'מדיניות פרטיות',
-  description: DESCRIPTION,
-  alternates: { canonical: '/privacy-policy' },
-  openGraph: {
-    title:       'מדיניות פרטיות | Bar Oren',
-    description:  DESCRIPTION,
-    url:         '/privacy-policy',
-    images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Bar Oren — מדיניות פרטיות' }],
-  },
-  twitter: {
-    card:        'summary_large_image',
-    title:       'מדיניות פרטיות | Bar Oren',
-    description:  DESCRIPTION,
-    images:      [{ url: '/og-image.jpg', alt: 'Bar Oren — מדיניות פרטיות' }],
-  },
-};
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title:       ogTitle,
+      description,
+      url:         canonical,
+      images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: ogAlt }],
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       ogTitle,
+      description,
+      images:      [{ url: '/og-image.jpg', alt: ogAlt }],
+    },
+  };
+}
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage({ params }) {
+  const { locale } = await params;
+  const isEnglish = locale === 'en';
   const { email, address } = siteConfig.contact;
+  const p = siteConfig.privacyPage;
+
+  const h1           = isEnglish ? p.h1En           : p.h1;
+  const updated       = isEnglish ? p.updatedEn       : p.updated;
+  const introPrefix   = isEnglish ? p.introPrefixEn   : p.introPrefix;
+  const introSuffix   = isEnglish ? p.introSuffixEn   : p.introSuffix;
+  const securityHeading      = isEnglish ? p.securityHeadingEn      : p.securityHeading;
+  const securityParagraph    = isEnglish ? p.securityParagraphEn    : p.securityParagraph;
+  const retentionHeading     = isEnglish ? p.retentionHeadingEn     : p.retentionHeading;
+  const retentionParagraph   = isEnglish ? p.retentionParagraphEn   : p.retentionParagraph;
+  const rightsHeading        = isEnglish ? p.rightsHeadingEn        : p.rightsHeading;
+  const rightsIntro          = isEnglish ? p.rightsIntroEn          : p.rightsIntro;
+  const rightsItems          = isEnglish ? p.rightsItemsEn          : p.rightsItems;
+  const rightsOutro          = isEnglish ? p.rightsOutroEn          : p.rightsOutro;
+  const changesHeading       = isEnglish ? p.changesHeadingEn       : p.changesHeading;
+  const changesParagraph     = isEnglish ? p.changesParagraphEn     : p.changesParagraph;
+  const contactHeading       = isEnglish ? p.contactHeadingEn       : p.contactHeading;
+  const contactIntro         = isEnglish ? p.contactIntroEn         : p.contactIntro;
+  const emailLabel           = isEnglish ? p.emailLabelEn           : p.emailLabel;
+  const emailAriaTemplate    = isEnglish ? p.emailAriaTemplateEn    : p.emailAriaTemplate;
+  const addressLabel         = isEnglish ? p.addressLabelEn         : p.addressLabel;
 
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
-        <div className="container">
-          <h1 className={styles.pageTitle}>מדיניות פרטיות</h1>
-        </div>
-      </div>
+      <PageHeader title={h1} />
 
       <div className="container">
         <div className={styles.content}>
-          <p className={styles.updated}>עודכן לאחרונה: יוני 2026</p>
+          <p className={styles.updated}>{updated}</p>
 
           <p>
-            מדיניות פרטיות זו מתארת כיצד Bar Oren Talent Agency ("הסוכנות",
-            "אנחנו") אוספת, משתמשת ומגנה על המידע האישי שמוסר לנו דרך האתר{' '}
-            <a href={siteConfig.meta.url}>{siteConfig.meta.url}</a>.
-            השימוש באתר מהווה הסכמה למדיניות זו.
+            {introPrefix}
+            <a href={siteConfig.meta.url}>{siteConfig.meta.url}</a>
+            {introSuffix}
           </p>
 
-          <h2>מידע שאנו אוספים</h2>
-          <p>אנו אוספים מידע רק כאשר אתם פונים אלינו ישירות:</p>
+          {p.sections.map((section, i) => {
+            const heading = isEnglish ? section.headingEn : section.heading;
+            const intro   = isEnglish ? section.introEn   : section.intro;
+            const items   = isEnglish ? section.itemsEn   : section.items;
+            const outro   = isEnglish ? section.outroEn   : section.outro;
+            return (
+              <div key={i}>
+                <h2>{heading}</h2>
+                {intro && <p>{intro}</p>}
+                <ul>
+                  {items.map((item, j) => (
+                    <li key={j}>
+                      {item.lead ? (
+                        <>
+                          <strong>{item.lead}</strong> — {item.text}
+                        </>
+                      ) : (
+                        item.text
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {outro && <p>{outro}</p>}
+              </div>
+            );
+          })}
+
+          <h2>{securityHeading}</h2>
+          <p>{securityParagraph}</p>
+
+          <h2>{retentionHeading}</h2>
+          <p>{retentionParagraph}</p>
+
+          <h2>{rightsHeading}</h2>
+          <p>{rightsIntro}</p>
           <ul>
-            <li>
-              <strong>טופס יצירת קשר</strong> — שם מלא, כתובת אימייל, מספר
-              טלפון (אופציונלי) והודעה שנשלחים מרצונכם החופשי.
-            </li>
-            <li>
-              <strong>WhatsApp / אימייל ישיר</strong> — פרטי התקשרות שמוסרים
-              במהלך שיחה ישירה עם הסוכנות.
-            </li>
+            {rightsItems.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
           </ul>
-          <p>
-            אין אנו אוספים קובצי Cookie, נתוני גלישה, כתובות IP לצרכי מעקב,
-            או כל מידע אחר ללא ידיעתכם.
-          </p>
+          <p>{rightsOutro}</p>
 
-          <h2>מטרת השימוש במידע</h2>
-          <p>המידע שנמסר משמש אך ורק:</p>
-          <ul>
-            <li>למענה לפנייתכם — שיתופי פעולה, קאסטינג, שאלות כלליות</li>
-            <li>לניהול קשר עסקי שוטף עם מיוצגים ושותפים</li>
-          </ul>
-          <p>לא נשתמש במידעכם לצרכי שיווק ישיר ללא הסכמתכם המפורשת.</p>
+          <h2>{changesHeading}</h2>
+          <p>{changesParagraph}</p>
 
-          <h2>שיתוף מידע עם צדדים שלישיים</h2>
-          <p>
-            אנו לא מוכרים, סוחרים או מעבירים את פרטיכם לגורמים חיצוניים, למעט:
-          </p>
+          <h2>{contactHeading}</h2>
+          <p>{contactIntro}</p>
           <ul>
             <li>
-              <strong>WhatsApp (Meta Platforms)</strong> — כאשר אתם יוזמים שיחה
-              דרך הקישור באתר, תוכן השיחה כפוף למדיניות הפרטיות של Meta.
-            </li>
-            <li>
-              ספקי שירות טכנולוגיים הנדרשים להפעלת האתר (Vercel לאירוח),
-              שמחויבים לסודיות.
-            </li>
-            <li>
-              גורמים מוסמכים על פי חוק, אם נדרש על ידי רשות מוסמכת.
-            </li>
-          </ul>
-
-          <h2>אבטחת מידע</h2>
-          <p>
-            האתר פועל תחת חיבור מאובטח (HTTPS). המידע שנשלח בטופס יצירת הקשר
-            מועבר באופן מוצפן. אנו נוקטים אמצעי זהירות סבירים לשמירה על המידע,
-            אולם אין ביכולתנו להבטיח אבטחה מוחלטת של כל העברת מידע.
-          </p>
-
-          <h2>שמירת מידע</h2>
-          <p>
-            מידע שנמסר בטופס יצירת קשר נשמר רק כל עוד הוא רלוונטי לצורך שלשמו
-            נמסר, ולא מעבר לכך. ניתן לבקש מחיקת המידע בכל עת.
-          </p>
-
-          <h2>זכויותיכם</h2>
-          <p>
-            בהתאם לחוק הגנת הפרטיות, התשמ"א-1981, עומדות לכם הזכויות הבאות:
-          </p>
-          <ul>
-            <li>לעיין במידע שנשמר אודותיכם</li>
-            <li>לבקש תיקון מידע שגוי</li>
-            <li>לבקש מחיקת מידעכם</li>
-          </ul>
-          <p>
-            לממוש זכויות אלו, פנו אלינו בכתב לכתובת האימייל המופיעה למטה.
-          </p>
-
-          <h2>שינויים במדיניות</h2>
-          <p>
-            אנו עשויים לעדכן מדיניות זו מעת לעת. השינויים ייכנסו לתוקף עם
-            פרסומם בעמוד זה. ממשיכים להשתמש באתר לאחר עדכון המדיניות? הרי זו
-            הסכמה לתנאים המעודכנים.
-          </p>
-
-          <h2>יצירת קשר</h2>
-          <p>לכל שאלה בנושא פרטיות, ניתן לפנות אלינו:</p>
-          <ul>
-            <li>
-              אימייל:{' '}
-              <a href={`mailto:${email}`} aria-label={`שלח אימייל ל-${email}`}>
+              {emailLabel}{' '}
+              <a href={`mailto:${email}`} aria-label={emailAriaTemplate.replace('{email}', email)}>
                 {email}
               </a>
             </li>
-            {address && <li>כתובת: {address}</li>}
+            {address && <li>{addressLabel} {address}</li>}
           </ul>
         </div>
       </div>

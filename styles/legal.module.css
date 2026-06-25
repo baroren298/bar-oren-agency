@@ -3,22 +3,8 @@
   padding-top: 72px;
 }
 
-/* ─── Page header ─────────────────────────────────────────────────────────── */
-
-.pageHeader {
-  padding-block: var(--space-12) var(--space-8);
-  border-bottom: 1px solid var(--color-border);
-  background-color: var(--color-surface);
-}
-
-.pageTitle {
-  font-family: var(--font-display);
-  font-size: clamp(32px, 5vw, 56px);
-  font-weight: var(--weight-light);
-  letter-spacing: 0.01em;
-  color: var(--color-text-primary);
-  line-height: 1;
-}
+/* Page header now lives in components/common/PageHeader — shared with the
+   About and Contact pages so all three stay in sync. */
 
 /* ─── Prose content ───────────────────────────────────────────────────────── */
 
@@ -87,10 +73,6 @@
 @media (max-width: 768px) {
   .page {
     padding-top: 64px;
-  }
-
-  .pageHeader {
-    padding-block: var(--space-8) var(--space-6);
   }
 
   .content {

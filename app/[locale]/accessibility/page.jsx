@@ -1,88 +1,100 @@
 import { siteConfig } from '@/data/site';
+import PageHeader from '@/components/common/PageHeader';
+import { localizeHref } from '@/lib/i18n';
 import styles from '@/styles/legal.module.css';
 
-const DESCRIPTION = 'הצהרת נגישות של Bar Oren Talent Agency — מחויבותנו לנגישות דיגיטלית, תאימות WCAG 2.1 ואפשרויות יצירת קשר לדיווח על בעיות נגישות.';
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const isEnglish = locale === 'en';
+  const { accessibilityPage: a } = siteConfig;
+  const title       = isEnglish ? a.metaTitleEn       : a.metaTitle;
+  const description = isEnglish ? a.metaDescriptionEn : a.metaDescription;
+  const ogTitle      = isEnglish ? a.ogTitleEn         : a.ogTitle;
+  const ogAlt         = isEnglish ? a.ogAltEn           : a.ogAlt;
+  const canonical     = localizeHref('/accessibility', locale);
 
-export const metadata = {
-  title: 'הצהרת נגישות',
-  description: DESCRIPTION,
-  alternates: { canonical: '/accessibility' },
-  openGraph: {
-    title:       'הצהרת נגישות | Bar Oren',
-    description:  DESCRIPTION,
-    url:         '/accessibility',
-    images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Bar Oren — הצהרת נגישות' }],
-  },
-  twitter: {
-    card:        'summary_large_image',
-    title:       'הצהרת נגישות | Bar Oren',
-    description:  DESCRIPTION,
-    images:      [{ url: '/og-image.jpg', alt: 'Bar Oren — הצהרת נגישות' }],
-  },
-};
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title:       ogTitle,
+      description,
+      url:         canonical,
+      images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: ogAlt }],
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       ogTitle,
+      description,
+      images:      [{ url: '/og-image.jpg', alt: ogAlt }],
+    },
+  };
+}
 
-export default function AccessibilityPage() {
+export default async function AccessibilityPage({ params }) {
+  const { locale } = await params;
+  const isEnglish = locale === 'en';
   const { email } = siteConfig.contact;
+  const a = siteConfig.accessibilityPage;
+
+  const h1               = isEnglish ? a.h1En               : a.h1;
+  const updated           = isEnglish ? a.updatedEn           : a.updated;
+  const intro             = isEnglish ? a.introEn             : a.intro;
+  const whatHeading       = isEnglish ? a.whatHeadingEn       : a.whatHeading;
+  const whatItems         = isEnglish ? a.whatItemsEn         : a.whatItems;
+  const techHeading       = isEnglish ? a.techHeadingEn       : a.techHeading;
+  const techParagraph     = isEnglish ? a.techParagraphEn     : a.techParagraph;
+  const limitationsHeading   = isEnglish ? a.limitationsHeadingEn   : a.limitationsHeading;
+  const limitationsParagraph = isEnglish ? a.limitationsParagraphEn : a.limitationsParagraph;
+  const contactHeading    = isEnglish ? a.contactHeadingEn    : a.contactHeading;
+  const contactIntro      = isEnglish ? a.contactIntroEn      : a.contactIntro;
+  const emailLabel        = isEnglish ? a.emailLabelEn        : a.emailLabel;
+  const emailAriaTemplate = isEnglish ? a.emailAriaTemplateEn : a.emailAriaTemplate;
+  const closingLine       = isEnglish ? a.closingLineEn       : a.closingLine;
 
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
-        <div className="container">
-          <h1 className={styles.pageTitle}>הצהרת נגישות</h1>
-        </div>
-      </div>
+      <PageHeader title={h1} />
 
       <div className="container">
         <div className={styles.content}>
-          <p className={styles.updated}>עודכן לאחרונה: יוני 2026</p>
+          <p className={styles.updated}>{updated}</p>
 
-          <p>
-            Bar Oren Talent Agency מחויבת להנגיש את האתר לכלל המשתמשים, לרבות
-            אנשים עם מוגבלויות. אנו פועלים בהתאם לתקן הנגישות הבינלאומי
-            WCAG 2.1 ברמה AA ולדרישות חוק שוויון זכויות לאנשים עם מוגבלות,
-            התשנ"ח-1998.
-          </p>
+          <p>{intro}</p>
 
-          <h2>מה ביצענו</h2>
+          <h2>{whatHeading}</h2>
           <ul>
-            <li>מבנה HTML סמנטי עם היררכיית כותרות ברורה (H1–H3)</li>
-            <li>תוויות ARIA וטקסט חלופי לכל התמונות הפונקציונליות</li>
-            <li>ניווט מקלדת מלא — כל הפעולות נגישות ללא עכבר</li>
-            <li>מחוון מיקוד גלוי בכל אלמנט אינטראקטיבי</li>
-            <li>ניהול מיקוד בחלונות מודאל — פתיחה, מלכוד, סגירה והחזרת מיקוד</li>
-            <li>תמיכה בכיוון RTL ובשפה העברית</li>
-            <li>יחסי ניגוד צבע העומדים בדרישות WCAG AA</li>
-            <li>טופס יצירת קשר עם תוויות, הודעות שגיאה ותכונת <code>required</code></li>
-            <li>קישור "דלג לתוכן" בראש כל עמוד</li>
+            {whatItems.map((item, i) =>
+              typeof item === 'string' ? (
+                <li key={i}>{item}</li>
+              ) : (
+                <li key={i}>
+                  {item.text}
+                  <code>{item.code}</code>
+                  {item.suffix || ''}
+                </li>
+              )
+            )}
           </ul>
 
-          <h2>טכנולוגיות נשענות</h2>
-          <p>
-            האתר בנוי עם Next.js ומשתמש ב-HTML סמנטי, CSS לעיצוב ו-JavaScript
-            לאינטראקציות. האתר תומך בקוראי מסך כגון VoiceOver (macOS / iOS)
-            ו-NVDA (Windows) ובדפדפנים מודרניים.
-          </p>
+          <h2>{techHeading}</h2>
+          <p>{techParagraph}</p>
 
-          <h2>מגבלות ידועות</h2>
-          <p>
-            אנו עובדים באופן שוטף על שיפור הנגישות. אם נתקלתם בקושי כלשהו
-            בגישה לתוכן, נשמח לשמוע ולטפל בכך בהקדם.
-          </p>
+          <h2>{limitationsHeading}</h2>
+          <p>{limitationsParagraph}</p>
 
-          <h2>יצירת קשר בנושא נגישות</h2>
-          <p>
-            לדיווח על בעיית נגישות, בקשה לתוכן בפורמט חלופי, או כל שאלה בנושא —
-            ניתן לפנות אלינו:
-          </p>
+          <h2>{contactHeading}</h2>
+          <p>{contactIntro}</p>
           <ul>
             <li>
-              אימייל:{' '}
-              <a href={`mailto:${email}`} aria-label={`שלח אימייל לנגישות ל-${email}`}>
+              {emailLabel}{' '}
+              <a href={`mailto:${email}`} aria-label={emailAriaTemplate.replace('{email}', email)}>
                 {email}
               </a>
             </li>
           </ul>
-          <p>נשתדל להשיב תוך 5 ימי עסקים.</p>
+          <p>{closingLine}</p>
         </div>
       </div>
     </div>

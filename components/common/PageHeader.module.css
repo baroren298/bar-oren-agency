@@ -1,0 +1,25 @@
+/* ─── Page header ─────────────────────────────────────────────────────────── */
+/* Shared with About (AboutHero) and Contact page headers — keep all three in
+   sync rather than re-declaring these rules per page. */
+
+.pageHeader {
+  padding-block: var(--space-12) var(--space-8);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: clamp(29px, 4.5vw, 50px);
+  font-weight: var(--weight-light);
+  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .pageHeader {
+    padding-block: var(--space-8) var(--space-6);
+  }
+}

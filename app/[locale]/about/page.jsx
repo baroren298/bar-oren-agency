@@ -1,34 +1,47 @@
 import AboutHero from '@/components/about/AboutHero';
 import AboutFounder from '@/components/about/AboutFounder';
 import ContactInvite from '@/components/home/ContactInvite';
+import { siteConfig } from '@/data/site';
+import { localizeHref } from '@/lib/i18n';
 import styles from './about.module.css';
 
-const DESCRIPTION = 'סוכנות בוטיק לייצוג וניהול אישי של יוצרי תוכן, משפיענים ושחקנים. הכירו את בר אורן ואת הגישה האישית שמובילה את הסוכנות.';
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const isEnglish = locale === 'en';
+  const { about } = siteConfig;
+  const title       = isEnglish ? about.metaTitleEn       : about.metaTitle;
+  const description = isEnglish ? about.metaDescriptionEn : about.metaDescription;
+  const ogTitle      = isEnglish ? about.ogTitleEn         : about.ogTitle;
+  const ogAlt         = isEnglish ? about.ogAltEn           : about.ogAlt;
+  const canonical     = localizeHref('/about', locale);
 
-export const metadata = {
-  title:       'אודות | Bar Oren Talent Agency',
-  description:  DESCRIPTION,
-  alternates:  { canonical: '/about' },
-  openGraph: {
-    title:       'אודות | Bar Oren',
-    description:  DESCRIPTION,
-    url:         '/about',
-    images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Bar Oren Talent Agency — אודות' }],
-  },
-  twitter: {
-    card:        'summary_large_image',
-    title:       'אודות | Bar Oren',
-    description:  DESCRIPTION,
-    images:      [{ url: '/og-image.jpg', alt: 'Bar Oren Talent Agency — אודות' }],
-  },
-};
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title:       ogTitle,
+      description,
+      url:         canonical,
+      images:      [{ url: '/og-image.jpg', width: 1200, height: 630, alt: ogAlt }],
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       ogTitle,
+      description,
+      images:      [{ url: '/og-image.jpg', alt: ogAlt }],
+    },
+  };
+}
 
-export default function AboutPage() {
+export default async function AboutPage({ params }) {
+  const { locale } = await params;
+
   return (
     <div className={styles.page}>
-      <AboutHero />
-      <AboutFounder />
-      <ContactInvite />
+      <AboutHero locale={locale} />
+      <AboutFounder locale={locale} />
+      <ContactInvite locale={locale} />
     </div>
   );
 }
