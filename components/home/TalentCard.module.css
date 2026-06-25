@@ -91,7 +91,13 @@
  * equally to Hebrew (RTL) and English names — no alignment changes. */
 @media (max-width: 767px) {
   .name {
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 0.01em;
+  }
+
+  /* A touch more breathing room between the image and the name on mobile
+     (+7px over the desktop --space-3 gap). Desktop .card gap is untouched. */
+  .card {
+    gap: 19px;
   }
 }

@@ -81,11 +81,11 @@
 
 @media (max-width: 768px) {
   .btn {
-    /* FloatingWhatsApp shrinks to 48px on mobile — match it and keep the
-       14px gap above it */
-    bottom: calc(var(--space-6) + 48px + 14px + env(safe-area-inset-bottom, 0px));
-    width: 48px;
-    height: 48px;
+    /* FloatingWhatsApp shrinks to 42px on mobile — match it and widen the
+       gap above it slightly (14px → 18px) so the pair feels lighter */
+    bottom: calc(var(--space-6) + 42px + 18px + env(safe-area-inset-bottom, 0px));
+    width: 42px;
+    height: 42px;
   }
 }
 

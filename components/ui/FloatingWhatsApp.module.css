@@ -57,8 +57,9 @@
 
 @media (max-width: 768px) {
   .btn {
-    /* Slightly smaller on mobile to take less screen real estate */
-    width: 48px;
-    height: 48px;
+    /* Slightly smaller on mobile to take less screen real estate
+       (~12% down from 48px) */
+    width: 42px;
+    height: 42px;
   }
 }
