@@ -82,3 +82,16 @@
   color: var(--color-text-secondary);
   line-height: 1;
 }
+
+/* ─── Mobile name sizing ──────────────────────────────────────────────────────
+ * At narrow widths the clamp() above bottoms out at a fixed 16px, which reads
+ * too large/heavy for the compact 2-column mobile card (see
+ * TalentRoster.module.css's matching 767px breakpoint). Scale it down here
+ * without touching desktop sizing, image sizes, spacing, or layout. Applies
+ * equally to Hebrew (RTL) and English names — no alignment changes. */
+@media (max-width: 767px) {
+  .name {
+    font-size: 14px;
+    letter-spacing: 0.01em;
+  }
+}
