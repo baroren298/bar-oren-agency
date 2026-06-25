@@ -44,6 +44,16 @@
   white-space: pre-line;
 }
 
+/* English descriptor: same text, same font-size — only the wrapping width
+   changes so lines break more evenly and the final line isn't left with a
+   single orphan word ("actors."). text-wrap: balance lets the browser pick
+   even line lengths; the wider max-width gives it room to do so. Hebrew
+   (white-space: pre-line, two manual lines) is untouched. */
+html[lang="en"] .descriptor {
+  max-width: 560px;
+  text-wrap: balance;
+}
+
 /* ─── Scroll indicator ────────────────────────────────────────────────────── */
 
 .scrollBtn {

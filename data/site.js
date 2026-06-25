@@ -13,6 +13,7 @@ export const siteConfig = {
     tiktok: null,
     linkedin: null,
     address: 'תל אביב, ישראל',
+    addressEn: 'Tel Aviv, Israel',
   },
 
   meta: {
@@ -59,7 +60,7 @@ export const siteConfig = {
 
   talentPage: {
     title: 'מיוצגי הסוכנות',
-    titleEn: 'Our Talent',
+    titleEn: 'Our Talents',
     description: 'מיוצגים בניהולו האישי של בר אורן — יוצרי תוכן, משפיענים, דוגמנים ושחקנים.',
     descriptionEn: "Talent under Bar Oren's personal management — content creators, influencers, models, and actors.",
   },
@@ -93,8 +94,16 @@ export const siteConfig = {
 
   contactPage: {
     headline: 'בואו נדבר.',
+    headlineEn: "Let's Talk.",
     subheadline: 'לשיתופי פעולה, קאסטינג ופניות מותגים — בר אורן זמין ישירות.',
+    subheadlineEn: 'For collaborations, casting, and brand inquiries — Bar Oren is available directly.',
     formTitle: 'שלחו הודעה',
+    formTitleEn: 'Send a Message',
     directTitle: 'ישירות',
+    directTitleEn: 'Direct',
+    metaTitle: 'צור קשר',
+    metaTitleEn: 'Contact',
+    metaDescription: 'לשיתופי פעולה, קאסטינג ופניות מותגים — צרו קשר ישירות עם בר אורן.',
+    metaDescriptionEn: 'For collaborations, casting, and brand inquiries — get in touch directly with Bar Oren.',
   },
 };

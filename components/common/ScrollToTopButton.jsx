@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { getStrings } from '@/lib/i18n';
 import styles from './ScrollToTopButton.module.css';
 
 /* Fallback when no hero section can be measured (shouldn't normally happen,
@@ -34,7 +35,8 @@ function ArrowUpIcon() {
   );
 }
 
-export default function ScrollToTopButton() {
+export default function ScrollToTopButton({ locale = 'he' }) {
+  const t = getStrings(locale);
   const [visible, setVisible] = useState(false);
   const thresholdRef = useRef(FALLBACK_THRESHOLD_PX);
 
@@ -93,7 +95,7 @@ export default function ScrollToTopButton() {
       type="button"
       onClick={handleClick}
       className={`${styles.btn} ${visible ? styles.visible : ''}`}
-      aria-label="חזרה לראש העמוד"
+      aria-label={t.aria.scrollToTop}
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
     >

@@ -2,23 +2,29 @@
 
 import { useState, useId } from 'react';
 import Link from 'next/link';
+import { getStrings, localizeHref } from '@/lib/i18n';
 import styles from './ContactForm.module.css';
 
 const INITIAL_FIELDS = { name: '', email: '', phone: '', message: '', consent: false, _trap: '' };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validate(fields) {
+/* errs: same shared error copy used by the API route (data/i18n/strings.js),
+   so client-side and server-side validation always say the same thing in
+   the same locale. */
+function validate(fields, errs) {
   const errors = {};
-  if (!fields.name.trim())               errors.name    = 'נא להזין שם מלא';
-  if (!fields.email.trim())              errors.email   = 'נא להזין כתובת אימייל';
-  else if (!EMAIL_RE.test(fields.email)) errors.email   = 'כתובת אימייל לא תקינה';
-  if (!fields.message.trim())            errors.message = 'נא להזין הודעה';
-  if (!fields.consent)                   errors.consent = 'יש לאשר את מדיניות הפרטיות לפני שליחת הטופס.';
+  if (!fields.name.trim())               errors.name    = errs.name;
+  if (!fields.email.trim())              errors.email   = errs.email;
+  else if (!EMAIL_RE.test(fields.email)) errors.email   = errs.emailInvalid;
+  if (!fields.message.trim())            errors.message = errs.message;
+  if (!fields.consent)                   errors.consent = errs.consent;
   return errors;
 }
 
-export default function ContactForm({ title }) {
+export default function ContactForm({ title, locale = 'he' }) {
   const uid = useId();
+  const t = getStrings(locale).contact.form;
+  const errorCopy = t.errors;
   const [fields, setFields]   = useState(INITIAL_FIELDS);
   const [errors, setErrors]   = useState({});
   const [touched, setTouched] = useState({});
@@ -31,7 +37,7 @@ export default function ContactForm({ title }) {
     setFields((prev) => ({ ...prev, [name]: newValue }));
     /* Clear field error as user corrects it */
     if (touched[name]) {
-      const next = validate({ ...fields, [name]: newValue });
+      const next = validate({ ...fields, [name]: newValue }, errorCopy);
       setErrors((prev) => ({ ...prev, [name]: next[name] }));
     }
   };
@@ -39,7 +45,7 @@ export default function ContactForm({ title }) {
   const handleBlur = (e) => {
     const { name } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
-    const next = validate(fields);
+    const next = validate(fields, errorCopy);
     setErrors((prev) => ({ ...prev, [name]: next[name] }));
   };
 
@@ -47,9 +53,9 @@ export default function ContactForm({ title }) {
     e.preventDefault();
     const allTouched = { name: true, email: true, phone: true, message: true, consent: true };
     setTouched(allTouched);
-    const errs = validate(fields);
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+    const fieldErrors = validate(fields, errorCopy);
+    setErrors(fieldErrors);
+    if (Object.keys(fieldErrors).length > 0) return;
 
     setStatus('loading');
     setServerError('');
@@ -58,7 +64,7 @@ export default function ContactForm({ title }) {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fields),
+        body: JSON.stringify({ ...fields, locale }),
       });
       const data = await res.json();
 
@@ -74,7 +80,7 @@ export default function ContactForm({ title }) {
       setTouched({});
       setErrors({});
     } catch {
-      setServerError('אירעה שגיאה. אנא נסו שוב.');
+      setServerError(errorCopy.network);
       setStatus('idle');
     }
   };
@@ -136,8 +142,8 @@ export default function ContactForm({ title }) {
         <p className={styles.sectionLabel}>{title}</p>
         <div className={styles.successBlock}>
           <p className={styles.successIcon} aria-hidden="true">✓</p>
-          <p className={styles.successTitle}>ההודעה נשלחה.</p>
-          <p className={styles.successBody}>בר אורן ייצור איתכם קשר בהקדם.</p>
+          <p className={styles.successTitle}>{t.success.title}</p>
+          <p className={styles.successBody}>{t.success.body}</p>
         </div>
       </div>
     );
@@ -150,32 +156,32 @@ export default function ContactForm({ title }) {
       <form
         onSubmit={handleSubmit}
         noValidate
-        aria-label="טופס יצירת קשר"
+        aria-label={t.ariaLabel}
         className={styles.form}
       >
-        {field('name', 'שם מלא', {
+        {field('name', t.labels.name, {
           type: 'text',
           autoComplete: 'name',
-          placeholder: 'ישראל ישראלי',
+          placeholder: t.placeholders.name,
         })}
 
         <div className={styles.twoCol}>
-          {field('email', 'אימייל', {
+          {field('email', t.labels.email, {
             type: 'email',
             autoComplete: 'email',
-            placeholder: 'name@example.com',
+            placeholder: t.placeholders.email,
             dir: 'ltr',
           })}
-          {field('phone', 'טלפון', {
+          {field('phone', t.labels.phone, {
             type: 'tel',
             autoComplete: 'tel',
-            placeholder: '050-000-0000',
+            placeholder: t.placeholders.phone,
             dir: 'ltr',
             required: false,
           })}
         </div>
 
-        {field('message', 'הודעה', { placeholder: 'ספרו לנו במה אתם מעוניינים...' })}
+        {field('message', t.labels.message, { placeholder: t.placeholders.message })}
 
         {/* Honeypot — visually hidden, bots fill it, humans never see it */}
         <input
@@ -205,11 +211,11 @@ export default function ContactForm({ title }) {
               required
             />
             <label htmlFor={`${uid}-consent`} className={styles.consentLabel}>
-              אני מאשר/ת את{' '}
-              <Link href="/privacy-policy" className={styles.consentLink}>
-                מדיניות הפרטיות
+              {t.consent.prefix}{' '}
+              <Link href={localizeHref('/privacy-policy', locale)} className={styles.consentLink}>
+                {t.consent.linkText}
               </Link>
-              {' '}של האתר ומסכים/ה להעברת פרטיי לצורך יצירת קשר.
+              {' '}{t.consent.suffix}
             </label>
           </div>
           {touched.consent && errors.consent && (
@@ -229,7 +235,7 @@ export default function ContactForm({ title }) {
           disabled={status === 'loading'}
           aria-busy={status === 'loading'}
         >
-          {status === 'loading' ? 'שולח...' : 'שלחו הודעה'}
+          {status === 'loading' ? t.submitting : t.submit}
         </button>
       </form>
     </div>

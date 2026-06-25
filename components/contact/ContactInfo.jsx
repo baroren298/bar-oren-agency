@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import { siteConfig } from '@/data/site';
+import { getStrings } from '@/lib/i18n';
 import styles from './ContactInfo.module.css';
 
 const { contact, contactPage } = siteConfig;
@@ -11,21 +12,26 @@ const socialLinks = [
   contact.linkedin  && { label: 'LinkedIn',  href: contact.linkedin  },
 ].filter(Boolean);
 
-export default function ContactInfo() {
+export default function ContactInfo({ locale = 'he' }) {
+  const t = getStrings(locale).contact.info;
+  const isEnglish = locale === 'en';
+  const directTitle = isEnglish ? contactPage.directTitleEn : contactPage.directTitle;
+  const address = isEnglish ? (contact.addressEn || contact.address) : contact.address;
+
   return (
     <div className={styles.wrapper}>
       <ScrollReveal>
-        <p className={styles.sectionLabel}>{contactPage.directTitle}</p>
+        <p className={styles.sectionLabel}>{directTitle}</p>
       </ScrollReveal>
 
       {/* Email */}
       <ScrollReveal delay={0.1}>
         <div className={styles.contactRow}>
-          <p className={styles.contactRowLabel}>אימייל</p>
+          <p className={styles.contactRowLabel}>{t.emailLabel}</p>
           <Link
             href={`mailto:${contact.email}`}
             className={styles.contactRowValue}
-            aria-label={`שלח אימייל ל-${contact.email}`}
+            aria-label={`${t.emailAriaPrefix}${contact.email}`}
           >
             {contact.email}
           </Link>
@@ -36,12 +42,12 @@ export default function ContactInfo() {
       {contact.phone && (
         <ScrollReveal delay={0.13}>
           <div className={styles.contactRow}>
-            <p className={styles.contactRowLabel}>טלפון</p>
+            <p className={styles.contactRowLabel}>{t.phoneLabel}</p>
             <Link
               href={`tel:${contact.phone}`}
               className={styles.contactRowValue}
               dir="ltr"
-              aria-label={`התקשר ל-${contact.phone}`}
+              aria-label={`${t.phoneAriaPrefix}${contact.phone}`}
             >
               {contact.phone}
             </Link>
@@ -53,8 +59,8 @@ export default function ContactInfo() {
       {contact.address && (
         <ScrollReveal delay={0.16}>
           <div className={styles.contactRow}>
-            <p className={styles.contactRowLabel}>מיקום</p>
-            <p className={styles.contactRowValue}>{contact.address}</p>
+            <p className={styles.contactRowLabel}>{t.locationLabel}</p>
+            <p className={styles.contactRowValue}>{address}</p>
           </div>
         </ScrollReveal>
       )}
@@ -63,7 +69,7 @@ export default function ContactInfo() {
       {socialLinks.length > 0 && (
         <ScrollReveal delay={0.2}>
           <div className={styles.socialsGroup}>
-            <p className={styles.contactRowLabel}>עקבו אחרינו</p>
+            <p className={styles.contactRowLabel}>{t.followLabel}</p>
             <div className={styles.socialLinks}>
               {socialLinks.map((s) => (
                 <Link
@@ -72,7 +78,7 @@ export default function ContactInfo() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.socialLink}
-                  aria-label={`${s.label} — בר אורן`}
+                  aria-label={`${s.label} ${t.socialAriaSuffix}`}
                 >
                   {s.label}
                 </Link>

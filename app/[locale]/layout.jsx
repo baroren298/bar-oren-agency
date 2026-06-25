@@ -94,96 +94,113 @@ const metaBase =
     ? `https://${process.env.VERCEL_URL}`
     : siteConfig.meta.url;
 
-export const metadata = {
-  metadataBase: new URL(metaBase),
+/*
+ * generateMetadata (not a static `metadata` export) so openGraph.locale can
+ * reflect the actual locale tree being rendered ('he_IL' vs 'en_US')
+ * instead of always advertising Hebrew, even on /en/* pages. Page-level
+ * generateMetadata (home, talent, etc.) still overrides title/description/
+ * url per page — this just supplies the site-wide defaults + the
+ * locale-correct fallback.
+ */
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const isEnglish = locale === 'en';
+  const description = isEnglish ? siteConfig.meta.descriptionEn : siteConfig.meta.description;
+  const ogLocale = isEnglish ? 'en_US' : 'he_IL';
 
-  title: {
-    default:  siteConfig.meta.title,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: siteConfig.meta.description,
+  return {
+    metadataBase: new URL(metaBase),
 
-  keywords: siteConfig.meta.keywords,
-
-  authors:   [{ name: siteConfig.name }],
-  creator:    siteConfig.name,
-  publisher:  siteConfig.agencyName,
-
-  openGraph: {
-    type:        'website',
-    locale:       siteConfig.meta.locale,
-    siteName:     siteConfig.agencyName,
-    title:        siteConfig.meta.title,
-    description:  siteConfig.meta.description,
-    url:          siteConfig.meta.url,
-    images:       [OG_IMAGE],
-  },
-
-  twitter: {
-    card:        'summary_large_image',
-    title:        siteConfig.meta.title,
-    description:  siteConfig.meta.description,
-    images:       [{ url: '/og-image.jpg', alt: siteConfig.meta.title }],
-  },
-
-  robots: {
-    index:  true,
-    follow: true,
-    googleBot: {
-      index:               true,
-      follow:              true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet':       -1,
+    title: {
+      default:  siteConfig.meta.title,
+      template: `%s | ${siteConfig.name}`,
     },
-  },
-};
+    description,
+
+    keywords: siteConfig.meta.keywords,
+
+    authors:   [{ name: siteConfig.name }],
+    creator:    siteConfig.name,
+    publisher:  siteConfig.agencyName,
+
+    openGraph: {
+      type:        'website',
+      locale:       ogLocale,
+      siteName:     siteConfig.agencyName,
+      title:        siteConfig.meta.title,
+      description,
+      url:          siteConfig.meta.url,
+      images:       [OG_IMAGE],
+    },
+
+    twitter: {
+      card:        'summary_large_image',
+      title:        siteConfig.meta.title,
+      description,
+      images:      [{ url: '/og-image.jpg', alt: siteConfig.meta.title }],
+    },
+
+    robots: {
+      index:  true,
+      follow: true,
+      googleBot: {
+        index:               true,
+        follow:              true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet':       -1,
+      },
+    },
+  };
+}
 
 const BASE = siteConfig.meta.url;
 
-const siteSchema = [
-  {
-    '@context': 'https://schema.org',
-    '@type':    'WebSite',
-    '@id':      `${BASE}/#website`,
-    name:        siteConfig.agencyName,
-    url:         BASE,
-    inLanguage:  'he',
-    publisher: { '@id': `${BASE}/#organization` },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type':    'Organization',
-    '@id':      `${BASE}/#organization`,
-    name:        siteConfig.agencyName,
-    url:         BASE,
-    logo: {
-      '@type':  'ImageObject',
-      url:      `${BASE}/images/brand/logo3.png`,
-      width:    600,
-      height:   240,
+function buildSiteSchema(locale) {
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type':    'WebSite',
+      '@id':      `${BASE}/#website`,
+      name:        siteConfig.agencyName,
+      url:         BASE,
+      inLanguage:  locale === 'en' ? 'en' : 'he',
+      publisher: { '@id': `${BASE}/#organization` },
     },
-    description: siteConfig.meta.description,
-    founder: {
-      '@type': 'Person',
-      name:     siteConfig.about.founder.name,
+    {
+      '@context': 'https://schema.org',
+      '@type':    'Organization',
+      '@id':      `${BASE}/#organization`,
+      name:        siteConfig.agencyName,
+      url:         BASE,
+      logo: {
+        '@type':  'ImageObject',
+        url:      `${BASE}/images/brand/logo3.png`,
+        width:    600,
+        height:   240,
+      },
+      description: locale === 'en' ? siteConfig.meta.descriptionEn : siteConfig.meta.description,
+      founder: {
+        '@type': 'Person',
+        name:     siteConfig.about.founder.name,
+      },
+      address: {
+        '@type':         'PostalAddress',
+        addressLocality: 'Tel Aviv',
+        addressCountry:  'IL',
+      },
+      contactPoint: {
+        '@type':       'ContactPoint',
+        email:          siteConfig.contact.email,
+        contactType:   'booking',
+      },
+      sameAs: [
+        siteConfig.contact.instagram,
+        siteConfig.contact.tiktok,
+      ].filter(Boolean),
     },
-    address: {
-      '@type':         'PostalAddress',
-      addressLocality: 'Tel Aviv',
-      addressCountry:  'IL',
-    },
-    contactPoint: {
-      '@type':       'ContactPoint',
-      email:          siteConfig.contact.email,
-      contactType:   'booking',
-    },
-    sameAs: [
-      siteConfig.contact.instagram,
-      siteConfig.contact.tiktok,
-    ].filter(Boolean),
-  },
-];
+  ];
+}
 
 export default async function RootLayout({ children, params }) {
   const { locale } = await params;
@@ -212,11 +229,11 @@ export default async function RootLayout({ children, params }) {
         <main id="main-content">{children}</main>
         <Footer />
         {/* Scroll-to-top sits directly above WhatsApp, which stays the primary, lowest CTA */}
-        <ScrollToTopButton />
+        <ScrollToTopButton locale={locale} />
         {/* Single site-wide WhatsApp entry point — rendered once, available on every page */}
-        <FloatingWhatsApp />
+        <FloatingWhatsApp locale={locale} />
 
-        <JsonLd data={siteSchema} />
+        <JsonLd data={buildSiteSchema(locale)} />
       </body>
     </html>
   );

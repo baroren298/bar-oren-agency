@@ -81,14 +81,16 @@ function buildProfileSchemas(talent, locale = 'he') {
 
   const categoryLabels = siteConfig.categories
     .filter((c) => talent.category.includes(c.key) && c.key !== 'all')
-    .map((c) => c.labelEn);
+    .map((c) => (isEnglish ? c.labelEn : c.label));
+
+  const personName = isEnglish ? (talent.nameEn || talent.name) : talent.name;
 
   const person = {
     '@context': 'https://schema.org',
     '@type':    'Person',
     '@id':       pageUrl,
-    name:        talent.nameEn,
-    description: talent.bioEn || talent.bioHe,
+    name:        personName,
+    description: isEnglish ? (talent.bioEn || talent.bioHe) : (talent.bioHe || talent.bioEn),
     jobTitle:    categoryLabels.join(', '),
     image:       talent.profileImage ? `${BASE}${talent.profileImage}` : undefined,
     url:         pageUrl,
@@ -124,7 +126,7 @@ function buildProfileSchemas(talent, locale = 'he') {
       {
         '@type':  'ListItem',
         position:  3,
-        name:      isEnglish ? (talent.nameEn || talent.name) : talent.name,
+        name:      personName,
         item:      pageUrl,
       },
     ],

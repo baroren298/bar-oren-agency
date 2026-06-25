@@ -9,6 +9,8 @@
  * are logged server-side). Add them in Vercel → Project → Settings → Environment Variables.
  */
 
+import { getStrings } from '@/lib/i18n';
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function escapeHtml(str) {
@@ -21,9 +23,12 @@ function escapeHtml(str) {
 }
 
 export async function POST(request) {
+  let locale = 'he';
   try {
     const body = await request.json();
+    ({ locale = 'he' } = body);
     const { name, email, phone, message, _trap } = body;
+    const errs = getStrings(locale).contact.form.errors;
 
     /* ── Honeypot check — bots fill this field, humans never see it ── */
     if (_trap) {
@@ -33,12 +38,12 @@ export async function POST(request) {
 
     /* ── Server-side validation ── */
     const errors = {};
-    if (!name?.trim())    errors.name    = 'נא להזין שם מלא';
-    if (!email?.trim())   errors.email   = 'נא להזין כתובת אימייל';
-    if (!message?.trim()) errors.message = 'נא להזין הודעה';
+    if (!name?.trim())    errors.name    = errs.name;
+    if (!email?.trim())   errors.email   = errs.email;
+    if (!message?.trim()) errors.message = errs.message;
 
     if (email?.trim() && !EMAIL_REGEX.test(email.trim())) {
-      errors.email = 'כתובת אימייל לא תקינה';
+      errors.email = errs.emailInvalid;
     }
 
     if (Object.keys(errors).length > 0) {
@@ -101,7 +106,7 @@ export async function POST(request) {
   } catch (err) {
     console.error('[contact] Unexpected error:', err);
     return Response.json(
-      { error: 'אירעה שגיאה. אנא נסו שוב או צרו קשר ישירות.' },
+      { error: getStrings(locale).contact.form.errors.server },
       { status: 500 }
     );
   }

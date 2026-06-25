@@ -11,7 +11,7 @@ export async function generateMetadata({ params }) {
   const title       = isEnglish ? siteConfig.talentPage.titleEn       : siteConfig.talentPage.title;
   const description = isEnglish ? siteConfig.talentPage.descriptionEn : siteConfig.talentPage.description;
   const ogTitle      = isEnglish ? `${siteConfig.talentPage.titleEn} | Bar Oren` : `${siteConfig.talentPage.title} | Bar Oren`;
-  const ogAlt         = isEnglish ? 'Bar Oren — Our Talent' : 'Bar Oren — מיוצגי הסוכנות';
+  const ogAlt         = isEnglish ? `Bar Oren — ${siteConfig.talentPage.titleEn}` : `Bar Oren — ${siteConfig.talentPage.title}`;
   const canonical     = localizeHref('/talent', locale);
 
   return {

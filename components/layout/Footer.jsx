@@ -27,6 +27,10 @@ export default function Footer() {
         </span>
 
         <nav className={styles.links} aria-label={t.aria.footerLinks}>
+          <Link href={`mailto:${siteConfig.contact.email}`} className={styles.link}>
+            {siteConfig.contact.email}
+          </Link>
+          <span className={styles.dot} aria-hidden="true">·</span>
           <Link href={siteConfig.contact.instagram} target="_blank" rel="noopener noreferrer" className={styles.link}>
             Instagram
           </Link>
@@ -37,10 +41,6 @@ export default function Footer() {
           <span className={styles.dot} aria-hidden="true">·</span>
           <Link href={localizeHref('/privacy-policy', locale)} className={styles.link}>
             {t.footer.privacyPolicy}
-          </Link>
-          <span className={styles.dot} aria-hidden="true">·</span>
-          <Link href={`mailto:${siteConfig.contact.email}`} className={styles.link}>
-            {siteConfig.contact.email}
           </Link>
         </nav>
 

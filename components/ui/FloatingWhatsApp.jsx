@@ -1,3 +1,4 @@
+import { getStrings } from '@/lib/i18n';
 import styles from './FloatingWhatsApp.module.css';
 
 /* WhatsApp SVG — minimal two-path mark, fill=currentColor */
@@ -19,14 +20,16 @@ function WhatsAppIcon() {
   );
 }
 
-export default function FloatingWhatsApp() {
+export default function FloatingWhatsApp({ locale = 'he' }) {
+  const t = getStrings(locale);
+
   return (
     <a
       href="https://wa.me/972548311818"
       target="_blank"
       rel="noopener noreferrer"
       className={styles.btn}
-      aria-label="שליחת הודעה בוואטסאפ"
+      aria-label={t.aria.whatsapp}
     >
       <WhatsAppIcon />
     </a>

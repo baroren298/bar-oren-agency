@@ -1,5 +1,6 @@
 import { getFeaturedTalent } from '@/data/talent';
 import { siteConfig } from '@/data/site';
+import { localizeHref } from '@/lib/i18n';
 import HeroSection from '@/components/home/HeroSection';
 import FeaturedTalent from '@/components/home/FeaturedTalent';
 /* Collaborations hidden for launch — restore by uncommenting the two lines below:
@@ -14,15 +15,16 @@ const OG_IMAGE = { url: '/og-image.jpg', width: 1200, height: 630, alt: siteConf
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const description = locale === 'en' ? siteConfig.meta.descriptionEn : siteConfig.meta.description;
+  const canonical   = localizeHref('/', locale);
 
   return {
     title:       { absolute: siteConfig.meta.title },
     description,
-    alternates:  { canonical: '/' },
+    alternates:  { canonical },
     openGraph: {
       title:       siteConfig.meta.title,
       description,
-      url:         '/',
+      url:         canonical,
       images:      [OG_IMAGE],
     },
     twitter: {
