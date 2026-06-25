@@ -99,7 +99,10 @@ html[lang="en"] .title {
 @media (max-width: 480px) {
   .grid {
     grid-template-columns: 1fr;
-    gap: var(--space-6);
+    /* Tightened from --space-6 (24px) — single column, so this gap is
+       purely vertical between stacked cards; no horizontal spacing exists
+       here to disturb. */
+    gap: 20px;
   }
 
   /* Header row: keep side-by-side (row) rather than stacking.
