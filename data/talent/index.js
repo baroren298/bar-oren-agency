@@ -21,6 +21,9 @@
  *   featured      — show on homepage featured grid (keep to max 3)
  *   sortOrder     — roster display order (lower = earlier)
  *
+ *   location      — Hebrew location label (profile meta row)
+ *   locationEn    — English location label (profile meta row, English locale)
+ *
  *   profileImage  — path relative to /public  e.g. '/images/talent/slug/profile.jpg'
  *                   set to null to show warm gradient placeholder
  *   gallery       — array of { src, alt } objects
@@ -59,6 +62,7 @@ export const talentList = [
     sortOrder: 1,
 
     location: 'הרצליה',
+    locationEn: 'Herzliya',
     birthDate: '2002-07-23',
 
     profileImage: '/images/talent/kim-chorilov/profile.jpg',
@@ -104,13 +108,17 @@ export const talentList = [
     sortOrder: 3,
 
     location: 'אזור המרכז',
+    locationEn: 'Central District',
     birthDate: '1997-02-23',
 
     profileImage: '/images/talent/topaz-falah/profile-v2.jpg',
     // Crop focus override — source photo has excess empty space above the
     // head; shift the visible window down to bring her higher in the frame.
+    // Nudged from 25% → 35% to trim a bit more headroom (mobile hero in
+    // particular had too much empty space above her head); hands remain
+    // fully visible since this shifts the crop window up, not down.
     // All other talents keep the TalentImage default ('center top').
-    imagePosition: 'center 25%',
+    imagePosition: 'center 35%',
     gallery: [
       '/images/talent/topaz-falah/gallery/01.jpg',
       '/images/talent/topaz-falah/gallery/02.JPEG',
@@ -148,6 +156,7 @@ export const talentList = [
     sortOrder: 0,
 
     location: 'חולון',
+    locationEn: 'Holon',
     birthDate: '2003-06-02',
 
     profileImage: '/images/talent/gal-azar/profile-v2.jpg',
@@ -186,6 +195,7 @@ export const talentList = [
     sortOrder: 2,
 
     location: 'הוד השרון',
+    locationEn: 'Hod HaSharon',
     birthDate: '2003-10-24',
 
     profileImage: '/images/talent/michal-bendavid/profile.jpg',
@@ -231,6 +241,7 @@ export const talentList = [
     sortOrder: 4,
 
     location: 'הרצליה',
+    locationEn: 'Herzliya',
     birthDate: '2008-01-21',
 
     profileImage: '/images/talent/emma-weinberg/profile-v2.jpg',
@@ -274,6 +285,7 @@ export const talentList = [
     sortOrder: 5,
 
     location: 'באר יעקב',
+    locationEn: "Be'er Ya'akov",
     birthDate: '1996-10-10',
 
     profileImage: '/images/talent/ordan-nahari/profile.jpg',
@@ -314,6 +326,7 @@ export const talentList = [
     sortOrder: 6,
 
     location: 'חדרה',
+    locationEn: 'Hadera',
     birthDate: '2003-04-01',
 
     profileImage: '/images/talent/alma-weizman/profile-v2.jpg',
@@ -352,6 +365,7 @@ export const talentList = [
     sortOrder: 7,
 
     location: 'קיבוץ דבירה',
+    locationEn: 'Kibbutz Dvira',
     birthDate: '1997-08-18',
 
     profileImage: '/images/talent/shilav-jorin/profile.jpg',
@@ -381,6 +395,7 @@ export const talentList = [
     sortOrder: 8,
 
     location: 'בת ים',
+    locationEn: 'Bat Yam',
     birthDate: '1999-05-19',
 
     profileImage: '/images/talent/shaked-hudra/profile-v2.jpg',
@@ -414,6 +429,7 @@ export const talentList = [
     sortOrder: 9,
 
     location: 'חולון',
+    locationEn: 'Holon',
     birthDate: '2002-03-03',
 
     profileImage: '/images/talent/gal-arad/profile-v2.jpg',

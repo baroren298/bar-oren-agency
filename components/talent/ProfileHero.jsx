@@ -123,6 +123,9 @@ export default function ProfileHero({ talent, locale = 'he' }) {
   const categoryLine = getCategories(talent.category, isEnglish);
   const hasSocials   = talent.instagram || talent.tiktok || talent.youtube || talent.extraSocials?.length > 0;
   const age          = getAge(talent.birthDate);
+  /* English location name falls back to the Hebrew one if no translation
+     has been provided for a given talent. */
+  const locationText = isEnglish ? (talent.locationEn || talent.location) : talent.location;
   const hasMeta       = Boolean(talent.location) || age !== null;
   /* English field may be missing on a given talent — fall back to the
      Hebrew bio/name rather than rendering nothing. */
@@ -149,22 +152,31 @@ export default function ProfileHero({ talent, locale = 'he' }) {
 
           <h1 className={styles.name}>{displayName}</h1>
 
-          {hasMeta && (
-            <div className={styles.meta} aria-label={isEnglish ? 'Details' : 'פרטים'}>
-              {talent.location && (
-                <span className={styles.metaItem}>
-                  <LocationIcon />
-                  {talent.location}
-                </span>
-              )}
-              {age !== null && (
-                <span className={styles.metaItem}>
-                  <CalendarIcon />
-                  {age}
-                </span>
-              )}
-            </div>
-          )}
+          {hasMeta && (() => {
+            const locationItem = locationText && (
+              <span key="location" className={styles.metaItem}>
+                <LocationIcon />
+                {locationText}
+              </span>
+            );
+            const ageItem = age !== null && (
+              <span key="age" className={styles.metaItem}>
+                <CalendarIcon />
+                {age}
+              </span>
+            );
+            /* Hebrew (RTL): location first, then age — unchanged.
+               English (LTR): age first, then location, per spec. */
+            const items = isEnglish
+              ? [ageItem, locationItem]
+              : [locationItem, ageItem];
+
+            return (
+              <div className={styles.meta} aria-label={isEnglish ? 'Details' : 'פרטים'}>
+                {items}
+              </div>
+            );
+          })()}
 
           {bio && (
             <p className={styles.excerpt}>{bio}</p>
