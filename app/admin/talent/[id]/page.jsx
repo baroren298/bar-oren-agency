@@ -15,10 +15,10 @@
  * four-state status (including "changes requested", via a REJECTED
  * version) instead of just three, see that module's header comment.
  *
- * No editing, no propose/approve/reject actions, no gallery/socials/SEO
- * content yet — those four sections are intentionally empty-state
- * placeholders this sprint (requirement #2: "No editing required yet.
- * Just create the layout and placeholders").
+ * Details/Gallery/Socials/SEO now each have a real (still fully local,
+ * still no persistence) editing UI — see DetailsSectionContent,
+ * GallerySectionContent, SocialsSectionContent, SeoSectionContent below.
+ * Only History remains an empty-state placeholder this sprint.
  *
  * Database-deferred bridge unchanged: still `force-dynamic` + the
  * `isDatabaseConfigured` guard.
@@ -35,6 +35,7 @@ import EmptyState from '@/components/admin/EmptyState';
 import ComparisonView from '@/components/admin/ComparisonView';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
+import SeoEditor from '@/components/admin/SeoEditor';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import { getTalentBySlug } from '@/data/talent';
 import {
@@ -198,6 +199,31 @@ function SocialsSectionContent({ talentSlug }) {
   return <SocialLinksEditor publishedLinks={publishedLinks} />;
 }
 
+/*
+ * SEO Editor Foundation sprint — same reasoning as buildSocialLinks above:
+ * no seo query exists yet on talentAdapter/versionService (and adding one
+ * is out of scope for a UI-only sprint), and data/talent/index.js doesn't
+ * model SEO fields at all today. So every field is surfaced as `null` —
+ * SeoFieldRow already renders `null` as a calm "לא קיים" placeholder,
+ * exactly like a talent that genuinely has no SEO metadata set yet.
+ * Wiring this up to a real "page SEO" record is later work; this sprint
+ * only prepares the layout and the editing surface.
+ */
+function buildSeoFields() {
+  return {
+    title: null,
+    description: null,
+    keywords: [],
+    ogTitle: null,
+    ogDescription: null,
+  };
+}
+
+function SeoSectionContent() {
+  const publishedSeo = buildSeoFields();
+  return <SeoEditor publishedSeo={publishedSeo} />;
+}
+
 export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
     return (
@@ -238,6 +264,9 @@ export default async function AdminTalentDetailPage({ params }) {
     }
     if (section.key === 'socials') {
       return { ...section, content: <SocialsSectionContent talentSlug={talent.slug} /> };
+    }
+    if (section.key === 'seo') {
+      return { ...section, content: <SeoSectionContent /> };
     }
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
