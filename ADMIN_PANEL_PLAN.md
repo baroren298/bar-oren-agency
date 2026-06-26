@@ -12,6 +12,8 @@
 
 **Last Architecture Review:** 2026-06-26
 
+**Implementation status note (Sprint 3.6):** `proposalService`, `conflictService`, `approvalService`, `publishService`, `versionService`, `eventService`/`eventTypes`/`auditLogListener`, `adapterContract`, and `talentAdapter` are implemented (Sprints 3.2–3.5). Sprint 3.6 added a second adapter — `createEntityAdapter` (`lib/admin/engine/adapters/entityAdapter.js`), wired against new `entityRepository` primitives — proving the same, unmodified engine services run against a second entity type. This satisfies Phase 3 success criterion #8 (Section 13.17). Criteria 1–7 were already met against `talentAdapter` alone; with #8 now also met, all eight Section 13.17 criteria are demonstrably true at the service layer, though still only spot-checked manually — no automated test suite exists yet in this repo. `siteContentAdapter`, `seoAdapter`, `legalPageAdapter`, route handlers/`/admin` UI, and `mapToPublicShape`/Live Preview remain unbuilt (Section 13.14 sub-phases 7–8 and Phase 4 onward).
+
 ---
 
 ## Architecture Freeze
@@ -355,8 +357,8 @@ A capability flag that the adapter doesn't actually enforce server-side is worse
 4. Build `adapterContract.js` and `talentAdapter.js` (with its `capabilities` object), since Talent is the most fully fleshed-out model in Section 3.
 5. Build `versionService.js` and `proposalService.js` against the Talent adapter.
 6. Build `approvalService.js` and `publishService.js` as separate files, wired so `approve()` calls `publish()` in the same transaction for v1, per 13.5.
-7. Add `siteContentAdapter.js`, `seoAdapter.js`, `legalPageAdapter.js` as stubs that implement the contract minimally, to prove the abstraction generalizes before any of their UIs are built (Phase 7).
-8. Write `versionService.getVersionForPreview()` against `talentAdapter.mapToPublicShape()`, with no preview route yet — proves the Live Preview data path (Section 7) end-to-end at the service layer.
+7. Add `siteContentAdapter.js`, `seoAdapter.js`, `legalPageAdapter.js` as stubs that implement the contract minimally, to prove the abstraction generalizes before any of their UIs are built (Phase 7). **Status (Sprint 3.6):** not yet done for these three — they have no separate parent row with a `revisionNumber`/`currentPublishedVersionId` to repoint (unlike Talent and the generic Entity/EntityVersion pair), so wiring them needs a design decision deferred to a later sprint. Instead, Sprint 3.6 built `createEntityAdapter` (`lib/admin/engine/adapters/entityAdapter.js`) over the existing Entity/EntityVersion primitives (Section 3.1), which already share Talent's parent-pointer shape — proving the engine generalizes to a second adapter without that open design question blocking it.
+8. Write `versionService.getVersionForPreview()` against `talentAdapter.mapToPublicShape()`, with no preview route yet — proves the Live Preview data path (Section 7) end-to-end at the service layer. **Status:** not yet built.
 
 ### 13.15 Architecture layers
 
