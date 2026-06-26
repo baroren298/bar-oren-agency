@@ -4,7 +4,7 @@ Admin-only UI components (Admin Panel Architecture v1.2, Section 7). Kept delibe
 
 **Admin Design System Foundation sprint added** the first six reusable components, plus a shared token file:
 
-- `admin-tokens.css` — a `.tokens` CSS-module class carrying the admin palette/spacing as custom properties (mirrors `app/admin/admin-shell.module.css`'s tokens but is independent from it). Each component below composes `.tokens` on its own root element so it renders correctly even outside `<AdminShell>`.
+- `admin-tokens.module.css` — a `.tokens` CSS-module class carrying the admin palette/spacing as custom properties (mirrors `app/admin/admin-shell.module.css`'s tokens but is independent from it). Each component below composes `.tokens` on its own root element so it renders correctly even outside `<AdminShell>`.
 - `PageHeader.jsx` — page title + optional description + optional right-aligned action slot.
 - `Card.jsx` — generic bordered surface panel, optional heading.
 - `PrimaryButton.jsx` — solid accent-colored button/link for the main action on a page.

@@ -1,0 +1,42 @@
+/*
+ * Shared admin design tokens — Phase: Admin Design System Foundation.
+ *
+ * Mirrors the palette already established in app/admin/admin-shell.module.css
+ * (soft warm-light surface, restrained borders, one accent) so every
+ * components/admin/** component matches the existing admin look without
+ * importing anything from css/styles.css or styles/* (the public site's
+ * stylesheets). Deliberately a tiny, self-contained set — not meant to grow
+ * into a general theming system, just a single source of truth so the six
+ * Phase components below (and whatever Talent/SEO/Media/Settings add later)
+ * stay visually consistent.
+ *
+ * Each component module below applies `.tokens` on its own root element via
+ * `composes: tokens from "./admin-tokens.module.css"` so components are self-
+ * contained and renderable even outside <AdminShell> (e.g. in isolation,
+ * in tests, or on a future admin page that doesn't use the shell).
+ */
+
+.tokens {
+  --admin-bg: #faf8f5;
+  --admin-surface: #ffffff;
+  --admin-text-primary: #1f1c17;
+  --admin-text-secondary: #6b665d;
+  --admin-text-muted: #9a948a;
+  --admin-border: #e7e2d8;
+  --admin-accent: #b89a6f;
+  --admin-accent-strong: #a3855d;
+  --admin-accent-subtle: #f1ebe0;
+  --admin-radius: 8px;
+  --admin-radius-lg: 12px;
+
+  --admin-status-neutral-bg: #f1ebe0;
+  --admin-status-neutral-text: #6b665d;
+  --admin-status-success-bg: #e9f0e6;
+  --admin-status-success-text: #4d6b41;
+  --admin-status-warning-bg: #f7ecd9;
+  --admin-status-warning-text: #8a6420;
+  --admin-status-info-bg: #e8eef3;
+  --admin-status-info-text: #3f6380;
+  --admin-status-danger-bg: #f6e7e4;
+  --admin-status-danger-text: #9c4a3a;
+}

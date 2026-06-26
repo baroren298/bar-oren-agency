@@ -10,6 +10,8 @@ Placeholder folder for the admin panel UI (Admin Panel Architecture v1.2, Sectio
 
 **Known cleanup needed:** an `app/admin/(dashboard)/` folder exists alongside this README from an abandoned first attempt at this sprint (a Next.js route-group version of the same shell). It duplicates `page.jsx` for `/admin`, `/admin/talent`, and `/admin/talent/[id]` and **must be deleted** before running `next build` — Next.js will fail with a duplicate-route error otherwise. It was left in place because file deletion wasn't available in the session that built this; delete the whole `app/admin/(dashboard)/` directory, nothing else needs to change.
 
+**Phase 2 (Agency Workflow) added:** `my-work/page.jsx` + `my-work/WorkflowItemCard.jsx` + `my-work/my-work.module.css` — the "My Work" dashboard (Drafts / Waiting for Approval / Changes Requested / Approved-Published), reusing `AdminShell`, `PageHeader`, `Card`, `StatusBadge`, and `EmptyState` from `components/admin/**`. Data comes from `lib/admin/mock-workflow.js` (local mock only — no database, no Prisma, no new API route). `AdminNavLinks.jsx` gained a "My Work" link between Dashboard and Talent. No auth, middleware, or public-site changes.
+
 Planned contents, added starting in later phases per `ADMIN_PANEL_PLAN.md` Section 9:
 
 - `page.jsx` — dashboard (done: minimal foundation; richer dashboard content still pending)

@@ -35,4 +35,8 @@ Sprint 3.4 (Approval and Publish, Section 13.5/13.8) added:
 
 No schema changes this sprint — `TalentVersion.approvedById`/`approvedAt`/`rejectionNote` already exist in `prisma/schema.prisma`.
 
-Nothing in this folder is wired into any route, page, or component yet.
+Sprint Phase 2 (Agency Workflow) added:
+
+- `mock-workflow.js` — local, hardcoded mock data for the new `/admin/my-work` page (`app/admin/my-work/page.jsx`). Exports `WORKFLOW_STATUS`, `STATUS_LABEL`, `STATUS_TONE`, and `getWorkflowSections()`. Deliberately not wired to the engine/repository layers above — no database, no Prisma, per this sprint's explicit scope — but its status keys (`draft`, `waiting_for_approval`, `changes_requested`, `approved`, `published`) are named to map cleanly onto real Proposal/Version statuses later, so swapping this file's exports for a real query shouldn't require touching the page's JSX.
+
+Nothing in this folder (other than `mock-workflow.js`, which is plain local data) is wired into any route, page, or component yet.

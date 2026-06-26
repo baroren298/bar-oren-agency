@@ -7,6 +7,8 @@
  * Shared by the desktop sidebar and the mobile top nav in AdminShell.jsx
  * so both stay in sync from one list. Only working routes are listed —
  * no placeholder/future items, per this sprint's scope.
+ *
+ * Phase 2 (Agency Workflow) added "My Work" -> /admin/my-work.
  */
 
 import { usePathname } from "next/navigation";
@@ -14,6 +16,7 @@ import styles from "./admin-shell.module.css";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/my-work", label: "My Work" },
   { href: "/admin/talent", label: "Talent" },
 ];
 
