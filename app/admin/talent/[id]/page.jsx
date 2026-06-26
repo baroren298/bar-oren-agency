@@ -15,10 +15,13 @@
  * four-state status (including "changes requested", via a REJECTED
  * version) instead of just three, see that module's header comment.
  *
- * Details/Gallery/Socials/SEO now each have a real (still fully local,
- * still no persistence) editing UI — see DetailsSectionContent,
- * GallerySectionContent, SocialsSectionContent, SeoSectionContent below.
- * Only History remains an empty-state placeholder this sprint.
+ * Details/Gallery/Socials/SEO/History now each have a real (still fully
+ * local, still no persistence) UI — see DetailsSectionContent,
+ * GallerySectionContent, SocialsSectionContent, SeoSectionContent,
+ * HistorySectionContent below. History Tab Foundation sprint: a read-only
+ * <Timeline> of mock events (lib/admin/mock-history.js) — no database, no
+ * real audit log, no workflow engine, same "still UI/Foundation only" scope
+ * every other section here follows.
  *
  * Database-deferred bridge unchanged: still `force-dynamic` + the
  * `isDatabaseConfigured` guard.
@@ -36,6 +39,7 @@ import ComparisonView from '@/components/admin/ComparisonView';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import SeoEditor from '@/components/admin/SeoEditor';
+import Timeline from '@/components/admin/Timeline';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import { getTalentBySlug } from '@/data/talent';
 import {
@@ -46,6 +50,7 @@ import {
   workflowStatusLabel,
   workflowStatusTone,
 } from '@/lib/admin/talent-workspace';
+import { getTalentHistory, ACTION_LABEL, ACTION_TONE } from '@/lib/admin/mock-history';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent-detail.module.css';
 
@@ -224,6 +229,28 @@ function SeoSectionContent() {
   return <SeoEditor publishedSeo={publishedSeo} />;
 }
 
+/*
+ * History Tab Foundation sprint — maps lib/admin/mock-history.js's mock
+ * events (action keys + raw tone keys) into the resolved
+ * { action: label, tone }[] shape <Timeline> expects, the same
+ * "resolve labels/tones at the call site, keep the component generic"
+ * pattern workflowStatusLabel/workflowStatusTone already use for
+ * <StatusBadge> elsewhere on this page. No database, no real audit log —
+ * just a local mock feed, same as every other section here this sprint.
+ */
+function buildHistoryItems(talentSlug) {
+  return getTalentHistory(talentSlug).map((event) => ({
+    ...event,
+    action: ACTION_LABEL[event.action] || event.action,
+    tone: ACTION_TONE[event.action] || 'neutral',
+  }));
+}
+
+function HistorySectionContent({ talentSlug }) {
+  const items = buildHistoryItems(talentSlug);
+  return <Timeline items={items} />;
+}
+
 export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
     return (
@@ -267,6 +294,9 @@ export default async function AdminTalentDetailPage({ params }) {
     }
     if (section.key === 'seo') {
       return { ...section, content: <SeoSectionContent /> };
+    }
+    if (section.key === 'history') {
+      return { ...section, content: <HistorySectionContent talentSlug={talent.slug} /> };
     }
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
