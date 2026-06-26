@@ -1,62 +1,52 @@
 /*
- * /admin/talent — Sprint 4.1 (ADMIN_PANEL_PLAN.md Section 2's roster list,
- * scoped down to the read-only slice approved for this sprint).
+ * /admin/talent — Sprint 4.1/4.2 (read-only roster), reworked by the
+ * "Talent Workspace Foundation" sprint into a work-queue list per the
+ * product vision: this should feel like an employee's queue of profiles to
+ * act on, not a directory/CMS table.
  *
- * Server Component, calling straight into the Core Content Engine
- * (versionService.listParents + talentAdapter) — no API route needed yet,
- * since nothing here is a client-driven mutation (Section 13.15: the
- * Presentation layer may call the engine directly; an API route only
- * becomes necessary once a browser-side write needs to reach it).
+ * Still strictly read-only and still calling straight into the existing
+ * Core Content Engine read path (versionService.listParents +
+ * talentAdapter) — no new repository/adapter/engine code, no API route,
+ * no Prisma changes. Only the Presentation layer changed: PageHeader +
+ * EmptyState + the new TalentQueueRow (Card + StatusBadge) replace the
+ * plain <table>, and status/summary text is derived from the exact same
+ * fields the old table read (`hasPublishedVersion`, `hasPendingChanges`) —
+ * see lib/admin/talent-workspace.js's header comment for why a full
+ * four-state status (incl. "changes requested") isn't derivable from this
+ * particular list query yet, and why that's a deliberate scope line for
+ * this sprint rather than an oversight.
  *
- * Strictly read-only per this sprint's approved scope:
- *   - no action buttons (approve/reject/propose/hide/archive — all later
- *     sprints),
- *   - no version content resolved or rendered (no bio/images/socials —
- *     versionService.listParents() deliberately never returns that; see
- *     its own header comment),
- *   - already gated by middleware.js's existing /admin session check, so
- *     no auth changes were needed for this route.
- *
- * Fields shown, exactly as proposed and approved before implementation:
- * name (from the current published TalentVersion, if any), slug, lifecycle
- * status, a "pending changes" flag, and a "published" flag.
- *
- * Sprint 4.2 addition: each row's name now links to the read-only detail
- * page at /admin/talent/[id] (Sprint 4.1 had deliberately deferred this
- * link since that route didn't exist yet). No other change to this file.
- *
- * Database-deferred bridge: the database phase is intentionally postponed
- * (see lib/admin/db.js), so this page is marked `force-dynamic` — it must
- * never be statically prerendered at build time, since that would execute
- * this component (and the Prisma-backed engine call below) during
- * `next build`/Vercel Preview with no DATABASE_URL set. It also checks
- * `isDatabaseConfigured` before calling into the engine and renders a
- * plain placeholder instead. Once a real database is configured, both of
- * these can stay as-is (force-dynamic is also the right mode for live
- * admin data) — no further change is required here.
- *
- * Phase 4 layout sprint: now wrapped in AdminShell (header + sidebar +
- * content) instead of supplying its own <main> padding — see
- * ../AdminShell.jsx. No change to data fetching, fields, or behavior.
+ * Database-deferred bridge unchanged: still `force-dynamic` + the
+ * `isDatabaseConfigured` guard (see lib/admin/db.js) so this page never
+ * runs its Prisma-backed engine call during `next build`/Preview with no
+ * DATABASE_URL set.
  */
 
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { isDatabaseConfigured } from '@/lib/admin/db';
 import AdminShell from '../AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
+import TalentQueueRow from './TalentQueueRow';
+import { he } from '@/lib/admin/i18n/he';
+import styles from './talent.module.css';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Talent — Admin',
+  title: 'מיוצגים — ניהול',
 };
 
 export default async function AdminTalentListPage() {
   if (!isDatabaseConfigured) {
     return (
       <AdminShell>
-        <h1 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Talent (read-only)</h1>
-        <p>Database not configured yet.</p>
+        <PageHeader title={he.talent.list.title} description={he.talent.list.description} />
+        <EmptyState
+          title={he.talent.list.dbNotConfiguredTitle}
+          description={he.talent.list.dbNotConfiguredDescription}
+        />
       </AdminShell>
     );
   }
@@ -65,35 +55,16 @@ export default async function AdminTalentListPage() {
 
   return (
     <AdminShell>
-      <h1 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Talent (read-only)</h1>
+      <PageHeader title={he.talent.list.title} description={he.talent.list.description} />
 
       {talents.length === 0 ? (
-        <p>No talent records yet.</p>
+        <EmptyState title={he.talent.list.emptyTitle} description={he.talent.list.emptyDescription} />
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-          <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-              <th style={{ padding: '0.5rem' }}>Name</th>
-              <th style={{ padding: '0.5rem' }}>Slug</th>
-              <th style={{ padding: '0.5rem' }}>Status</th>
-              <th style={{ padding: '0.5rem' }}>Published</th>
-              <th style={{ padding: '0.5rem' }}>Pending changes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {talents.map((talent) => (
-              <tr key={talent.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '0.5rem' }}>
-                  <a href={`/admin/talent/${talent.id}`}>{talent.name || talent.slug}</a>
-                </td>
-                <td style={{ padding: '0.5rem' }}>{talent.slug}</td>
-                <td style={{ padding: '0.5rem' }}>{talent.status}</td>
-                <td style={{ padding: '0.5rem' }}>{talent.hasPublishedVersion ? 'Yes' : 'No'}</td>
-                <td style={{ padding: '0.5rem' }}>{talent.hasPendingChanges ? 'Yes' : 'No'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className={styles.queue}>
+          {talents.map((talent) => (
+            <TalentQueueRow key={talent.id} talent={talent} />
+          ))}
+        </div>
       )}
     </AdminShell>
   );

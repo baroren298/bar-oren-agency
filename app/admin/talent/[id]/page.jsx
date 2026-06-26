@@ -1,41 +1,27 @@
 /*
- * /admin/talent/[id] — Sprint 4.2 (ADMIN_PANEL_PLAN.md Section 2's talent
- * editor route, scoped down to the read-only slice approved for this
- * sprint).
+ * /admin/talent/[id] — Sprint 4.2 (read-only detail), reworked by the
+ * "Talent Workspace Foundation" sprint into the talent's workspace: a
+ * header (name, workflow status, last updated) plus workspace navigation
+ * with five placeholder sections (פרטים / גלריה / רשתות / SEO / היסטוריה),
+ * per the product vision — opening a talent should feel like opening
+ * their working folder, not a CRUD edit screen.
  *
- * Server Component, calling straight into the Core Content Engine
- * (versionService.getCurrentPublished / getCurrentDraftOrProposed +
- * talentAdapter) — same pattern as /admin/talent (Sprint 4.1): no API
- * route needed, since nothing here is a client-driven mutation (Section
- * 13.15: Presentation may call the engine directly for a decision-free
- * read).
+ * Still strictly read-only, still calling straight into the existing Core
+ * Content Engine read path — no new repository/adapter/engine code, no
+ * API route, no Prisma changes. The one addition to the data calls already
+ * made here (getCurrentPublished, getCurrentDraftOrProposed) is
+ * versionService.listVersionHistory, which already existed unused by this
+ * page — adding it lets lib/admin/talent-workspace.js derive the real
+ * four-state status (including "changes requested", via a REJECTED
+ * version) instead of just three, see that module's header comment.
  *
- * Strictly read-only per this sprint's approved scope:
- *   - no edit form, no propose/approve/reject/hide/archive actions,
- *   - no gallery/image rendering, no socials,
- *   - no diff view, no Live Preview,
- *   - no new engine/repository/Prisma code — every call below already
- *     existed before this sprint (versionService.getCurrentPublished,
- *     versionService.getCurrentDraftOrProposed, talentAdapter.getParent),
- *   - already gated by middleware.js's existing /admin/* session check
- *     (path-prefix match, so the dynamic [id] segment needed no changes),
- *   - no API route added.
+ * No editing, no propose/approve/reject actions, no gallery/socials/SEO
+ * content yet — those four sections are intentionally empty-state
+ * placeholders this sprint (requirement #2: "No editing required yet.
+ * Just create the layout and placeholders").
  *
- * Fields shown, exactly as approved: from the Current Published
- * TalentVersion only — name (he/en), category, tags, location (he/en),
- * bio (he/en), featured flag — plus the talent's slug/lifecycle status
- * (from the parent Talent row) and a pending-changes indicator (whether a
- * DRAFT or PROPOSED version exists). If there is no published version yet,
- * that is stated plainly instead of rendering empty fields.
- *
- * Database-deferred bridge: see the matching comment in
- * /admin/talent/page.jsx — same reasoning applies here (force-dynamic +
- * isDatabaseConfigured guard so this page never runs its Prisma-backed
- * engine call during a build with no DATABASE_URL set).
- *
- * Phase 4 layout sprint: now wrapped in AdminShell (header + sidebar +
- * content) instead of supplying its own <main> padding — see
- * ../../AdminShell.jsx. No change to data fetching, fields, or behavior.
+ * Database-deferred bridge unchanged: still `force-dynamic` + the
+ * `isDatabaseConfigured` guard.
  */
 
 import { notFound } from 'next/navigation';
@@ -43,22 +29,81 @@ import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { isDatabaseConfigured } from '@/lib/admin/db';
 import AdminShell from '../../AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Card from '@/components/admin/Card';
+import StatusBadge from '@/components/admin/StatusBadge';
+import EmptyState from '@/components/admin/EmptyState';
+import TalentWorkspaceTabs from './TalentWorkspaceTabs';
+import {
+  TALENT_WORKSPACE_SECTIONS,
+  deriveDetailWorkflowStatus,
+  deriveLastUpdated,
+  formatHebrewDate,
+  workflowStatusLabel,
+  workflowStatusTone,
+} from '@/lib/admin/talent-workspace';
+import { he } from '@/lib/admin/i18n/he';
+import styles from './talent-detail.module.css';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Talent detail — Admin',
+  title: 'סביבת עבודה — מיוצג',
 };
-
-const fieldRowStyle = { padding: '0.5rem 0', borderBottom: '1px solid #eee' };
-const labelStyle = { fontWeight: 600, paddingRight: '1rem', width: '160px', verticalAlign: 'top' };
 
 function FieldRow({ label, value }) {
   return (
-    <tr style={fieldRowStyle}>
-      <td style={labelStyle}>{label}</td>
-      <td>{value === null || value === undefined || value === '' ? '—' : String(value)}</td>
-    </tr>
+    <div className={styles.fieldRow}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <span className={styles.fieldValue}>
+        {value === null || value === undefined || value === '' ? he.talent.fields.empty : String(value)}
+      </span>
+    </div>
+  );
+}
+
+function DetailsSectionContent({ publishedVersion }) {
+  if (!publishedVersion) {
+    return (
+      <EmptyState
+        title={he.talent.detail.noPublishedVersionTitle}
+        description={he.talent.detail.noPublishedVersionDescription}
+      />
+    );
+  }
+
+  return (
+    <Card>
+      <div className={styles.fieldList}>
+        <FieldRow label={he.talent.fields.name} value={publishedVersion.name} />
+        <FieldRow label={he.talent.fields.nameEn} value={publishedVersion.nameEn} />
+        <FieldRow
+          label={he.talent.fields.category}
+          value={Array.isArray(publishedVersion.category) ? publishedVersion.category.join(', ') : null}
+        />
+        <FieldRow
+          label={he.talent.fields.tags}
+          value={Array.isArray(publishedVersion.tags) ? publishedVersion.tags.join(', ') : null}
+        />
+        <FieldRow label={he.talent.fields.location} value={publishedVersion.location} />
+        <FieldRow label={he.talent.fields.locationEn} value={publishedVersion.locationEn} />
+        <FieldRow
+          label={he.talent.fields.featured}
+          value={publishedVersion.featured ? he.talent.fields.yes : he.talent.fields.no}
+        />
+        <FieldRow label={he.talent.fields.bio} value={publishedVersion.bioHe} />
+        <FieldRow label={he.talent.fields.bioEn} value={publishedVersion.bioEn} />
+      </div>
+    </Card>
+  );
+}
+
+function PlaceholderSectionContent({ label }) {
+  return (
+    <EmptyState
+      title={he.talent.sectionPlaceholder.title}
+      description={he.talent.sectionPlaceholder.description(label)}
+    />
   );
 }
 
@@ -66,10 +111,10 @@ export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
     return (
       <AdminShell>
-        <p style={{ marginBottom: '0.5rem' }}>
-          <a href="/admin/talent">&larr; Back to Talent</a>
-        </p>
-        <p>Database not configured yet.</p>
+        <a href="/admin/talent" className={styles.backLink}>
+          {he.talent.detail.backToList}
+        </a>
+        <EmptyState description={he.talent.detail.dbNotConfiguredDescription} />
       </AdminShell>
     );
   }
@@ -81,51 +126,50 @@ export default async function AdminTalentDetailPage({ params }) {
     notFound();
   }
 
-  const [publishedVersion, pendingVersion] = await Promise.all([
+  const [publishedVersion, versions] = await Promise.all([
     versionService.getCurrentPublished(talentAdapter, id),
-    versionService.getCurrentDraftOrProposed(talentAdapter, id),
+    versionService.listVersionHistory(talentAdapter, id),
   ]);
+
+  const status = deriveDetailWorkflowStatus(versions);
+  const lastUpdated = deriveLastUpdated(versions, talent);
+  const displayName = publishedVersion?.name || talent.slug;
+
+  const sections = TALENT_WORKSPACE_SECTIONS.map((section) => {
+    if (section.key === 'details') {
+      return { ...section, content: <DetailsSectionContent publishedVersion={publishedVersion} /> };
+    }
+    return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
+  });
 
   return (
     <AdminShell>
-      <p style={{ marginBottom: '0.5rem' }}>
-        <a href="/admin/talent">&larr; Back to Talent</a>
-      </p>
+      <a href="/admin/talent" className={styles.backLink}>
+        {he.talent.detail.backToList}
+      </a>
 
-      <h1 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>
-        {publishedVersion?.name || talent.slug} (read-only)
-      </h1>
+      <PageHeader
+        title={displayName}
+        description={`${he.talent.meta.lastUpdated}: ${formatHebrewDate(lastUpdated)}`}
+        action={<StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />}
+      />
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-        <tbody>
-          <FieldRow label="Slug" value={talent.slug} />
-          <FieldRow label="Lifecycle status" value={talent.status} />
-          <FieldRow label="Pending changes" value={pendingVersion ? 'Yes' : 'No'} />
-        </tbody>
-      </table>
+      <div className={styles.metaCard}>
+        <Card as="section">
+          <div className={styles.metaGrid}>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>{he.talent.detail.slug}</span>
+              <span className={styles.metaValue}>{talent.slug}</span>
+            </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>{he.talent.detail.visibilityStatus}</span>
+              <span className={styles.metaValue}>{talent.status}</span>
+            </div>
+          </div>
+        </Card>
+      </div>
 
-      <h2 style={{ fontSize: '1.05rem', marginBottom: '0.5rem' }}>Current Published</h2>
-
-      {!publishedVersion ? (
-        <p>No published version yet.</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-          <tbody>
-            <FieldRow label="Name" value={publishedVersion.name} />
-            <FieldRow label="Name (EN)" value={publishedVersion.nameEn} />
-            <FieldRow
-              label="Category"
-              value={Array.isArray(publishedVersion.category) ? publishedVersion.category.join(', ') : null}
-            />
-            <FieldRow label="Tags" value={Array.isArray(publishedVersion.tags) ? publishedVersion.tags.join(', ') : null} />
-            <FieldRow label="Location" value={publishedVersion.location} />
-            <FieldRow label="Location (EN)" value={publishedVersion.locationEn} />
-            <FieldRow label="Featured" value={publishedVersion.featured ? 'Yes' : 'No'} />
-            <FieldRow label="Bio" value={publishedVersion.bioHe} />
-            <FieldRow label="Bio (EN)" value={publishedVersion.bioEn} />
-          </tbody>
-        </table>
-      )}
+      <TalentWorkspaceTabs sections={sections} />
     </AdminShell>
   );
 }

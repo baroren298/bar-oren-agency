@@ -1,0 +1,68 @@
+/*
+ * Talent work-queue list styles — Talent Workspace Foundation sprint.
+ *
+ * Composes the shared components/admin/admin-tokens.module.css palette,
+ * same as every other admin page module, so this page can't drift from
+ * the existing look. Card/StatusBadge supply the surface and badge colors;
+ * this file only adds the queue list layout and row typography.
+ */
+
+.tokens {
+  composes: tokens from "../../../components/admin/admin-tokens.module.css";
+}
+
+.queue {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.rowLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--admin-radius-lg);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.rowLink:hover,
+.rowLink:focus-visible {
+  box-shadow: 0 1px 0 0 var(--admin-accent);
+}
+
+.rowHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.rowName {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.rowMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--admin-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.metaDot {
+  color: var(--admin-text-muted);
+}
+
+.rowSummary {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--admin-text-secondary);
+  line-height: 1.45;
+}
