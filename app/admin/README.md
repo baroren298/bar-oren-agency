@@ -2,11 +2,10 @@
 
 Placeholder folder for the admin panel UI (Admin Panel Architecture v1.2, Section 2).
 
-**Nothing here yet on purpose.** Phase 1 (Foundations) only sets up non-route infrastructure (Prisma schema, repository skeletons, shared constants, mapper skeletons under `lib/admin/`). No `page.jsx`, `layout.jsx`, or other route files exist in this folder yet, so this folder currently contributes no routes and has no effect on the public site.
+**Phase 2 (Auth/Security) added:** `layout.jsx` (root layout — required since this folder sits outside `app/[locale]/`, which is the de-facto root for the public site) and `login/page.jsx` + `login/LoginForm.jsx` + `login/login.module.css` (Owner login form, posts to `app/api/admin/auth/login/route.js`). No other admin pages exist yet — `/admin` itself (the dashboard) is intentionally not built until Phase 4, so a logged-in redirect to `/admin` currently 404s. That's expected for this phase.
 
 Planned contents, added starting in later phases per `ADMIN_PANEL_PLAN.md` Section 9:
 
-- `login/page.jsx` — Owner authentication (Phase 2)
 - `page.jsx` — dashboard (Phase 4+)
 - `talent/page.jsx`, `talent/[id]/page.jsx`, `talent/new/page.jsx` (Phase 4)
 - `proposals/page.jsx`, `proposals/[id]/page.jsx` (Phase 5)
