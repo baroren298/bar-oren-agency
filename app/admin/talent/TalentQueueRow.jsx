@@ -26,24 +26,29 @@ export default function TalentQueueRow({ talent }) {
   const displayName = talent.name || talent.nameEn || talent.slug;
 
   return (
-    <Link href={`/admin/talent/${talent.id}`} className={styles.rowLink}>
+    <Link href={`/admin/talent/${talent.id}`} className={styles.rowLink} aria-label={`${he.talent.list.openFolder}: ${displayName}`}>
       <Card as="article">
-        <div className={styles.rowHeader}>
-          <h3 className={styles.rowName}>{displayName}</h3>
-          <StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />
-        </div>
+        <div className={styles.rowMain}>
+          <div className={styles.rowBody}>
+            <div className={styles.rowHeader}>
+              <h3 className={styles.rowName}>{displayName}</h3>
+              <StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />
+            </div>
 
-        <div className={styles.rowMeta}>
-          <span>
-            {he.talent.meta.lastUpdated}: {he.talent.meta.noDateYet}
-          </span>
-          <span className={styles.metaDot} aria-hidden="true">
-            •
-          </span>
-          <span>{talent.slug}</span>
-        </div>
+            <div className={styles.rowMeta}>
+              <span>
+                {he.talent.meta.lastUpdated}: {he.talent.meta.noDateYet}
+              </span>
+            </div>
 
-        <p className={styles.rowSummary}>{summary}</p>
+            <p className={styles.rowSummary}>{summary}</p>
+          </div>
+
+          <div className={styles.rowAffordance} aria-hidden="true">
+            <span className={styles.rowAffordanceLabel}>{he.talent.list.openFolder}</span>
+            <span className={styles.rowAffordanceArrow}>‹</span>
+          </div>
+        </div>
       </Card>
     </Link>
   );

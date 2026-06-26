@@ -21,32 +21,62 @@
   color: var(--admin-accent-strong);
 }
 
-.metaCard {
+/*
+ * Subtle "מידע טכני" disclosure — Talent Workspace Header Polish sprint.
+ *
+ * Replaces the old always-visible metaCard (raw slug + raw lifecycle
+ * status shown next to the human-readable header) per the sprint goal:
+ * the workspace should read like a talent's work folder, not a technical
+ * record page. Collapsed by default (<details>), low-contrast, placed
+ * after the workspace tabs so it never competes with the name/status/
+ * last-updated header above.
+ */
+.technicalInfo {
   composes: tokens;
-  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--admin-border);
 }
 
-.metaGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+.technicalInfoSummary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  list-style: none;
 }
 
-.metaItem {
+.technicalInfoSummary:hover {
+  color: var(--admin-text-secondary);
+}
+
+.technicalInfoBody {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
 }
 
-.metaLabel {
+.technicalInfoHint {
+  font-size: 0.76rem;
+  color: var(--admin-text-muted);
+}
+
+.technicalInfoRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.technicalInfoLabel {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--admin-text-muted);
 }
 
-.metaValue {
-  font-size: 0.92rem;
-  color: var(--admin-text-primary);
+.technicalInfoValue {
+  font-size: 0.82rem;
+  color: var(--admin-text-secondary);
 }
 
 .workspace {

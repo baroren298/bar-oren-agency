@@ -22,13 +22,33 @@
   display: block;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
   border-radius: var(--admin-radius-lg);
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .rowLink:hover,
 .rowLink:focus-visible {
-  box-shadow: 0 1px 0 0 var(--admin-accent);
+  box-shadow: 0 4px 14px 0 rgba(31, 28, 23, 0.08), 0 0 0 1px var(--admin-accent);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.rowLink:hover .rowAffordanceArrow,
+.rowLink:focus-visible .rowAffordanceArrow {
+  transform: translateX(-3px);
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rowBody {
+  flex: 1;
+  min-width: 0;
 }
 
 .rowHeader {
@@ -41,8 +61,8 @@
 
 .rowName {
   margin: 0;
-  font-size: 1.02rem;
-  font-weight: 600;
+  font-size: 1.12rem;
+  font-weight: 700;
   color: var(--admin-text-primary);
 }
 
@@ -56,13 +76,39 @@
   margin-bottom: 0.5rem;
 }
 
-.metaDot {
-  color: var(--admin-text-muted);
-}
-
 .rowSummary {
   margin: 0;
   font-size: 0.88rem;
   color: var(--admin-text-secondary);
   line-height: 1.45;
+}
+
+/*
+ * Open-folder affordance — Talent Workspace Header Polish sprint.
+ * A small, low-key "פתח תיק" + arrow at the row's edge so the card reads
+ * as clearly clickable, without competing with the talent name.
+ */
+.rowAffordance {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  color: var(--admin-text-muted);
+  transition: color 0.15s ease;
+}
+
+.rowLink:hover .rowAffordance,
+.rowLink:focus-visible .rowAffordance {
+  color: var(--admin-accent-strong);
+}
+
+.rowAffordanceLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rowAffordanceArrow {
+  font-size: 1rem;
+  transition: transform 0.15s ease;
 }

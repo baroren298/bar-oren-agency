@@ -30,7 +30,6 @@ import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { isDatabaseConfigured } from '@/lib/admin/db';
 import AdminShell from '../../AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
-import Card from '@/components/admin/Card';
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import ComparisonView from '@/components/admin/ComparisonView';
@@ -149,22 +148,18 @@ export default async function AdminTalentDetailPage({ params }) {
         action={<StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />}
       />
 
-      <div className={styles.metaCard}>
-        <Card as="section">
-          <div className={styles.metaGrid}>
-            <div className={styles.metaItem}>
-              <span className={styles.metaLabel}>{he.talent.detail.slug}</span>
-              <span className={styles.metaValue}>{talent.slug}</span>
-            </div>
-            <div className={styles.metaItem}>
-              <span className={styles.metaLabel}>{he.talent.detail.visibilityStatus}</span>
-              <span className={styles.metaValue}>{talent.status}</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       <TalentWorkspaceTabs sections={sections} />
+
+      <details className={styles.technicalInfo}>
+        <summary className={styles.technicalInfoSummary}>{he.talent.detail.technicalInfo}</summary>
+        <div className={styles.technicalInfoBody}>
+          <span className={styles.technicalInfoHint}>{he.talent.detail.technicalInfoHint}</span>
+          <div className={styles.technicalInfoRow}>
+            <span className={styles.technicalInfoLabel}>{he.talent.detail.slug}</span>
+            <span className={styles.technicalInfoValue}>{talent.slug}</span>
+          </div>
+        </div>
+      </details>
     </AdminShell>
   );
 }
