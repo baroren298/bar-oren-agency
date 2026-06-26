@@ -1,0 +1,27 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 2rem;
+  padding: 0.85rem 1rem;
+  background: var(--admin-bg);
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--admin-radius);
+}
+
+.icon {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.text {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--admin-text-secondary);
+}

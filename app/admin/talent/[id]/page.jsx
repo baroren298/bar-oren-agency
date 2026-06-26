@@ -53,29 +53,61 @@ export const metadata = {
 
 /*
  * Field config for the פרטים editing experience — Editing Experience
- * Foundation sprint. Maps the same published-version fields the previous
- * read-only view showed into <ComparisonView>'s generic
- * { key, label, value, type } shape. This is the only place that knows
- * "name is text, category is a list, featured is a boolean" for talent —
+ * Foundation sprint, regrouped by the Profile Editor Foundation sprint.
+ * Maps the same published-version fields the previous read-only view
+ * showed into <ComparisonView>'s generic group shape:
+ * { key, label, fields: { key, label, value, type }[] }[]. This is the
+ * only place that knows "name is text, category is a list, featured is a
+ * boolean, and they belong in these four groups" for talent —
  * ComparisonView itself stays entity-agnostic so the same component can be
- * reused for Gallery/SEO/Social links/Homepage/etc. later.
+ * reused for Gallery/SEO/Social links/Homepage/etc. later, each with its
+ * own grouping.
  */
-function buildDetailsFields(publishedVersion) {
+function buildDetailsGroups(publishedVersion) {
   return [
-    { key: 'name', label: he.talent.fields.name, type: 'text', value: publishedVersion.name },
-    { key: 'nameEn', label: he.talent.fields.nameEn, type: 'text', value: publishedVersion.nameEn },
-    { key: 'category', label: he.talent.fields.category, type: 'list', value: publishedVersion.category },
-    { key: 'tags', label: he.talent.fields.tags, type: 'list', value: publishedVersion.tags },
-    { key: 'location', label: he.talent.fields.location, type: 'text', value: publishedVersion.location },
-    { key: 'locationEn', label: he.talent.fields.locationEn, type: 'text', value: publishedVersion.locationEn },
     {
-      key: 'featured',
-      label: he.talent.fields.featured,
-      type: 'boolean',
-      value: Boolean(publishedVersion.featured),
+      key: 'basic',
+      label: he.talent.detailGroups.basic,
+      fields: [
+        { key: 'name', label: he.talent.fields.name, type: 'text', value: publishedVersion.name },
+        { key: 'nameEn', label: he.talent.fields.nameEn, type: 'text', value: publishedVersion.nameEn },
+        {
+          key: 'featured',
+          label: he.talent.fields.featured,
+          type: 'boolean',
+          value: Boolean(publishedVersion.featured),
+        },
+      ],
     },
-    { key: 'bioHe', label: he.talent.fields.bio, type: 'textarea', value: publishedVersion.bioHe },
-    { key: 'bioEn', label: he.talent.fields.bioEn, type: 'textarea', value: publishedVersion.bioEn },
+    {
+      key: 'bio',
+      label: he.talent.detailGroups.bio,
+      fields: [
+        { key: 'bioHe', label: he.talent.fields.bio, type: 'textarea', value: publishedVersion.bioHe },
+        { key: 'bioEn', label: he.talent.fields.bioEn, type: 'textarea', value: publishedVersion.bioEn },
+      ],
+    },
+    {
+      key: 'categories',
+      label: he.talent.detailGroups.categories,
+      fields: [
+        { key: 'category', label: he.talent.fields.category, type: 'list', value: publishedVersion.category },
+        { key: 'tags', label: he.talent.fields.tags, type: 'list', value: publishedVersion.tags },
+      ],
+    },
+    {
+      key: 'location',
+      label: he.talent.detailGroups.location,
+      fields: [
+        { key: 'location', label: he.talent.fields.location, type: 'text', value: publishedVersion.location },
+        {
+          key: 'locationEn',
+          label: he.talent.fields.locationEn,
+          type: 'text',
+          value: publishedVersion.locationEn,
+        },
+      ],
+    },
   ];
 }
 
@@ -89,7 +121,7 @@ function DetailsSectionContent({ publishedVersion }) {
     );
   }
 
-  return <ComparisonView fields={buildDetailsFields(publishedVersion)} />;
+  return <ComparisonView groups={buildDetailsGroups(publishedVersion)} />;
 }
 
 function PlaceholderSectionContent({ label }) {

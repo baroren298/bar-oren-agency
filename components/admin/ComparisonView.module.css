@@ -68,6 +68,39 @@
   color: var(--admin-text-muted);
 }
 
+/*
+ * Field groups — Profile Editor Foundation sprint. A group is just a
+ * label sitting above its own .fieldList; when a caller passes the legacy
+ * flat `fields` prop there is exactly one group with no label, so the
+ * layout degrades gracefully back to the old "one long list" look.
+ */
+.groupedFieldList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.groupLabel,
+.groupLabelProposed {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.groupLabel {
+  color: var(--admin-text-muted);
+}
+
+.groupLabelProposed {
+  color: var(--admin-accent-strong);
+}
+
 .fieldList {
   display: flex;
   flex-direction: column;

@@ -36,17 +36,44 @@
  *
  * The same component is meant to be reused for every other entity that
  * gets an editing experience later (gallery, SEO, social links, homepage,
- * about, contact, footer, ...) — callers just supply a different `fields`
- * array. Each field is { key, label, value, type }, where `type` is one of
- * "text" | "textarea" | "list" | "boolean" ("list" = comma-separated
- * values, e.g. categories/tags).
+ * about, contact, footer, ...) — callers just supply a different `fields`/
+ * `groups` array. Each field is { key, label, value, type }, where `type`
+ * is one of "text" | "textarea" | "list" | "boolean" ("list" =
+ * comma-separated values, e.g. categories/tags).
+ *
+ * Profile Editor Foundation sprint additions:
+ *   - Fields can now be organized into named groups (e.g. "מידע בסיסי",
+ *     "ביוגרפיה") via the new `groups` prop, so a real editor with many
+ *     fields reads as a structured form instead of one long list. The
+ *     flat `fields` prop still works unchanged (wrapped into a single,
+ *     unlabeled group internally) so this is purely additive — no existing
+ *     caller breaks.
+ *   - The editor now ends with a gentle helper note (EditorHelperNote) and
+ *     a bottom action bar (EditorActionBar: ביטול שינויים / שמור כטיוטה /
+ *     שלח לאישור). Per this sprint's explicit scope, "ביטול שינויים" only
+ *     resets the in-memory proposed values back to the published ones —
+ *     still no API calls — and "שמור כטיוטה" / "שלח לאישור" are disabled
+ *     placeholders. See EditorActionBar.jsx for why they're disabled
+ *     rather than wired to no-ops: it should be obvious to the employee
+ *     that nothing happened yet, not ambiguous.
  *
  * Props:
- *   - fields ({ key, label, value, type }[], required)
+ *   - fields ({ key, label, value, type }[], optional) — flat list, legacy
+ *   - groups ({ key, label, fields: { key, label, value, type }[] }[],
+ *     optional) — grouped list, preferred for new callers. Exactly one of
+ *     `fields`/`groups` should be supplied.
  */
 
 import { useState } from "react";
 import styles from "./ComparisonView.module.css";
+import EditorHelperNote from "./EditorHelperNote";
+import EditorActionBar from "./EditorActionBar";
+
+function normalizeGroups({ groups, fields }) {
+  if (groups && groups.length) return groups;
+  if (fields && fields.length) return [{ key: "_ungrouped", label: null, fields }];
+  return [];
+}
 
 function formatReadOnlyValue(field) {
   const { value, type } = field;
@@ -125,16 +152,28 @@ function ProposedField({ field, value, onChange }) {
   );
 }
 
-export default function ComparisonView({ fields }) {
-  const [proposedValues, setProposedValues] = useState(() =>
-    fields.reduce((acc, field) => {
+export default function ComparisonView({ fields, groups }) {
+  const fieldGroups = normalizeGroups({ groups, fields });
+  const allFields = fieldGroups.flatMap((group) => group.fields);
+
+  function buildInitialValues() {
+    return allFields.reduce((acc, field) => {
       acc[field.key] = field.value;
       return acc;
-    }, {})
-  );
+    }, {});
+  }
+
+  const [proposedValues, setProposedValues] = useState(buildInitialValues);
 
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
+  }
+
+  // Local-only reset — per this sprint's scope, "ביטול שינויים" never talks
+  // to a server. It just discards whatever the employee typed into the
+  // proposed column and snaps it back to the published values in memory.
+  function handleCancel() {
+    setProposedValues(buildInitialValues());
   }
 
   return (
@@ -149,11 +188,18 @@ export default function ComparisonView({ fields }) {
           </header>
           <p className={styles.publishedSubtitle}>כך הביקורים רואים את זה באתר כרגע.</p>
 
-          <div className={styles.fieldList}>
-            {fields.map((field) => (
-              <div key={field.key} className={styles.fieldRow}>
-                <span className={styles.fieldLabel}>{field.label}</span>
-                <span className={styles.readOnlyValue}>{formatReadOnlyValue(field)}</span>
+          <div className={styles.groupedFieldList}>
+            {fieldGroups.map((group) => (
+              <div key={group.key} className={styles.fieldGroup}>
+                {group.label ? <h3 className={styles.groupLabel}>{group.label}</h3> : null}
+                <div className={styles.fieldList}>
+                  {group.fields.map((field) => (
+                    <div key={field.key} className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>{field.label}</span>
+                      <span className={styles.readOnlyValue}>{formatReadOnlyValue(field)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -170,29 +216,41 @@ export default function ComparisonView({ fields }) {
             זו הגרסה שאתה מציע. שום דבר לא יתפרסם באתר לפני אישור.
           </p>
 
-          <div className={styles.fieldList}>
-            {fields.map((field) => (
-              <div key={field.key} className={styles.fieldRowEditable}>
-                <label htmlFor={`proposed-${field.key}`} className={styles.proposedFieldLabel}>
-                  {/*
-                   * Inert placeholder for a future "this field was changed"
-                   * indicator. Purely visual — no diffing against the
-                   * published value happens here or anywhere in this
-                   * component yet.
-                   */}
-                  <span className={styles.changeDot} aria-hidden="true" />
-                  {field.label}
-                </label>
-                <ProposedField
-                  field={field}
-                  value={proposedValues[field.key]}
-                  onChange={(value) => handleChange(field.key, value)}
-                />
+          <div className={styles.groupedFieldList}>
+            {fieldGroups.map((group) => (
+              <div key={group.key} className={styles.fieldGroup}>
+                {group.label ? (
+                  <h3 className={styles.groupLabelProposed}>{group.label}</h3>
+                ) : null}
+                <div className={styles.fieldList}>
+                  {group.fields.map((field) => (
+                    <div key={field.key} className={styles.fieldRowEditable}>
+                      <label htmlFor={`proposed-${field.key}`} className={styles.proposedFieldLabel}>
+                        {/*
+                         * Inert placeholder for a future "this field was
+                         * changed" indicator. Purely visual — no diffing
+                         * against the published value happens here or
+                         * anywhere in this component yet.
+                         */}
+                        <span className={styles.changeDot} aria-hidden="true" />
+                        {field.label}
+                      </label>
+                      <ProposedField
+                        field={field}
+                        value={proposedValues[field.key]}
+                        onChange={(value) => handleChange(field.key, value)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
         </section>
       </div>
+
+      <EditorHelperNote />
+      <EditorActionBar onCancel={handleCancel} />
     </div>
   );
 }
