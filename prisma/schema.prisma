@@ -44,7 +44,15 @@ enum Role {
 /// EntityVersion, SiteContent, SEO, LegalPage, etc). Distinct from
 /// LifecycleStatus below — a row can be the PUBLISHED version of an entity
 /// that is itself HIDDEN.
+///
+/// DRAFT added in Phase 3B.1 (ADMIN_PANEL_PLAN.md Section 13.3, sub-phase 1
+/// of Section 13.14): a proposal the author is still working on and hasn't
+/// submitted for review yet. `proposalService.submit()` (not yet built)
+/// will flip DRAFT → PROPOSED, which is the point a proposal becomes
+/// visible to the approval queue. Purely additive — no existing row uses
+/// DRAFT yet, so no data migration of existing rows is implied.
 enum VersionStatus {
+  DRAFT
   PUBLISHED
   PROPOSED
   REJECTED
@@ -511,4 +519,50 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Event — Core Content Engine substrate (ADMIN_PANEL_PLAN.md Section 13,
+// specifically 13.3.1 and 13.6; added in Phase 3B.1 per Section 13.14's
+// sub-phase 1). Every lifecycle action (proposal created/updated, approved,
+// rejected, published) will emit one of these via eventService.emit() —
+// not yet built in this phase — making Event the source AuditLog rows are
+// projected from (Section 13.7), once auditLogListener exists.
+//
+// Two deliberate splits, both required by the architecture doc:
+//   - `correlationId` is its own indexed column, not nested in `metadata`,
+//     so every Event produced by one user action/transaction can be
+//     grouped and queried directly.
+//   - `payload` (business data only) is kept structurally separate from
+//     `metadata` (technical/request context only — IP, user agent,
+//     request id, duration).
+//
+// `type` is validated against a plain-string catalog (eventTypes.js, not
+// yet built) rather than a Postgres enum, since that catalog is expected
+// to grow continuously (Section 13.2).
+//
+// Append-only per Section 13.16 ("Events are append-only") — no
+// application code may UPDATE or DELETE an Event row once written.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Event {
+  id String @id @default(cuid())
+
+  type String // validated against eventTypes.js, not a DB enum
+
+  entityType EntityType
+  entityId   String
+
+  actorId String? // null for system-generated events
+
+  correlationId String // dedicated, indexed column (Section 13.6)
+
+  payload  Json // business data only
+  metadata Json // technical/request context only
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([correlationId])
+  @@map("events")
 }

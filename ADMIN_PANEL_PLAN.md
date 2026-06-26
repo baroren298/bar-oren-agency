@@ -1,8 +1,40 @@
-# Bar Oren Talent Agency — Admin Panel Architecture v1.2
+# Architecture Status
 
-Branch: `feature/admin-panel`. Status: planning only, no implementation yet. Supersedes v1.1; changes are tracked inline where a decision was revised.
+**Architecture Status:** LOCKED ✅
+**Current Version:** v1.4
+
+| Phase                                          | Status         |
+| ----------------------------------------------- | -------------- |
+| Phase 1 – Foundations                           | ✅ Completed   |
+| Phase 2 – Authentication & Security             | ✅ Completed   |
+| Phase 3A – Core Content Engine Architecture     | ✅ Completed   |
+| Phase 3B – Core Content Engine Implementation   | ⏳ Not Started |
+
+**Last Architecture Review:** 2026-06-26
+
+---
+
+## Architecture Freeze
+
+This architecture is now considered frozen.
+
+From this point forward, architectural changes should only be introduced if they solve a real problem discovered during implementation.
+
+New ideas alone are not sufficient reason to change the architecture.
+
+The objective is to preserve long-term consistency, minimize unnecessary refactoring, and ensure that every implementation phase builds upon a stable foundation.
+
+---
+
+# Bar Oren Talent Agency — Admin Panel Architecture v1.4
+
+Branch: `feature/admin-panel`. Status: Phase 1 (Foundations) and Phase 2 (Auth/Security) are implemented and committed. Phase 3 (Core Content Engine, Section 13 below) is planning only — no implementation yet. Supersedes v1.3; changes are tracked inline where a decision was revised.
 
 **Decisions locked in v1.2** (previously open questions, now settled): the admin launches Owner-only, with the schema already supporting an Editor role so adding one later needs no migration; the stack is Postgres + Prisma, not a multi-option recommendation; optimistic locking ships in v1 from the start rather than being deferred to Hardening; Migration Day happens only after the admin has been fully tested running in parallel with the live `data/*.js`-backed site — no fixed calendar date, the trigger is "tested," not "scheduled."
+
+**Decisions locked in v1.3** (Phase 3 architecture, Section 13): the proposal/approval/publish machinery is reframed as the **Core Content Engine**, scoped to the full pipeline **Content → Version → Proposal → Approval → Publish → Events**, not just "the proposal engine." `Approval` and `Publish` remain two separate services even though v1's composition has approval call publish immediately, in the same transaction — this is so "approve now, publish later," scheduled publishing, and manual publish-after-approval are future compositions of existing services, not rewrites. Every `Event` carries a dedicated, top-level `correlationId` so every event produced by one user action/transaction can be grouped, and an `Event`'s `payload` (business data) is kept structurally separate from its `metadata` (technical/request context — IP, user agent, request id, correlation id, duration). Every adapter declares a `capabilities` object (`supportsPreview`, `supportsScheduling`, `supportsSEO`, `supportsGallery`, `supportsSoftDelete`, `supportsPublishing`, `supportsArchive`) so generic services and future UI can ask "what does this content type support" without an entity-specific `if` statement anywhere in engine code.
+
+**Decisions locked in v1.4** (architectural refinements ahead of Phase 3 implementation, Sections 13.15–13.18): the system has five mandatory architecture layers — Presentation → Core Content Engine → Repositories → Prisma → Database — each depending only on the layer directly below it, never skipping or reversing (Section 13.15). Eight Design Principles govern the whole platform, not just Phase 3 (Section 13.16). Phase 3 is not "done" on a calendar date — it is done only when eight measurable success criteria are all met, including at least two adapters using the engine with zero engine modifications (Section 13.17). A set of architectural guardrails names prohibited patterns explicitly — e.g. no business logic in routes, no entity-specific branching in engine services, no Event or AuditLog writes outside their owning service (Section 13.18). This version is documentation-only: no implementation code, schema, or `data/*.js` changes.
 
 ## 0. Codebase findings that shape this plan
 
@@ -144,11 +176,11 @@ Migration Day is the single moment the database becomes authoritative — script
 
 **Updated in v1.1** to separate concerns the brief called out explicitly (auth/security as its own phase, normalized data model as its own phase before talent admin, image versioning as its own phase, live preview elevated but still sequenced after the approval core is proven):
 
-1. **Foundations** — database, ORM/migrations, repository-layer skeleton, the shared versioning primitives (`Entity`/`EntityVersion`, status/audit conventions from Sections 3–4), and the `mapTalentVersionToPublicShape`-style mapping functions that Live Preview will later depend on. Add the `/admin` rewrite passthrough to `next.config.mjs`. No UI yet.
-2. **Auth/security** — Owner login, session handling, `/admin/*` and `/api/admin/*` gating in `middleware.js`, environment-variable wiring for secrets (Section 10). Done before any real admin UI is built, not after, since every later phase assumes the admin is already access-controlled.
-3. **Normalized data model** — `Talent`, `TalentVersion`, `TalentSocial`, `TalentGalleryImage`, `SiteContent`, `SEO`, `LegalPage`, `ImageAsset` tables and their repositories, plus the soft-delete/status enum (Section 5) and the optimistic-concurrency fields (Section 6) from the start, since retrofitting `revisionNumber`/`basedOnVersionId` onto live tables later is more disruptive than including them now.
-4. **Talent admin (read + propose)** — `/admin/talent` list and `/admin/talent/[id]` editor producing proposed `TalentVersion`/`TalentSocial`/`TalentGalleryImage` rows; conflict-detection UI from Section 6 included here since it's intrinsic to "propose a change," not a later add-on.
-5. **Approval queue** — `/admin/proposals`, diff rendering, approve/reject transactions, the expanded audit log (Section 4.1). Validated thoroughly on talent before extending to other content types.
+1. **Foundations** *(done)* — database, ORM/migrations, repository-layer skeleton, the shared versioning primitives (`Entity`/`EntityVersion`, status/audit conventions from Sections 3–4), and the `mapTalentVersionToPublicShape`-style mapping functions that Live Preview will later depend on. Add the `/admin` rewrite passthrough to `next.config.mjs`. This phase also shipped the full Section 3 normalized data model (`Talent`, `TalentVersion`, `TalentSocial`, `TalentGalleryImage`, `SiteContent`, `SEO`, `LegalPage`, `ImageAsset`) up front rather than deferring it — **superseding this list's original phase-3 description below**, which is repurposed in v1.3 for the Core Content Engine instead. No UI yet.
+2. **Auth/security** *(done)* — Owner login, session handling, `/admin/*` and `/api/admin/*` gating in `middleware.js`, environment-variable wiring for secrets (Section 11). Done before any real admin UI is built, not after, since every later phase assumes the admin is already access-controlled.
+3. **Core Content Engine** *(architecture in Section 13, not yet implemented)* — the generic `ProposalService`/`VersionService`/`ApprovalService`/`PublishService`/`ConflictService`/`EventService`/`AuditService` layer plus the first adapter (Talent), the `Event` model (with its `payload`/`metadata`/`correlationId` split), the `DRAFT` version-status addition, and the Adapter Capabilities convention — all described in Section 13. This phase exists so that phases 4–5 below consume a proven generic engine instead of each building its own ad hoc propose/approve logic.
+4. **Talent admin (read + propose)** — `/admin/talent` list and `/admin/talent/[id]` editor, built on top of the Phase 3 engine via the Talent adapter, producing proposed `TalentVersion`/`TalentSocial`/`TalentGalleryImage` rows; conflict-detection UI from Section 6 included here since it's intrinsic to "propose a change," not a later add-on.
+5. **Approval queue** — `/admin/proposals`, diff rendering, approve/reject transactions via `ApprovalService`, the expanded audit log (Section 4.1, now a projection of the Event stream per Section 13.6). Validated thoroughly on talent before extending to other content types.
 6. **Image upload/versioning** — blob storage integration, `ImageAsset` lifecycle, proposed-vs-published image comparison, crop/alt/order editing per Section 6's image-versioning model below.
 7. **Remaining content types** — `SiteContent`, `SEO`, `LegalPage`, collaborations, agency socials — mostly UI, reusing the machinery already proven on talent.
 8. **Live Preview** — `/admin/preview/talent/[id]` and equivalents for other entity types, built on the mapping functions seeded in phase 1.
@@ -174,8 +206,221 @@ Non-negotiables, restated and unchanged from v1.0 per the brief's explicit re-co
 
 Two simultaneous proposals on one entity: handled per Section 6 — both are visible in the queue, approving one prompts explicit handling of the other rather than a silent overwrite. Partial-approval scope creep: v1 deliberately ships whole-proposal approval only (Section 4); resist the temptation to half-build field-level approval before the `ProposalLineItem` path is actually needed. Image lifecycle bloat: archived/soft-deleted `ImageAsset` rows accumulate by design (Section 5) — plan a periodic reporting/cleanup process for genuinely stale assets even though nothing is auto-deleted. Locale parity: every bilingual field must be flagged, not silently allowed to ship incomplete (Section 8's bilingual parity check exists specifically because this was already an open risk in v1.0). Migration Day reversibility: never delete or overwrite `data/*.js` as part of the switch (Section 8). Schema drift during build-out: any manual edits made directly to `data/*.js` while the admin is built in parallel must be reconciled or re-imported before the final migration, or they're lost — worth a standing reminder to whoever still touches those files during the build-out window. SEO/sitemap source-switch risk: explicitly checked in Section 8's gate rather than assumed. Over-generalizing the data model: Section 3's normalized tables are scoped to this site's known content types; resist adding a generic visual schema builder or fully dynamic field system — that's scope creep beyond "admin panel for one agency's site." Hard-delete temptation: no admin-facing action should ever issue a real `DELETE` against `Talent`, `TalentVersion`, `ImageAsset`, etc. — only status transitions (Section 5); a genuine hard-delete, if ever needed, stays a manual, deliberate, logged operation outside the admin UI.
 
-## 13. Open questions before implementation
+## 13. Phase 3 — Core Content Engine
+
+**New in v1.3.** This section is the architecture and implementation plan for Phase 3, the generic engine that every future content type (Talent, Gallery, Images, SEO, Social links, Homepage, About, Contact, Legal pages, and later brands/campaigns/blog/contracts) builds on. **Planning only — nothing in this section has been implemented, and nothing in it changes the public site.** The public site keeps reading `data/*.js` exclusively until Migration Day (Section 8); this section does not touch `data/*.js`, does not switch any public data loading, does not build admin UI, and does not implement Migration Day.
+
+### 13.1 Pipeline and scope: Content → Version → Proposal → Approval → Publish → Events
+
+The engine's scope is renamed from "Proposal Engine" to the **Core Content Engine**, because its job spans the full lifecycle of a piece of content, not just the proposal step. The named pipeline is:
+
+`Content` (the stable entity — `Talent`, a `SiteContent` row, a `Seo` row, a `LegalPage`) → `Version` (a snapshot, `DRAFT`/`PROPOSED`/`PUBLISHED`/`REJECTED`/`SUPERSEDED`) → `Proposal` (a version in `DRAFT` or `PROPOSED` state, not yet decided) → `Approval` (an Owner decision on a proposal) → `Publish` (the decided version becomes the live one, old one is superseded) → `Events` (every step along the way emits an `Event`, which is the substrate for the audit log, and later an activity feed, notifications, webhooks, and analytics).
+
+This reframing changes nothing about the data already in `prisma/schema.prisma` (Section 3) — it is a naming and layering decision for the *services* that operate on that data, described below.
+
+### 13.2 Layering and files
+
+```
+lib/admin/engine/
+  proposalService.js       — create/update a DRAFT or PROPOSED version
+  versionService.js        — read current published / proposed / draft versions, version history, getVersionForPreview()
+  approvalService.js       — approve/reject a proposal (decision only — see 13.5)
+  publishService.js        — flip a version to PUBLISHED, supersede the prior one, repoint the parent (the only thing that ever sets status = PUBLISHED)
+  conflictService.js       — pure revision-comparison helper, used both at proposal-creation time (non-blocking) and inside publishService's transaction (authoritative)
+  eventService.js          — emit(type, {...}) — the only way an Event row is created; calls registered listeners synchronously
+  auditService.js          — read-side queries over the Event stream (Section 13.6) for /admin/history-style consumers
+  eventTypes.js             — the catalog of valid event type strings (e.g. ProposalCreated, ProposalApproved, VersionPublished) — plain strings, not a Postgres enum, since this list is expected to grow continuously
+  listeners/
+    auditLogListener.js     — the one listener registered in Phase 3; turns each Event into an AuditLog row (Section 4.1) — the only writer of AuditLog rows
+  adapters/
+    adapterContract.js      — the shape every adapter must implement (13.10), plus the capabilities object shape (13.4)
+    talentAdapter.js         — first real adapter, used to prove the contract
+    siteContentAdapter.js    — stub, proves the contract generalizes beyond Talent
+    seoAdapter.js             — stub
+    legalPageAdapter.js       — stub
+    entityAdapter.js          — generic adapter for the shared Entity/EntityVersion primitives (Section 3.1), parameterized per entityType
+```
+
+`prisma/schema.prisma` changes proposed for this phase (not yet applied): add an `Event` model (13.3.1) and add `DRAFT` to the `VersionStatus` enum (purely additive — no migration of existing rows, since no row uses it yet).
+
+No route handlers, no admin pages, and no edits to `data/*.js` are part of this phase.
+
+### 13.3 Proposal design
+
+A proposal is just a version row in `DRAFT` or `PROPOSED` status, created via `proposalService.create(adapter, { parentId, fields, actorId, basedOnVersionId, basedOnRevisionNumber, correlationId })`. `DRAFT` (new in v1.3) represents a proposal the author is still working on and hasn't submitted for review; `proposalService.submit(proposalId)` flips `DRAFT` → `PROPOSED`, which is the point a proposal becomes visible to the approval queue. This split lets an editor save partial work without it appearing as "pending Owner review."
+
+#### 13.3.1 Event shape
+
+```
+Event
+  id            String  @id @default(cuid())
+  type          String                // validated against eventTypes.js, not a DB enum
+  entityType    EntityType
+  entityId      String
+  actorId       String?               // null for system-generated events
+  correlationId String                // dedicated, indexed column — see 13.6
+  payload       Json                  // business data only
+  metadata      Json                  // technical/request context only
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([correlationId])
+```
+
+### 13.4 Adapter Capabilities
+
+**New in v1.3.** Every adapter declares a `capabilities` object so generic services and any future UI can ask "does this content type support X" instead of an entity-specific `if` statement appearing anywhere in `lib/admin/engine/`:
+
+```
+capabilities: {
+  supportsPreview:    boolean,  // can adapter.mapToPublicShape() feed Live Preview (Section 7)?
+  supportsScheduling: boolean,  // can publish be deferred to a future timestamp?
+  supportsSEO:        boolean,  // does this content type carry its own SEO fields?
+  supportsGallery:    boolean,  // does it have an associated image collection?
+  supportsSoftDelete: boolean,  // does Section 5's status enum apply to this entity?
+  supportsPublishing: boolean,  // can it be published at all, or is it read-only/system-managed?
+  supportsArchive:    boolean,  // can it move to `archived` (Section 5), independent of soft-delete?
+}
+```
+
+Starting values, to be confirmed when each adapter is actually written:
+
+- `talentAdapter`: preview ✓, scheduling ✗ (v1), SEO ✗ (SEO is its own adapter/table), gallery ✓, softDelete ✓, publishing ✓, archive ✓.
+- `siteContentAdapter`: preview ✓, scheduling ✗, SEO ✗, gallery ✗, softDelete ✗ (rows aren't independently soft-deletable today), publishing ✓, archive ✗.
+- `seoAdapter`: preview ✗ (SEO fields aren't independently rendered — they describe someone else's page), scheduling ✗, SEO ✓ (trivially), gallery ✗, softDelete ✗, publishing ✓, archive ✗.
+- `legalPageAdapter`: preview ✓, scheduling ✗, SEO ✗, gallery ✗, softDelete ✗, publishing ✓, archive ✗.
+- `entityAdapter` (generic): capabilities are declared per `entityType` instantiation, not fixed for the whole adapter file.
+
+A capability flag describes what the adapter *claims* to support; the adapter itself must still enforce it server-side (e.g. `publishService` calling `conflictService` regardless of what a capability flag says) — capabilities are a routing/UI convenience, not a substitute for validation (also noted as a risk in 13.13).
+
+### 13.5 Approval and Publish: kept as two services, composed together in v1
+
+**Reaffirmed in v1.3 per explicit instruction.** `approvalService` and `publishService` are separate files/objects, not one merged "approve-and-publish" function, even though v1's behavior is: `approvalService.approve()` sets `approvedAt`/`approvedById` on the proposal, then calls `publishService.publish()` in the same database transaction, so approving a v1 proposal is published immediately.
+
+This separation is what lets the same two services support, without rewriting either one, three flows not built in v1 but anticipated:
+
+- **Approve now, publish later** — `approvalService.approve()` runs alone; a separate, later, explicit action calls `publishService.publish()`.
+- **Scheduled publishing** — approval sets a `publishAt` timestamp instead of calling publish; a future scheduled job calls `publishService.publish()` when due.
+- **Manual publish after approval** — identical data path to the above, just triggered by a "Publish now" UI action rather than a schedule.
+
+To make this composable without a schema branch today: `publishService.publish()` remains the *only* code path that ever sets a version's status to `PUBLISHED`. "Approved but not yet published" needs no new `VersionStatus` value — it's represented as `status = PROPOSED` with `approvedAt`/`approvedById` already set, and publish is a distinct, idempotent later step. This is recorded here as the decided approach, closing what would otherwise be an open question.
+
+### 13.6 Event architecture: correlationId, payload vs metadata
+
+**New in v1.3.** `eventService.emit(type, { entityType, entityId, actorId, correlationId, payload, metadata })` is the only way an `Event` row is created. Two splits, both requested explicitly:
+
+- **`correlationId`** is a dedicated, indexed, top-level column (13.3.1), not buried inside `metadata` — so every event produced by one user action or transaction (e.g. a single proposal submission that emits both `ProposalCreated` and `ProposalUpdated`) can be queried and grouped directly, without unpacking JSON. Engine service calls accept an optional `correlationId` and generate a fresh one if none is supplied, so even an isolated single-service call (a test script, a one-off admin action) produces a valid, queryable id. Whether `correlationId` is generated once per HTTP request (via an explicit param threaded through service calls, or `AsyncLocalStorage`) is a Phase 4+ decision, deferred until route handlers actually exist — explicit param-passing is the simpler, more testable default unless it proves unwieldy.
+- **`payload`** is business data only — the fields that changed, the entity affected, before/after values relevant to the action itself.
+- **`metadata`** is technical/request context only — IP address, user agent, request id, duration, and (contextually) the same `correlationId` already present as its own column. Keeping `metadata` strictly technical means a consumer (the audit log, a future webhook) can always trust that `payload` alone describes "what happened," without filtering out request plumbing first.
+
+### 13.7 Audit log as a projection of the Event stream
+
+`AuditLog` (Section 4.1) is not written to directly by any engine service. `auditLogListener.js` is registered with `eventService` and is the only thing that ever inserts an `AuditLog` row, built from whichever `Event` triggered it. This avoids a dual-write bug (an engine service forgetting to write the audit row, or writing one that disagrees with the Event it should correspond to) and means the audit log can be regenerated/backfilled later by replaying the Event stream if the listener's mapping logic changes.
+
+### 13.8 Conflict resolution
+
+Unchanged from Section 6's design, formalized as `conflictService.checkRevision(adapter, { parentId, basedOnRevisionNumber })`, a pure comparison with no side effects, returning `{ conflict: false }` or a structured conflict result. Called twice: early and non-blocking when a proposal is created (so the UI can warn immediately), and again, authoritatively and blocking, inside `publishService.publish()`'s own transaction — the early check is a UX convenience, the in-transaction check is the one that actually prevents a lost update, since only the in-transaction read is guaranteed not to race another publish.
+
+### 13.9 Generic services vs entity-specific adapters
+
+Everything in `lib/admin/engine/*.js` (13.2) is free of any entity name or type check. All entity-specific logic — field validation, the capabilities object (13.4), and the mapping between DB rows and the adapter contract — lives only in `lib/admin/engine/adapters/*.js`. A future content type (brands, campaigns, blog posts, contracts) is "plugged in" by writing one new adapter file that implements the fixed contract (13.10); no engine service file is ever edited to add a new content type.
+
+### 13.10 Adapter contract
+
+Every adapter implements: `getParent(id)`, `getVersion(versionId)`, `listVersionsForParent(parentId)`, `insertProposedVersion(fields, meta)`, `validate(fields)`, `mapToPublicShape(version, related)` (used by Live Preview, Section 7 — only meaningful where `capabilities.supportsPreview` is true), and the static `capabilities` object (13.4).
+
+### 13.11 Live Preview preparation
+
+Unchanged in substance from Section 7: `versionService.getVersionForPreview(adapter, versionId)` calls `adapter.mapToPublicShape()`, reusing the same mapping functions seeded in Phase 1 Foundations (`mapTalentVersionToPublicShape` and friends). New in v1.3: `getVersionForPreview` first checks `adapter.capabilities.supportsPreview` and short-circuits cleanly (rather than every caller needing to separately know which entities support preview) if false.
+
+### 13.12 How future entities plug in
+
+A new content type (e.g. `Brand`) gets: a normalized table (if it warrants one, per Section 3.3's rationale) or use of the generic `Entity`/`EntityVersion` pair; one adapter file implementing the 13.10 contract and declaring its `capabilities`; and nothing else — no changes to `proposalService`, `approvalService`, `publishService`, `conflictService`, `eventService`, or `auditService`. The same `eventTypes.js` catalog gains a few new entries (e.g. `BrandUpdated`) but the `Event` model and `eventService.emit()` mechanism are unchanged.
+
+### 13.13 Risks and edge cases specific to the engine
+
+A capability flag that the adapter doesn't actually enforce server-side is worse than no flag at all — it would let a generic UI assume a guarantee the backend doesn't provide; every capability claim must be backed by real validation in the adapter. `correlationId` generation strategy (explicit param vs `AsyncLocalStorage`) needs to be picked before route handlers are built in Phase 4, or different parts of one request could end up with inconsistent ids. `eventTypes.js` growing unboundedly without naming discipline (e.g. `ProposalUpdated` vs `TalentProposalUpdated` for the same conceptual event) would make the catalog hard to query against later — a naming convention (`<Entity><Action>` or `<Action>` for cross-entity events) should be fixed when the first few real event types are added, not left ad hoc. The `auditLogListener` being the *only* writer of `AuditLog` means a bug or exception inside the listener silently breaks the audit trail unless `eventService.emit()` treats listener failures as loud, logged errors rather than swallowing them — listener failure handling needs to be explicit in implementation, not assumed safe by default. Approve-now/publish-later and scheduled publishing both imply a window where a version is `PROPOSED` + `approvedAt` set but not yet live — any future UI must render that state distinctly from a not-yet-decided proposal, or Owners will be confused about why an "approved" change isn't on the site yet.
+
+### 13.14 Implementation sub-phases (within Phase 3)
+
+1. Add the `Event` model and `DRAFT` `VersionStatus` value to `prisma/schema.prisma`; migrate (additive only).
+2. Build `eventService.js` + `eventTypes.js` + the `auditLogListener`; prove `AuditLog` rows are correctly derived for at least one event type before building anything else.
+3. Build `conflictService.js` as a pure function, unit-testable without a database transaction.
+4. Build `adapterContract.js` and `talentAdapter.js` (with its `capabilities` object), since Talent is the most fully fleshed-out model in Section 3.
+5. Build `versionService.js` and `proposalService.js` against the Talent adapter.
+6. Build `approvalService.js` and `publishService.js` as separate files, wired so `approve()` calls `publish()` in the same transaction for v1, per 13.5.
+7. Add `siteContentAdapter.js`, `seoAdapter.js`, `legalPageAdapter.js` as stubs that implement the contract minimally, to prove the abstraction generalizes before any of their UIs are built (Phase 7).
+8. Write `versionService.getVersionForPreview()` against `talentAdapter.mapToPublicShape()`, with no preview route yet — proves the Live Preview data path (Section 7) end-to-end at the service layer.
+
+### 13.15 Architecture layers
+
+**New in v1.4.** Five mandatory layers, in strict order:
+
+```
+Presentation Layer        (app/admin/**, app/api/admin/** route handlers)
+        ↓
+Core Content Engine       (lib/admin/engine/** — Section 13.2)
+        ↓
+Repositories               (lib/admin/repository/** — Section 1)
+        ↓
+Prisma                     (prisma/schema.prisma, the generated client)
+        ↓
+Database                   (Postgres)
+```
+
+Dependency rules, binding on all implementation from Phase 3 onward:
+
+- A layer may only call directly into the layer immediately below it. Presentation never calls a repository directly, and never imports `@prisma/client` itself — it goes through the Core Content Engine, which goes through repositories, which go through Prisma. Skipping a layer (e.g. a route handler running a Prisma query inline "just this once") is a violation, not a shortcut, regardless of how small the query is.
+- Dependencies point downward only. Repositories never import from `lib/admin/engine/`; the engine never imports from `app/admin/` or `app/api/admin/`. A lower layer must remain usable (and testable) with no knowledge that any particular upper layer exists.
+- The Core Content Engine is the only layer permitted to contain business logic (proposal/approval/publish/conflict/event rules — Section 13.16's "services own business logic"). Repositories are a thin data-access layer over Prisma — query construction and shape-mapping only, no approval/publish/version-transition decisions. Presentation is rendering and request/response handling only — no business rules, no direct database access of any kind.
+- This layering applies uniformly to every content type, current and future — there is no "small entity" exception that gets to skip the engine or repository layer because its CRUD looks trivial.
+
+### 13.16 Design principles
+
+**New in v1.4.** These are the platform's core philosophy — they apply beyond Phase 3, to every phase and every future content type:
+
+- **Generic before specific.** Default to a generic, reusable solution in the engine; entity-specific code is the exception, confined to adapters, never the default approach.
+- **Composition over duplication.** New behavior is built by composing existing services (e.g. Section 13.5's approve-then-publish composition) rather than copy-pasting a service and modifying the copy for one entity.
+- **Version everything.** Every piece of editable content has a version history (Section 3); nothing is edited in place with no record of what it looked like before.
+- **Events are append-only.** No `Event` row is ever updated or deleted after being written (consistent with `AuditLog`'s append-only rule in Section 4.1) — corrections are new events, not edits to old ones.
+- **Never delete business history.** No hard deletes of business data (Talent, versions, proposals, images, audit/event rows) from any admin-facing action — only status transitions (Section 5), consistent with Section 12's "hard-delete temptation" risk.
+- **Public website remains isolated until Migration Day.** Every phase, including all of Phase 3, leaves `data/*.js` and the public data-loading path untouched; the database is shadow infrastructure until the single, deliberate switch in Section 8.
+- **Services own business logic.** `proposalService`, `approvalService`, `publishService`, `conflictService`, `eventService`, and `auditService` are where lifecycle rules and decisions live (Section 13.9) — not in adapters, not in repositories, not in routes.
+- **Adapters own translation only.** An adapter's job is shape translation between the engine's generic contract (Section 13.10) and a specific entity's storage shape (or its public-facing shape, for preview) — never a decision about whether something is allowed to publish, conflict, or be approved. If an adapter starts making a business decision, that logic belongs in a service instead.
+
+### 13.17 Phase 3 success criteria
+
+**New in v1.4.** Phase 3 is complete only when all of the following are true — this replaces any date-based notion of "done" for this phase, consistent with how Migration Day's own gate (Section 8) is condition-based, not calendar-based:
+
+1. The full proposal lifecycle works end-to-end (`DRAFT` → `PROPOSED`, Section 13.3) against at least one real adapter.
+2. Approval works — `approvalService.approve()` records a decision and is independently testable from publish (Section 13.5).
+3. Publish works — `publishService.publish()` is the only code path that sets `PUBLISHED`, supersedes the prior version, and repoints the parent, inside one transaction (Sections 4, 13.5).
+4. Version history works — `versionService` can list every version (published, proposed, rejected, superseded, draft) for a given parent, in order.
+5. Events are emitted for every lifecycle action (proposal created/updated, approved, rejected, published) via `eventService.emit()`, never written ad hoc (Section 13.6).
+6. `AuditLog` rows are generated from the Event stream by `auditLogListener`, never written directly by any other code path (Section 13.7).
+7. The engine (`lib/admin/engine/*.js`, excluding `adapters/`) contains no entity-specific branching — no `if (entityType === 'TALENT')` or equivalent anywhere outside an adapter file (Section 13.9).
+8. At least two different adapters (e.g. `talentAdapter` and one of `siteContentAdapter`/`seoAdapter`/`legalPageAdapter`) exercise the full lifecycle above through the same, unmodified engine services — proving genericness empirically, not just by design intent.
+
+Until all eight are demonstrably true (ideally backed by tests, not just manual spot-checks), Phase 3 is not considered complete and Phase 4 (Talent admin UI) should not begin building against the engine as if it were stable.
+
+### 13.18 Architectural guardrails
+
+**New in v1.4.** Prohibited patterns, binding from Phase 3 onward — these are the enforceable, specific form of Sections 13.15–13.16's layering and principles:
+
+- No business logic inside route handlers (`app/api/admin/**`). A route parses the request, calls into the Core Content Engine, and shapes the response — nothing else.
+- No repository access from Presentation. UI code and route handlers never import `lib/admin/repository/*.js` directly; they only ever go through the engine.
+- No entity-specific branching inside engine services. Any `if`/`switch` on entity type or adapter identity inside `lib/admin/engine/*.js` (outside `adapters/`) is a defect, not a style nit — the fix is always to push the distinction into the adapter's contract (capabilities, Section 13.4) or its data, never into the service.
+- No direct `AuditLog` writes outside `auditService`/`auditLogListener`. Every `AuditLog` row originates from the Event stream (Section 13.7) — nothing else is permitted to `INSERT` into that table.
+- No `Event` writes outside `eventService`. `eventService.emit()` is the sole entry point that creates `Event` rows; no service, adapter, or route is permitted to write one directly.
+- No bypassing the Proposal/Approval flow. There is no code path that mutates a published version's content without first going through `proposalService` → `approvalService` → `publishService` — including for "trivial" or "obviously safe" edits.
+- No coupling to the public website before Migration Day. Nothing in the Core Content Engine, repositories, or Prisma schema may be imported by, or change the behavior of, any file under `app/[locale]/**` or `data/*.js` until the single Section 8 switch — Phase 3 work must remain provably inert from the public site's perspective.
+
+## 14. Open questions before implementation
 
 **Resolved in v1.2** (kept here for traceability, no longer open): Owner-only at launch with Editor-ready schema (Section 11); Postgres + Prisma as the stack (Section 1); optimistic locking ships in v1, not deferred (Section 6); Migration Day is gated on "fully tested in parallel," not a calendar date (Section 8).
 
-Still open: which managed Postgres host specifically (Vercel Postgres / Neon / Supabase) — the engine is decided, the host isn't. Is the v1 whole-proposal-approval decision acceptable as final for launch, or is there a specific field (e.g. images) where partial approval is needed sooner than the general `ProposalLineItem` mechanism described in Section 4? What retention window should soft-deleted items sit in before they're eligible for a manual hard-delete (Section 5)? Should the Owner receive proposal-submitted notifications (email/Slack), or is checking `/admin/proposals` manually sufficient for now? Are there image size/format constraints to enforce on upload, matching the `next/image` AVIF/WebP formats already configured in `next.config.mjs`? Concretely, what does "fully tested" mean as a checklist for Migration Day's trigger condition (Section 8) — is the criteria described there (every content type exercised, all four verification checks passed, Owner has run the full loop once per type) sufficient, or should it be stricter (e.g. a minimum number of real-world edit cycles, a minimum elapsed time)? Should `/admin` live on the same deployment as the public site (simplest, per Section 1), or does anything argue for splitting it out?
+**Resolved in v1.3** (kept here for traceability): "Proposal Engine" is renamed Core Content Engine, framed as Content → Version → Proposal → Approval → Publish → Events (Section 13.1); Approval and Publish stay separate services with v1 composing them in one transaction (Section 13.5); every Event gets a dedicated `correlationId` column plus a `payload`/`metadata` split (Section 13.6); adapters declare a `capabilities` object (Section 13.4).
+
+Still open from v1.2: which managed Postgres host specifically (Vercel Postgres / Neon / Supabase) — the engine is decided, the host isn't. Is the v1 whole-proposal-approval decision acceptable as final for launch, or is there a specific field (e.g. images) where partial approval is needed sooner than the general `ProposalLineItem` mechanism described in Section 4? What retention window should soft-deleted items sit in before they're eligible for a manual hard-delete (Section 5)? Should the Owner receive proposal-submitted notifications (email/Slack), or is checking `/admin/proposals` manually sufficient for now? Are there image size/format constraints to enforce on upload, matching the `next/image` AVIF/WebP formats already configured in `next.config.mjs`? Concretely, what does "fully tested" mean as a checklist for Migration Day's trigger condition (Section 8) — is the criteria described there (every content type exercised, all four verification checks passed, Owner has run the full loop once per type) sufficient, or should it be stricter (e.g. a minimum number of real-world edit cycles, a minimum elapsed time)? Should `/admin` live on the same deployment as the public site (simplest, per Section 1), or does anything argue for splitting it out?
+
+New from v1.3 (Section 13): should `correlationId` generation use an explicit threaded parameter or `AsyncLocalStorage` once route handlers exist (13.6, 13.13)? What naming convention should `eventTypes.js` follow as it grows (`<Entity><Action>` vs free-form) — needs to be fixed early, not after a dozen ad hoc names exist (13.13)? Should listener failures inside `eventService.emit()` ever block the triggering action (e.g. should a broken `auditLogListener` be allowed to fail a publish), or should listener errors always be logged-and-swallowed so a derived-data bug never blocks the primary action (13.13)? When "approve now, publish later" is eventually built, does the UI need a distinct visible state for "approved, awaiting publish," or is that fully out of scope until that flow is actually implemented?
