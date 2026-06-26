@@ -1,0 +1,118 @@
+/*
+ * SocialLinkRow styles — Social Links Editor Foundation sprint.
+ *
+ * One row, three zones (platform identity / value or input / future
+ * actions), laid out with the same grid-row language ComparisonView already
+ * uses for its field rows (.fieldRow / .fieldRowEditable) so a row of
+ * social links reads as part of the same design system, not a one-off.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.row,
+.rowEditable {
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  align-items: center;
+  gap: 1.1rem;
+  padding-block: 0.65rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.row:last-child,
+.rowEditable:last-child {
+  border-bottom: none;
+}
+
+.platform {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.platformIcon {
+  font-size: 1.05rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.platformLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  white-space: nowrap;
+}
+
+.valueArea {
+  min-width: 0;
+}
+
+.readOnlyValue {
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+  word-break: break-all;
+}
+
+.emptyValue {
+  font-size: 0.92rem;
+  color: var(--admin-text-muted);
+}
+
+.input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.5rem 0.7rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.input::placeholder {
+  color: var(--admin-text-muted);
+}
+
+/* ---------- Reserved future-action slot (inert this sprint) ---------- */
+
+.futureActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.futureActionButton {
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+  cursor: default;
+  opacity: 0.7;
+}
+
+@media (max-width: 640px) {
+  .row,
+  .rowEditable {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  .futureActions {
+    justify-content: flex-start;
+  }
+}

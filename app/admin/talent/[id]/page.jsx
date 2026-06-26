@@ -34,6 +34,7 @@ import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import ComparisonView from '@/components/admin/ComparisonView';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
+import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import { getTalentBySlug } from '@/data/talent';
 import {
@@ -166,6 +167,37 @@ function GallerySectionContent({ talentSlug, displayName }) {
   return <MediaGalleryEditor publishedImages={images} />;
 }
 
+/*
+ * Social Links Editor Foundation sprint — same reasoning as
+ * buildGalleryImages above: data/talent/index.js (read via getTalentBySlug)
+ * is the accurate "what's currently live" source today, since the public
+ * site still renders straight from that file and no social-links query
+ * exists yet on talentAdapter/versionService. Read-only, nothing here
+ * writes anywhere.
+ *
+ * Only instagram/tiktok/youtube exist on that data shape today (see
+ * data/talent/index.js's own field-shape comment); facebook/website aren't
+ * modeled there yet, so they're surfaced as `null` — SocialLinkRow already
+ * renders `null` as a calm "לא קיים" placeholder, exactly like a platform
+ * that genuinely has no account yet.
+ */
+function buildSocialLinks(talentSlug) {
+  const publicTalent = talentSlug ? getTalentBySlug(talentSlug) : null;
+
+  return {
+    instagram: publicTalent?.instagram ?? null,
+    tiktok: publicTalent?.tiktok ?? null,
+    youtube: publicTalent?.youtube ?? null,
+    facebook: null,
+    website: null,
+  };
+}
+
+function SocialsSectionContent({ talentSlug }) {
+  const publishedLinks = buildSocialLinks(talentSlug);
+  return <SocialLinksEditor publishedLinks={publishedLinks} />;
+}
+
 export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
     return (
@@ -203,6 +235,9 @@ export default async function AdminTalentDetailPage({ params }) {
         ...section,
         content: <GallerySectionContent talentSlug={talent.slug} displayName={displayName} />,
       };
+    }
+    if (section.key === 'socials') {
+      return { ...section, content: <SocialsSectionContent talentSlug={talent.slug} /> };
     }
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
