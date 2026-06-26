@@ -33,6 +33,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import Card from '@/components/admin/Card';
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
+import ComparisonView from '@/components/admin/ComparisonView';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import {
   TALENT_WORKSPACE_SECTIONS,
@@ -51,15 +52,32 @@ export const metadata = {
   title: 'סביבת עבודה — מיוצג',
 };
 
-function FieldRow({ label, value }) {
-  return (
-    <div className={styles.fieldRow}>
-      <span className={styles.fieldLabel}>{label}</span>
-      <span className={styles.fieldValue}>
-        {value === null || value === undefined || value === '' ? he.talent.fields.empty : String(value)}
-      </span>
-    </div>
-  );
+/*
+ * Field config for the פרטים editing experience — Editing Experience
+ * Foundation sprint. Maps the same published-version fields the previous
+ * read-only view showed into <ComparisonView>'s generic
+ * { key, label, value, type } shape. This is the only place that knows
+ * "name is text, category is a list, featured is a boolean" for talent —
+ * ComparisonView itself stays entity-agnostic so the same component can be
+ * reused for Gallery/SEO/Social links/Homepage/etc. later.
+ */
+function buildDetailsFields(publishedVersion) {
+  return [
+    { key: 'name', label: he.talent.fields.name, type: 'text', value: publishedVersion.name },
+    { key: 'nameEn', label: he.talent.fields.nameEn, type: 'text', value: publishedVersion.nameEn },
+    { key: 'category', label: he.talent.fields.category, type: 'list', value: publishedVersion.category },
+    { key: 'tags', label: he.talent.fields.tags, type: 'list', value: publishedVersion.tags },
+    { key: 'location', label: he.talent.fields.location, type: 'text', value: publishedVersion.location },
+    { key: 'locationEn', label: he.talent.fields.locationEn, type: 'text', value: publishedVersion.locationEn },
+    {
+      key: 'featured',
+      label: he.talent.fields.featured,
+      type: 'boolean',
+      value: Boolean(publishedVersion.featured),
+    },
+    { key: 'bioHe', label: he.talent.fields.bio, type: 'textarea', value: publishedVersion.bioHe },
+    { key: 'bioEn', label: he.talent.fields.bioEn, type: 'textarea', value: publishedVersion.bioEn },
+  ];
 }
 
 function DetailsSectionContent({ publishedVersion }) {
@@ -72,30 +90,7 @@ function DetailsSectionContent({ publishedVersion }) {
     );
   }
 
-  return (
-    <Card>
-      <div className={styles.fieldList}>
-        <FieldRow label={he.talent.fields.name} value={publishedVersion.name} />
-        <FieldRow label={he.talent.fields.nameEn} value={publishedVersion.nameEn} />
-        <FieldRow
-          label={he.talent.fields.category}
-          value={Array.isArray(publishedVersion.category) ? publishedVersion.category.join(', ') : null}
-        />
-        <FieldRow
-          label={he.talent.fields.tags}
-          value={Array.isArray(publishedVersion.tags) ? publishedVersion.tags.join(', ') : null}
-        />
-        <FieldRow label={he.talent.fields.location} value={publishedVersion.location} />
-        <FieldRow label={he.talent.fields.locationEn} value={publishedVersion.locationEn} />
-        <FieldRow
-          label={he.talent.fields.featured}
-          value={publishedVersion.featured ? he.talent.fields.yes : he.talent.fields.no}
-        />
-        <FieldRow label={he.talent.fields.bio} value={publishedVersion.bioHe} />
-        <FieldRow label={he.talent.fields.bioEn} value={publishedVersion.bioEn} />
-      </div>
-    </Card>
-  );
+  return <ComparisonView fields={buildDetailsFields(publishedVersion)} />;
 }
 
 function PlaceholderSectionContent({ label }) {
