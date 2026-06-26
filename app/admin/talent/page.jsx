@@ -34,11 +34,16 @@
  * plain placeholder instead. Once a real database is configured, both of
  * these can stay as-is (force-dynamic is also the right mode for live
  * admin data) — no further change is required here.
+ *
+ * Phase 4 layout sprint: now wrapped in AdminShell (header + sidebar +
+ * content) instead of supplying its own <main> padding — see
+ * ../AdminShell.jsx. No change to data fetching, fields, or behavior.
  */
 
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { isDatabaseConfigured } from '@/lib/admin/db';
+import AdminShell from '../AdminShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,17 +54,17 @@ export const metadata = {
 export default async function AdminTalentListPage() {
   if (!isDatabaseConfigured) {
     return (
-      <main style={{ padding: '2rem', maxWidth: 960, margin: '0 auto' }}>
+      <AdminShell>
         <h1 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Talent (read-only)</h1>
         <p>Database not configured yet.</p>
-      </main>
+      </AdminShell>
     );
   }
 
   const talents = await versionService.listParents(talentAdapter, {});
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 960, margin: '0 auto' }}>
+    <AdminShell>
       <h1 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Talent (read-only)</h1>
 
       {talents.length === 0 ? (
@@ -90,6 +95,6 @@ export default async function AdminTalentListPage() {
           </tbody>
         </table>
       )}
-    </main>
+    </AdminShell>
   );
 }

@@ -34,7 +34,7 @@ export default function LoginForm() {
       });
 
       if (res.ok) {
-        router.push("/admin/talent");
+        router.push("/admin");
         router.refresh();
         return;
       }

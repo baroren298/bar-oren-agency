@@ -32,12 +32,17 @@
  * /admin/talent/page.jsx — same reasoning applies here (force-dynamic +
  * isDatabaseConfigured guard so this page never runs its Prisma-backed
  * engine call during a build with no DATABASE_URL set).
+ *
+ * Phase 4 layout sprint: now wrapped in AdminShell (header + sidebar +
+ * content) instead of supplying its own <main> padding — see
+ * ../../AdminShell.jsx. No change to data fetching, fields, or behavior.
  */
 
 import { notFound } from 'next/navigation';
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { isDatabaseConfigured } from '@/lib/admin/db';
+import AdminShell from '../../AdminShell';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,12 +65,12 @@ function FieldRow({ label, value }) {
 export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
     return (
-      <main style={{ padding: '2rem', maxWidth: 720, margin: '0 auto' }}>
+      <AdminShell>
         <p style={{ marginBottom: '0.5rem' }}>
           <a href="/admin/talent">&larr; Back to Talent</a>
         </p>
         <p>Database not configured yet.</p>
-      </main>
+      </AdminShell>
     );
   }
 
@@ -82,7 +87,7 @@ export default async function AdminTalentDetailPage({ params }) {
   ]);
 
   return (
-    <main style={{ padding: '2rem', maxWidth: 720, margin: '0 auto' }}>
+    <AdminShell>
       <p style={{ marginBottom: '0.5rem' }}>
         <a href="/admin/talent">&larr; Back to Talent</a>
       </p>
@@ -121,6 +126,6 @@ export default async function AdminTalentDetailPage({ params }) {
           </tbody>
         </table>
       )}
-    </main>
+    </AdminShell>
   );
 }

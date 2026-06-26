@@ -1,0 +1,168 @@
+/*
+ * Admin shell styles — Phase 4 layout/design-system foundation.
+ *
+ * Self-contained CSS module, scoped to AdminShell.jsx and its protected
+ * pages (/admin, /admin/talent, /admin/talent/[id]). Deliberately does
+ * NOT import css/styles.css (the public site's stylesheet) — per the
+ * existing rule in app/admin/layout.jsx's header comment, admin styling
+ * must never share a source of truth with the public site, so admin
+ * cannot accidentally drift if the public site restyles and vice versa.
+ *
+ * The palette/spacing below is a small, independent token set "inspired
+ * by" (not copied from) the public site's design language in
+ * css/styles.css: a soft warm-light background, restrained borders
+ * instead of heavy shadows, and generous whitespace — adapted for a
+ * denser admin-product layout.
+ */
+
+.shell {
+  --admin-bg: #faf8f5;
+  --admin-surface: #ffffff;
+  --admin-text-primary: #1f1c17;
+  --admin-text-secondary: #6b665d;
+  --admin-border: #e7e2d8;
+  --admin-accent: #b89a6f;
+  --admin-accent-subtle: #f1ebe0;
+  --admin-radius: 8px;
+
+  display: flex;
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-text-primary);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.brand {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0 0 2rem 0.25rem;
+  color: var(--admin-text-primary);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.navLink {
+  display: block;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--admin-radius);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.navLink:hover {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-text-primary);
+}
+
+.navLinkActive {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-text-primary);
+  font-weight: 600;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 2rem;
+  background: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.headerTitle {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+  margin: 0;
+}
+
+.logoutButton {
+  border: 1px solid var(--admin-border);
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--admin-radius);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.logoutButton:hover {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-text-primary);
+}
+
+.logoutButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── Main content area ──────────────────────────────────────────────── */
+
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+.content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+}
+
+/* ── Mobile top nav (compact) ───────────────────────────────────────── */
+
+.mobileNav {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobileNav {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 2rem 1rem;
+    background: var(--admin-surface);
+    border-bottom: 1px solid var(--admin-border);
+    overflow-x: auto;
+  }
+
+  .header {
+    padding: 1rem 1.25rem 0;
+    border-bottom: none;
+  }
+
+  .content {
+    padding: 1.5rem 1.25rem;
+  }
+}
