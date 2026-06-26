@@ -9,7 +9,8 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
-    "admin:create-owner": "node scripts/create-owner.mjs"
+    "admin:create-owner": "node scripts/create-owner.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
@@ -23,7 +24,8 @@
   "devDependencies": {
     "eslint": "^10.4.1",
     "eslint-config-next": "^16.2.7",
-    "prisma": "^6.6.0"
+    "prisma": "^6.6.0",
+    "vitest": "^3.0.0"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
