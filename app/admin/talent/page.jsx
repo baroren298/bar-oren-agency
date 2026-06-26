@@ -9,8 +9,6 @@
  * becomes necessary once a browser-side write needs to reach it).
  *
  * Strictly read-only per this sprint's approved scope:
- *   - no links to a talent editor (none exists yet — Section 9 Phase 4's
- *     /admin/talent/[id] is a later sprint),
  *   - no action buttons (approve/reject/propose/hide/archive — all later
  *     sprints),
  *   - no version content resolved or rendered (no bio/images/socials —
@@ -22,16 +20,42 @@
  * Fields shown, exactly as proposed and approved before implementation:
  * name (from the current published TalentVersion, if any), slug, lifecycle
  * status, a "pending changes" flag, and a "published" flag.
+ *
+ * Sprint 4.2 addition: each row's name now links to the read-only detail
+ * page at /admin/talent/[id] (Sprint 4.1 had deliberately deferred this
+ * link since that route didn't exist yet). No other change to this file.
+ *
+ * Database-deferred bridge: the database phase is intentionally postponed
+ * (see lib/admin/db.js), so this page is marked `force-dynamic` — it must
+ * never be statically prerendered at build time, since that would execute
+ * this component (and the Prisma-backed engine call below) during
+ * `next build`/Vercel Preview with no DATABASE_URL set. It also checks
+ * `isDatabaseConfigured` before calling into the engine and renders a
+ * plain placeholder instead. Once a real database is configured, both of
+ * these can stay as-is (force-dynamic is also the right mode for live
+ * admin data) — no further change is required here.
  */
 
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
+import { isDatabaseConfigured } from '@/lib/admin/db';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Talent — Admin',
 };
 
 export default async function AdminTalentListPage() {
+  if (!isDatabaseConfigured) {
+    return (
+      <main style={{ padding: '2rem', maxWidth: 960, margin: '0 auto' }}>
+        <h1 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Talent (read-only)</h1>
+        <p>Database not configured yet.</p>
+      </main>
+    );
+  }
+
   const talents = await versionService.listParents(talentAdapter, {});
 
   return (
@@ -54,7 +78,9 @@ export default async function AdminTalentListPage() {
           <tbody>
             {talents.map((talent) => (
               <tr key={talent.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '0.5rem' }}>{talent.name || '—'}</td>
+                <td style={{ padding: '0.5rem' }}>
+                  <a href={`/admin/talent/${talent.id}`}>{talent.name || talent.slug}</a>
+                </td>
                 <td style={{ padding: '0.5rem' }}>{talent.slug}</td>
                 <td style={{ padding: '0.5rem' }}>{talent.status}</td>
                 <td style={{ padding: '0.5rem' }}>{talent.hasPublishedVersion ? 'Yes' : 'No'}</td>
