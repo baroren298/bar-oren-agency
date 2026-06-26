@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./admin-shell.module.css";
+import { he } from "@/lib/admin/i18n/he";
 
 export default function AdminLogoutButton() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function AdminLogoutButton() {
 
   return (
     <button type="button" className={styles.logoutButton} onClick={handleLogout} disabled={loading}>
-      {loading ? "…" : "Log out"}
+      {loading ? he.shell.loggingOut : he.shell.logout}
     </button>
   );
 }

@@ -29,9 +29,10 @@ import EmptyState from "@/components/admin/EmptyState";
 import { getWorkflowSections } from "@/lib/admin/mock-workflow";
 import WorkflowItemCard from "./WorkflowItemCard";
 import styles from "./my-work.module.css";
+import { he } from "@/lib/admin/i18n/he";
 
 export const metadata = {
-  title: "My Work — Admin",
+  title: "המשימות שלי — ניהול",
 };
 
 export default function AdminMyWorkPage() {
@@ -40,8 +41,8 @@ export default function AdminMyWorkPage() {
   return (
     <AdminShell>
       <PageHeader
-        title="My Work"
-        description="Everything you're working on, submitted, or waiting to hear back about."
+        title={he.nav.myWork}
+        description="כל מה שאתם עובדים עליו, הגשתם, או מחכים לתשובה לגביו."
       />
 
       <div className={styles.sections}>
@@ -57,8 +58,8 @@ export default function AdminMyWorkPage() {
 
             {section.items.length === 0 ? (
               <EmptyState
-                title="Nothing here right now"
-                description={`No items are currently in "${section.label}".`}
+                title={he.workflow.emptyState.title}
+                description={he.workflow.emptyState.description(section.label)}
               />
             ) : (
               <div className={styles.grid}>

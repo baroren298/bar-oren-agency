@@ -1,38 +1,20 @@
 /*
- * /admin — dashboard landing page (Phase 4 foundation).
+ * /admin — dashboard landing page.
  *
  * Server Component. No auth code lives here: middleware.js already gates
  * every /admin/* path except the allow-listed /admin/login (see its header
  * comment), so this route is protected purely by reusing that existing
  * check — nothing new to wire up.
  *
- * Phase 4 layout sprint: now wrapped in AdminShell (header + sidebar +
- * content) instead of supplying its own <main> padding — see
- * ./AdminShell.jsx for the shared shell. No change to the page's own
- * content/behavior.
- *
- * Deliberately minimal per this sprint's scope: a title, a one-line
- * welcome, and a single nav link into /admin/talent. No stats, no charts,
- * no additional nav until those sections actually exist.
- *
- * Admin Design System Foundation sprint: rebuilt with the new
- * components/admin/** components (PageHeader, Card, PrimaryButton,
- * SecondaryButton, StatusBadge, EmptyState) in place of inline styles, as
- * the worked example for later pages to copy. Same facts as before — no
- * new data, no invented statistics; the "Read-only" badge just restates
- * what app/admin/talent/page.jsx's own heading already says. Still a
- * single working link into /admin/talent; no routing change.
- *
- * Admin Dashboard Polish sprint: tightened the layout into two cards —
- * a primary "Talent management" card (the one real, working link into
- * /admin/talent) and a small "Admin foundation ready" status card. Both
- * are factual statements about the admin shell/design-system work that's
- * already shipped, not product metrics — still no fake numbers, no fake
- * recent-activity feed, and no nav/links to sections that don't exist yet
- * (the EmptyState used previously named future sections by name, which
- * reads like placeholder navigation, so it's dropped here). Page still
- * renders nothing but AdminShell + these components; no new data fetching,
- * no routing change, no change to how /admin is protected.
+ * Admin Hebrew + Friendly Home sprint: replaced the previous generic
+ * "Talent management" / "Admin foundation ready" cards with a warm,
+ * work-focused landing: a Hebrew greeting, then a compact summary of the
+ * same workflow statuses already defined in lib/admin/mock-workflow.js
+ * (the same data source /admin/my-work uses), so an employee logging in
+ * immediately sees what needs attention instead of a cold technical
+ * dashboard. Still no database/API logic — purely a different read of the
+ * existing mock data — and the one working link into /admin/talent is
+ * kept, just restyled to fit the new layout.
  */
 
 import AdminShell from './AdminShell';
@@ -40,33 +22,70 @@ import PageHeader from '@/components/admin/PageHeader';
 import Card from '@/components/admin/Card';
 import PrimaryButton from '@/components/admin/PrimaryButton';
 import StatusBadge from '@/components/admin/StatusBadge';
+import MOCK_WORKFLOW_ITEMS, { WORKFLOW_STATUS } from '@/lib/admin/mock-workflow';
+import { he } from '@/lib/admin/i18n/he';
+import styles from './dashboard.module.css';
 
 export const metadata = {
-  title: 'Admin — Bar Oren Agency',
+  title: 'לוח בקרה — ניהול',
 };
 
 export default function AdminDashboardPage() {
+  const waitingForApproval = MOCK_WORKFLOW_ITEMS.filter(
+    (item) => item.status === WORKFLOW_STATUS.WAITING_FOR_APPROVAL
+  );
+  const changesRequested = MOCK_WORKFLOW_ITEMS.filter(
+    (item) => item.status === WORKFLOW_STATUS.CHANGES_REQUESTED
+  );
+  const recentlyPublished = MOCK_WORKFLOW_ITEMS.filter(
+    (item) => item.status === WORKFLOW_STATUS.PUBLISHED
+  ).sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+
+  const summaryTiles = [
+    {
+      key: 'waiting_for_approval',
+      label: he.dashboard.summary.waitingForApproval,
+      count: waitingForApproval.length,
+      tone: 'warning',
+    },
+    {
+      key: 'changes_requested',
+      label: he.dashboard.summary.changesRequested,
+      count: changesRequested.length,
+      tone: 'danger',
+    },
+    {
+      key: 'recently_published',
+      label: he.dashboard.summary.recentlyPublished,
+      count: recentlyPublished.length,
+      tone: 'success',
+    },
+  ];
+
   return (
     <AdminShell>
-      <PageHeader title="Dashboard" description="Welcome back. Here's where to manage the agency's admin tools." />
+      <PageHeader title={he.nav.dashboard} />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem', alignItems: 'stretch' }}>
-        <div style={{ flex: '2 1 320px' }}>
-          <Card title="Talent management">
-            <p style={{ margin: '0 0 1.25rem' }}>
-              Manage the talent roster — names, slugs, status, and publish state.
-            </p>
-            <PrimaryButton href="/admin/talent">Open Talent →</PrimaryButton>
-          </Card>
-        </div>
+      <Card>
+        <h2 className={styles.greeting}>{he.dashboard.greeting('בר')}</h2>
+        <p className={styles.subline}>{he.dashboard.subline}</p>
+      </Card>
 
-        <div style={{ flex: '1 1 220px' }}>
-          <Card title="Admin foundation">
-            <p style={{ margin: '0 0 1rem' }}>Admin shell, navigation, and design system are set up.</p>
-            <StatusBadge label="Ready" tone="success" />
+      <div className={styles.summaryGrid}>
+        {summaryTiles.map((tile) => (
+          <Card key={tile.key}>
+            <div className={styles.summaryTile}>
+              <span className={styles.summaryCount}>{tile.count}</span>
+              <StatusBadge label={tile.label} tone={tile.tone} />
+            </div>
           </Card>
-        </div>
+        ))}
       </div>
+
+      <Card title="מיוצגים">
+        <p className={styles.talentCardText}>ניהול רשימת המיוצגים — שמות, סטטוס ופרסום.</p>
+        <PrimaryButton href="/admin/talent">למיוצגים ←</PrimaryButton>
+      </Card>
     </AdminShell>
   );
 }

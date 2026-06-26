@@ -22,18 +22,19 @@
 import AdminNavLinks from "./AdminNavLinks";
 import AdminLogoutButton from "./AdminLogoutButton";
 import styles from "./admin-shell.module.css";
+import { he } from "@/lib/admin/i18n/he";
 
 export default function AdminShell({ children }) {
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
-        <p className={styles.brand}>Bar Oren Admin</p>
+        <p className={styles.brand}>{he.shell.brand}</p>
         <AdminNavLinks className={styles.nav} />
       </aside>
 
       <div className={styles.main}>
         <header className={styles.header}>
-          <p className={styles.headerTitle}>Bar Oren Talent Agency Admin</p>
+          <p className={styles.headerTitle}>{he.shell.headerTitle}</p>
           <AdminLogoutButton />
         </header>
 

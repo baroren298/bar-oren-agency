@@ -13,11 +13,12 @@
 
 import { usePathname } from "next/navigation";
 import styles from "./admin-shell.module.css";
+import { he } from "@/lib/admin/i18n/he";
 
 const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/my-work", label: "My Work" },
-  { href: "/admin/talent", label: "Talent" },
+  { href: "/admin", label: he.nav.dashboard },
+  { href: "/admin/my-work", label: he.nav.myWork },
+  { href: "/admin/talent", label: he.nav.talent },
 ];
 
 export default function AdminNavLinks({ className }) {

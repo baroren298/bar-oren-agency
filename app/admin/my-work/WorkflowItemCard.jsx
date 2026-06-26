@@ -12,16 +12,24 @@
 
 import Card from "@/components/admin/Card";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { STATUS_LABEL, STATUS_TONE } from "@/lib/admin/mock-workflow";
+import { STATUS_LABEL, STATUS_TONE, WORKFLOW_STATUS } from "@/lib/admin/mock-workflow";
+import { he } from "@/lib/admin/i18n/he";
 import styles from "./my-work.module.css";
 
 function formatDate(isoDate) {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return isoDate;
-  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return date.toLocaleDateString("he-IL", { year: "numeric", month: "short", day: "numeric" });
 }
 
 export default function WorkflowItemCard({ item }) {
+  // The mock data has a single "owner" field; which Hebrew label fits best
+  // depends on where the item is in the workflow — an item waiting for
+  // approval was "submitted by" that person, while a draft or an item sent
+  // back for changes is currently "assigned to" them.
+  const ownerLabel =
+    item.status === WORKFLOW_STATUS.WAITING_FOR_APPROVAL ? he.meta.submittedBy : he.meta.assignedTo;
+
   return (
     <Card>
       <div className={styles.itemHeader}>
@@ -34,13 +42,17 @@ export default function WorkflowItemCard({ item }) {
         <span className={styles.metaDot} aria-hidden="true">
           •
         </span>
-        <span>Updated {formatDate(item.lastUpdated)}</span>
+        <span>
+          {he.meta.lastUpdated}: {formatDate(item.lastUpdated)}
+        </span>
         {item.owner ? (
           <>
             <span className={styles.metaDot} aria-hidden="true">
               •
             </span>
-            <span>{item.owner}</span>
+            <span>
+              {ownerLabel}: {item.owner}
+            </span>
           </>
         ) : null}
       </div>
