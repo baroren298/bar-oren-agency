@@ -1,0 +1,117 @@
+/*
+ * MediaGalleryEditor styles — Gallery Editor Foundation sprint.
+ *
+ * Mirrors ComparisonView.module.css's hierarchy language deliberately:
+ * the published section sits unboxed on the page background with quiet
+ * typography (it must never look editable); the proposed section sits on
+ * its own soft tinted, elevated surface (the one place editing happens).
+ * A generous gap between the two does the separating job instead of a
+ * divider.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* ---------- Shared eyebrow header (icon + label) ---------- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.eyebrowIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.eyebrowTitle,
+.eyebrowTitleProposed {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eyebrowTitle {
+  color: var(--admin-text-muted);
+}
+
+.eyebrowTitleProposed {
+  color: var(--admin-accent-strong);
+}
+
+/* ---------- Published — calm, unboxed, read-only ---------- */
+
+.publishedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-inline-start: 0.1rem;
+}
+
+.publishedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+}
+
+/* ---------- Proposed — the one editable, "active" surface ---------- */
+
+.proposedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 2rem 2.25rem;
+  background: var(--admin-accent-subtle);
+  border-radius: var(--admin-radius-lg);
+  box-shadow: 0 12px 28px -22px rgba(31, 28, 23, 0.35);
+}
+
+.proposedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-accent-strong);
+}
+
+.proposedGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+}
+
+.emptyProposedWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.addImageRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .proposedGrid,
+  .addImageRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .proposedSection {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .proposedGrid,
+  .addImageRow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+}

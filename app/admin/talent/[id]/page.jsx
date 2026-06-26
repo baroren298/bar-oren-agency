@@ -33,7 +33,9 @@ import PageHeader from '@/components/admin/PageHeader';
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import ComparisonView from '@/components/admin/ComparisonView';
+import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
+import { getTalentBySlug } from '@/data/talent';
 import {
   TALENT_WORKSPACE_SECTIONS,
   deriveDetailWorkflowStatus,
@@ -133,6 +135,37 @@ function PlaceholderSectionContent({ label }) {
   );
 }
 
+/*
+ * Gallery Editor Foundation sprint — normalizes a talent's published
+ * gallery entries (each either a plain string path or a
+ * { src, position, scale } override object, per data/talent/index.js's
+ * documented field shape) into the flat { src, alt } shape
+ * MediaGalleryEditor/PublishedMediaGrid/GalleryImageCard expect.
+ *
+ * Deliberately reads from data/talent/index.js rather than the database:
+ * per talentMapper.js's own "PHASE 1 NOTE", the public website still
+ * renders straight from that file today (no gallery query exists yet on
+ * talentAdapter/versionService, and adding one is out of scope for a
+ * UI-only sprint) — so data/talent/index.js *is* the accurate "what's
+ * currently live" source for a gallery, exactly like the public
+ * ProfileGallery component itself reads. Read-only: nothing here writes
+ * to that file or to the public site.
+ */
+function buildGalleryImages(talentSlug, displayName) {
+  const publicTalent = talentSlug ? getTalentBySlug(talentSlug) : null;
+  const rawGallery = publicTalent?.gallery || [];
+
+  return rawGallery.map((entry, index) => {
+    const src = typeof entry === 'string' ? entry : entry.src;
+    return { src, alt: he.gallery.imageAlt(displayName, index) };
+  });
+}
+
+function GallerySectionContent({ talentSlug, displayName }) {
+  const images = buildGalleryImages(talentSlug, displayName);
+  return <MediaGalleryEditor publishedImages={images} />;
+}
+
 export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
     return (
@@ -164,6 +197,12 @@ export default async function AdminTalentDetailPage({ params }) {
   const sections = TALENT_WORKSPACE_SECTIONS.map((section) => {
     if (section.key === 'details') {
       return { ...section, content: <DetailsSectionContent publishedVersion={publishedVersion} /> };
+    }
+    if (section.key === 'gallery') {
+      return {
+        ...section,
+        content: <GallerySectionContent talentSlug={talent.slug} displayName={displayName} />,
+      };
     }
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
