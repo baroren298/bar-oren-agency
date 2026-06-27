@@ -39,6 +39,19 @@
  *
  * Database-deferred bridge unchanged: still `force-dynamic` + the
  * `isDatabaseConfigured` guard.
+ *
+ * Talent Detail DB Read Integration sprint — Gallery and Socials are no
+ * longer "untouched": they now read the talent's published
+ * TalentGalleryImage/TalentSocial rows (via two new pure-read
+ * talentAdapter methods, getGalleryImages/getSocials — see that file and
+ * talentRepository.js for the new repository primitives) instead of
+ * data/talent/index.js. SEO stays exactly as it was (no SEO model/query
+ * exists yet, and adding one is out of this sprint's scope) — still
+ * hardcoded `null`s. The editor components themselves
+ * (MediaGalleryEditor/SocialLinksEditor and everything they render) are
+ * unchanged; only what's fed into their `published*` props changed, and
+ * still only PUBLISHED + ACTIVE rows are ever shown, never a pending edit.
+ * Still zero writes, still `force-dynamic`.
  */
 
 import { notFound } from 'next/navigation';
@@ -56,7 +69,6 @@ import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import SeoEditor from '@/components/admin/SeoEditor';
 import Timeline from '@/components/admin/Timeline';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
-import { getTalentBySlug } from '@/data/talent';
 import {
   TALENT_WORKSPACE_SECTIONS,
   deriveDetailWorkflowStatus,
@@ -264,64 +276,66 @@ function PlaceholderSectionContent({ label }) {
 }
 
 /*
- * Gallery Editor Foundation sprint — normalizes a talent's published
- * gallery entries (each either a plain string path or a
- * { src, position, scale } override object, per data/talent/index.js's
- * documented field shape) into the flat { src, alt } shape
- * MediaGalleryEditor/PublishedMediaGrid/GalleryImageCard expect.
- *
- * Deliberately reads from data/talent/index.js rather than the database:
- * per talentMapper.js's own "PHASE 1 NOTE", the public website still
- * renders straight from that file today (no gallery query exists yet on
- * talentAdapter/versionService, and adding one is out of scope for a
- * UI-only sprint) — so data/talent/index.js *is* the accurate "what's
- * currently live" source for a gallery, exactly like the public
- * ProfileGallery component itself reads. Read-only: nothing here writes
- * to that file or to the public site.
+ * Talent Detail DB Read Integration sprint — replaces the previous
+ * data/talent/index.js read with the real published gallery rows
+ * (talentAdapter.getGalleryImages, already filtered to
+ * versionStatus=PUBLISHED + lifecycleStatus=ACTIVE by the repository), and
+ * normalizes them into the same flat { src, alt } shape
+ * MediaGalleryEditor/PublishedMediaGrid/GalleryImageCard already expect —
+ * the editor component itself is untouched. `altHe` is used when present
+ * (DB-authored alt text); falls back to the same generated
+ * "<name> — תמונה N" label the mock data path used, so a row with no alt
+ * text yet still renders identically to before. Read-only.
  */
-function buildGalleryImages(talentSlug, displayName) {
-  const publicTalent = talentSlug ? getTalentBySlug(talentSlug) : null;
-  const rawGallery = publicTalent?.gallery || [];
-
-  return rawGallery.map((entry, index) => {
-    const src = typeof entry === 'string' ? entry : entry.src;
-    return { src, alt: he.gallery.imageAlt(displayName, index) };
-  });
+function buildGalleryImages(galleryImages, displayName) {
+  return (galleryImages || []).map((row, index) => ({
+    src: row.imageAsset?.blobUrl ?? null,
+    alt: row.altHe || he.gallery.imageAlt(displayName, index),
+  }));
 }
 
-function GallerySectionContent({ talentSlug, displayName }) {
-  const images = buildGalleryImages(talentSlug, displayName);
+function GallerySectionContent({ galleryImages, displayName }) {
+  const images = buildGalleryImages(galleryImages, displayName);
   return <MediaGalleryEditor publishedImages={images} />;
 }
 
 /*
- * Social Links Editor Foundation sprint — same reasoning as
- * buildGalleryImages above: data/talent/index.js (read via getTalentBySlug)
- * is the accurate "what's currently live" source today, since the public
- * site still renders straight from that file and no social-links query
- * exists yet on talentAdapter/versionService. Read-only, nothing here
- * writes anywhere.
+ * Talent Detail DB Read Integration sprint — replaces the previous
+ * data/talent/index.js read with the real published TalentSocial rows
+ * (talentAdapter.getSocials, already filtered to versionStatus=PUBLISHED +
+ * lifecycleStatus=ACTIVE by the repository).
  *
- * Only instagram/tiktok/youtube exist on that data shape today (see
- * data/talent/index.js's own field-shape comment); facebook/website aren't
- * modeled there yet, so they're surfaced as `null` — SocialLinkRow already
- * renders `null` as a calm "לא קיים" placeholder, exactly like a platform
- * that genuinely has no account yet.
+ * <SocialLinksEditor> renders exactly one row per platform (a single
+ * string|null value) — that UI shape predates this sprint and isn't
+ * changed here. The schema now allows multiple accounts per platform
+ * (TalentSocial.label), so for each platform this picks the MAIN-labeled
+ * account if one exists, else the first published one, same precedence
+ * `talentRepository.listTalents` already uses for its roster "social
+ * preview" column — chosen for consistency, not invented here. Any
+ * additional accounts on the same platform (e.g. a second "Spam" Instagram)
+ * are not lost from the database, just not displayed on this page without
+ * a UI change, which is out of this sprint's scope (see summary).
+ *
+ * Only the platforms <SocialLinksEditor>'s default registry
+ * (lib/admin/social-platforms.js) knows about — instagram/tiktok/youtube/
+ * facebook/website — are mapped; a THREADS row (schema-only platform, no
+ * UI slot yet) is likewise not displayed, same reasoning.
  */
-function buildSocialLinks(talentSlug) {
-  const publicTalent = talentSlug ? getTalentBySlug(talentSlug) : null;
+function buildSocialLinks(socials) {
+  const platformKeys = { INSTAGRAM: 'instagram', TIKTOK: 'tiktok', YOUTUBE: 'youtube', FACEBOOK: 'facebook', WEBSITE: 'website' };
+  const links = { instagram: null, tiktok: null, youtube: null, facebook: null, website: null };
 
-  return {
-    instagram: publicTalent?.instagram ?? null,
-    tiktok: publicTalent?.tiktok ?? null,
-    youtube: publicTalent?.youtube ?? null,
-    facebook: null,
-    website: null,
-  };
+  for (const [dbPlatform, key] of Object.entries(platformKeys)) {
+    const accountsForPlatform = (socials || []).filter((s) => s.platform === dbPlatform);
+    const chosen = accountsForPlatform.find((s) => s.label === 'MAIN') || accountsForPlatform[0] || null;
+    links[key] = chosen ? (chosen.url || chosen.handle || null) : null;
+  }
+
+  return links;
 }
 
-function SocialsSectionContent({ talentSlug }) {
-  const publishedLinks = buildSocialLinks(talentSlug);
+function SocialsSectionContent({ socials }) {
+  const publishedLinks = buildSocialLinks(socials);
   return <SocialLinksEditor publishedLinks={publishedLinks} />;
 }
 
@@ -389,10 +403,15 @@ export default async function AdminTalentDetailPage({ params }) {
 
   // Pure reads only — no version is ever created as a side effect of
   // loading this page (see loadPendingVersion's header comment above).
-  const [publishedVersion, pendingVersion, versions] = await Promise.all([
+  // socials/galleryImages added by the Talent Detail DB Read Integration
+  // sprint, same pure-read guarantee: talentAdapter.getSocials/
+  // getGalleryImages call nothing but a SELECT.
+  const [publishedVersion, pendingVersion, versions, socials, galleryImages] = await Promise.all([
     versionService.getCurrentPublished(talentAdapter, id),
     loadPendingVersion(talent),
     versionService.listVersionHistory(talentAdapter, id),
+    talentAdapter.getSocials(talent.id),
+    talentAdapter.getGalleryImages(talent.id),
   ]);
 
   const status = deriveDetailWorkflowStatus(versions);
@@ -415,11 +434,11 @@ export default async function AdminTalentDetailPage({ params }) {
     if (section.key === 'gallery') {
       return {
         ...section,
-        content: <GallerySectionContent talentSlug={talent.slug} displayName={displayName} />,
+        content: <GallerySectionContent galleryImages={galleryImages} displayName={displayName} />,
       };
     }
     if (section.key === 'socials') {
-      return { ...section, content: <SocialsSectionContent talentSlug={talent.slug} /> };
+      return { ...section, content: <SocialsSectionContent socials={socials} /> };
     }
     if (section.key === 'seo') {
       return { ...section, content: <SeoSectionContent /> };
