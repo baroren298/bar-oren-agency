@@ -26,6 +26,13 @@
  *   - onSubmit (function, optional) — inert while submitDisabled
  *   - saveDraftDisabled (boolean, optional, default true)
  *   - submitDisabled (boolean, optional, default true)
+ *   - saveDraftStatus ("idle" | "saving" | "saved" | "error", optional,
+ *     default "idle") — Save Draft sprint addition. Purely a label slot
+ *     next to the button; this component still makes no decision about
+ *     *when* each status applies, the caller (ComparisonView) owns that.
+ *   - saveDraftStatusMessage (string, optional) — overrides the default
+ *     copy for the current saveDraftStatus, used for the "error" state's
+ *     specific error message.
  */
 
 import styles from "./EditorActionBar.module.css";
@@ -33,18 +40,36 @@ import SecondaryButton from "./SecondaryButton";
 import PrimaryButton from "./PrimaryButton";
 import { he } from "@/lib/admin/i18n/he";
 
+const STATUS_COPY = {
+  saving: he.editor.saveDraft.saving,
+  saved: he.editor.saveDraft.saved,
+  error: he.editor.saveDraft.error,
+};
+
 export default function EditorActionBar({
   onCancel = () => {},
   onSaveDraft = () => {},
   onSubmit = () => {},
   saveDraftDisabled = true,
   submitDisabled = true,
+  saveDraftStatus = "idle",
+  saveDraftStatusMessage,
 }) {
+  const statusText = saveDraftStatus !== "idle" ? saveDraftStatusMessage || STATUS_COPY[saveDraftStatus] : null;
+
   return (
     <div className={`${styles.tokens} ${styles.bar}`}>
       <SecondaryButton onClick={onCancel}>{he.editor.actions.cancel}</SecondaryButton>
 
       <div className={styles.primaryActions}>
+        {statusText ? (
+          <span
+            className={saveDraftStatus === "error" ? styles.statusError : styles.statusText}
+            role={saveDraftStatus === "error" ? "alert" : "status"}
+          >
+            {statusText}
+          </span>
+        ) : null}
         <SecondaryButton
           onClick={onSaveDraft}
           disabled={saveDraftDisabled}

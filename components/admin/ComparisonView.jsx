@@ -71,12 +71,33 @@
  *   - groups ({ key, label, fields: { key, label, value, type }[] }[],
  *     optional) — grouped list, preferred for new callers. Exactly one of
  *     `fields`/`groups` should be supplied.
+ *   - onSaveDraft (async function(values) => result, optional) — Save Draft
+ *     sprint addition. Still no fetch/URL/talent-specific logic in this
+ *     file (required safeguard #2): this component only ever calls the
+ *     callback its caller supplied with the current proposed values, and
+ *     interprets whatever that callback resolves/rejects with to drive its
+ *     own saving/saved/error UI state. The page (or a thin wrapper
+ *     component) owns the actual API call. When omitted, the Save Draft
+ *     button stays disabled exactly like before this prop existed — purely
+ *     additive, no existing caller's behavior changes.
+ *
+ * Save Draft sprint additions:
+ *   - Dirty-state tracking: the Save Draft button is enabled only once the
+ *     proposed values differ from their initial seed, and only when
+ *     `onSaveDraft` was supplied; it disables itself again immediately
+ *     while a save is in flight.
+ *   - A small, isolated `beforeunload` guard warns before leaving the page
+ *     with unsaved changes. Deliberately scoped to this one case (per this
+ *     sprint's explicit "don't overbuild tab-switch guards" instruction) —
+ *     it does not try to intercept in-app tab switches, only an actual
+ *     page unload/reload/close.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./ComparisonView.module.css";
 import EditorHelperNote from "./EditorHelperNote";
 import EditorActionBar from "./EditorActionBar";
+import { he } from "@/lib/admin/i18n/he";
 
 function normalizeGroups({ groups, fields }) {
   if (groups && groups.length) return groups;
@@ -161,7 +182,7 @@ function ProposedField({ field, value, onChange }) {
   );
 }
 
-export default function ComparisonView({ fields, groups }) {
+export default function ComparisonView({ fields, groups, onSaveDraft }) {
   const fieldGroups = normalizeGroups({ groups, fields });
   const allFields = fieldGroups.flatMap((group) => group.fields);
 
@@ -173,17 +194,76 @@ export default function ComparisonView({ fields, groups }) {
   }
 
   const [proposedValues, setProposedValues] = useState(buildInitialValues);
+  const [savedValues, setSavedValues] = useState(buildInitialValues);
+  const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved | error
+  const [saveError, setSaveError] = useState(null);
+  const [conflictNotice, setConflictNotice] = useState(null);
+
+  const isDirty = JSON.stringify(proposedValues) !== JSON.stringify(savedValues);
+  const saving = saveStatus === "saving";
+  const saveDraftDisabled = !onSaveDraft || !isDirty || saving;
 
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
+    // Any further edit after a "saved"/"error" status is shown should clear
+    // that stale status rather than leaving it stuck on screen.
+    if (saveStatus !== "idle" && saveStatus !== "saving") {
+      setSaveStatus("idle");
+      setSaveError(null);
+    }
   }
 
   // Local-only reset — per this sprint's scope, "ביטול שינויים" never talks
   // to a server. It just discards whatever the employee typed into the
   // proposed column and snaps it back to the published values in memory.
   function handleCancel() {
-    setProposedValues(buildInitialValues());
+    setProposedValues(savedValues);
+    setSaveStatus("idle");
+    setSaveError(null);
   }
+
+  // Save Draft sprint — the only place this component talks to its caller.
+  // No fetch/URL/talent-specific logic here (required safeguard #2): the
+  // caller's `onSaveDraft` callback owns the actual API call, this function
+  // just calls it with the current proposed values and reacts to the
+  // outcome. `onSaveDraft` is expected to resolve with
+  // `{ version, conflict, validation }` (matching proposalService.update's
+  // return shape) or throw/reject with an Error.
+  async function handleSaveDraft() {
+    if (!onSaveDraft || saving) return;
+
+    setSaveStatus("saving");
+    setSaveError(null);
+    setConflictNotice(null);
+
+    try {
+      const result = await onSaveDraft(proposedValues);
+      setSavedValues(proposedValues);
+      setSaveStatus("saved");
+      // Conflict info is non-blocking (required safeguard #6) — surfaced as
+      // a calm, informational note, never as a reason the save failed.
+      if (result?.conflict?.conflict) {
+        setConflictNotice(he.editor.saveDraft.conflictNotice);
+      }
+    } catch (error) {
+      setSaveStatus("error");
+      setSaveError(error?.message || he.editor.saveDraft.error);
+    }
+  }
+
+  // Isolated `beforeunload` guard only — deliberately not a tab-switch
+  // guard (out of scope this sprint, see header comment). Warns on an
+  // actual page unload/reload/close while there are unsaved changes.
+  useEffect(() => {
+    function handleBeforeUnload(event) {
+      if (isDirty) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   return (
     <div className={styles.tokens}>
@@ -259,7 +339,18 @@ export default function ComparisonView({ fields, groups }) {
       </div>
 
       <EditorHelperNote />
-      <EditorActionBar onCancel={handleCancel} />
+      {conflictNotice ? (
+        <p className={styles.conflictNotice} role="status">
+          {conflictNotice}
+        </p>
+      ) : null}
+      <EditorActionBar
+        onCancel={handleCancel}
+        onSaveDraft={handleSaveDraft}
+        saveDraftDisabled={saveDraftDisabled}
+        saveDraftStatus={saveStatus}
+        saveDraftStatusMessage={saveStatus === "error" ? saveError : undefined}
+      />
     </div>
   );
 }

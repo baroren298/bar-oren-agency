@@ -50,7 +50,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import StartEditingButton from '@/components/admin/StartEditingButton';
-import ComparisonView from '@/components/admin/ComparisonView';
+import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import SeoEditor from '@/components/admin/SeoEditor';
@@ -67,6 +67,7 @@ import {
   buildVersionHistoryTimelineItems,
 } from '@/lib/admin/talent-workspace';
 import { he } from '@/lib/admin/i18n/he';
+import { VERSION_STATUS } from '@/lib/admin/constants/enums';
 import styles from './talent-detail.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -189,7 +190,17 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
   ];
 }
 
-function DetailsSectionContent({ publishedVersion, pendingVersion }) {
+/*
+ * Save Draft sprint — only a DRAFT is editable (server-side authority lives
+ * in proposalService.update()'s status guard; this is just the UI
+ * reflecting the same rule without an extra round trip). A PROPOSED pending
+ * version is shown read-only via ComparisonView's draftValue seeding, same
+ * as before this feature existed — its "save draft" capability is simply
+ * never wired up, since `talentId`/`versionId` flow through
+ * <TalentDetailsEditor>, the one place that owns the actual Save Draft
+ * network call (required safeguard #2).
+ */
+function DetailsSectionContent({ talentId, publishedVersion, pendingVersion }) {
   if (!publishedVersion) {
     return (
       <EmptyState
@@ -199,7 +210,15 @@ function DetailsSectionContent({ publishedVersion, pendingVersion }) {
     );
   }
 
-  return <ComparisonView groups={buildDetailsGroups(publishedVersion, pendingVersion)} />;
+  const draftVersionId = pendingVersion?.status === VERSION_STATUS.DRAFT ? pendingVersion.id : null;
+
+  return (
+    <TalentDetailsEditor
+      talentId={talentId}
+      versionId={draftVersionId}
+      groups={buildDetailsGroups(publishedVersion, pendingVersion)}
+    />
+  );
 }
 
 /*
@@ -379,7 +398,13 @@ export default async function AdminTalentDetailPage({ params }) {
     if (section.key === 'details') {
       return {
         ...section,
-        content: <DetailsSectionContent publishedVersion={publishedVersion} pendingVersion={pendingVersion} />,
+        content: (
+          <DetailsSectionContent
+            talentId={talent.id}
+            publishedVersion={publishedVersion}
+            pendingVersion={pendingVersion}
+          />
+        ),
       };
     }
     if (section.key === 'gallery') {
