@@ -63,6 +63,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import StartEditingButton from '@/components/admin/StartEditingButton';
+import ProfileImagePanel from '@/components/admin/ProfileImagePanel';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
@@ -77,6 +78,7 @@ import {
   workflowStatusLabel,
   workflowStatusTone,
   buildVersionHistoryTimelineItems,
+  calculateAge,
 } from '@/lib/admin/talent-workspace';
 import { he } from '@/lib/admin/i18n/he';
 import { VERSION_STATUS } from '@/lib/admin/constants/enums';
@@ -382,6 +384,47 @@ function HistorySectionContent({ versions }) {
   return <Timeline items={items} />;
 }
 
+/*
+ * Talent Detail Header DB read-only mapping sprint — read-only profile
+ * facts block (birth date / computed age), rendered once below the
+ * workspace header, above the tabs. Deliberately separate from
+ * buildDetailsGroups/<TalentDetailsEditor> above: this is plain display,
+ * not wired to ComparisonView's Save Draft/Submit machinery, and shows
+ * only the current Published version's values (matching the rest of this
+ * page's header, which already reads from `publishedVersion`) — never a
+ * pending Draft/Proposed value, so there is no "which column" ambiguity
+ * for a block with no comparison view at all.
+ *
+ * Profile Image section sprint — the small circular avatar that used to
+ * live in this block moved out into its own dedicated
+ * <ProfileImagePanel> (rendered separately below), so this component is
+ * now facts-only (birth date / age). No DB read changed: still the same
+ * `publishedVersion.birthDate` this always read.
+ */
+function ProfileSummary({ publishedVersion }) {
+  if (!publishedVersion) return null;
+
+  const { birthDate } = publishedVersion;
+  const age = calculateAge(birthDate);
+
+  return (
+    <dl className={styles.profileFacts}>
+      <div className={styles.profileFactRow}>
+        <dt className={styles.profileFactLabel}>{he.talent.detail.profile.birthDate}</dt>
+        <dd className={styles.profileFactValue}>
+          {birthDate ? formatHebrewDate(birthDate) : he.talent.detail.profile.notSet}
+        </dd>
+      </div>
+      <div className={styles.profileFactRow}>
+        <dt className={styles.profileFactLabel}>{he.talent.detail.profile.age}</dt>
+        <dd className={styles.profileFactValue}>
+          {age != null ? he.talent.detail.profile.ageYears(age) : he.talent.detail.profile.notSet}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
     return (
@@ -472,6 +515,17 @@ export default async function AdminTalentDetailPage({ params }) {
           </div>
         }
       />
+
+      {publishedVersion ? (
+        <ProfileImagePanel
+          imageUrl={publishedVersion.profileImageAsset?.blobUrl ?? null}
+          profileImagePosition={publishedVersion.profileImagePosition}
+          profileImageScale={publishedVersion.profileImageScale}
+          displayName={displayName}
+        />
+      ) : null}
+
+      <ProfileSummary publishedVersion={publishedVersion} />
 
       <TalentWorkspaceTabs sections={sections} />
 

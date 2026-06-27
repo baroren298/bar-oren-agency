@@ -1,0 +1,128 @@
+/*
+ * ProfileImagePanel — Profile Image section sprint. Composes the shared
+ * admin-tokens palette, same as every other components/admin/** module.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.panel {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  background: var(--admin-surface);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.description {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+}
+
+.body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.previewColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.previewLabel {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+/*
+ * Rectangular preview, aspect-ratio 3 / 4 — matches the public site's
+ * primary portrait ratio (ProfileHero.module.css's .imageCol). Fixed
+ * width so the frame reads as a deliberate "photo card", not a stretched
+ * fluid box.
+ */
+.frame {
+  position: relative;
+  width: 11.5rem;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--admin-radius);
+  overflow: hidden;
+  background: var(--admin-accent-subtle);
+  border: 1px solid var(--admin-border);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+.controlsColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 12rem;
+  padding-top: 1.5rem;
+}
+
+/*
+ * Disabled placeholder buttons — reserved space for Replace image /
+ * Crop · Position / Zoom · Scale, wired up in a future sprint. Styled to
+ * clearly read as "not yet active" rather than a broken button.
+ */
+.controlButton {
+  composes: tokens;
+  width: 100%;
+  padding: 0.5rem 0.9rem;
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-bg);
+  color: var(--admin-text-muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: not-allowed;
+}
+
+.comingSoonHint {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+  max-width: 16rem;
+}

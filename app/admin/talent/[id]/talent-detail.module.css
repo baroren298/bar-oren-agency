@@ -90,6 +90,48 @@
   color: var(--admin-text-secondary);
 }
 
+/*
+ * Talent Detail Header DB read-only mapping sprint — read-only profile
+ * facts block (birth date / computed age), placed below the workspace
+ * header, above the tabs. Plain display only — no editing affordance, no
+ * form controls, intentionally lighter-weight than the tab content below
+ * it.
+ *
+ * Profile Image section sprint — the photo (previously a small circular
+ * avatar shown alongside these facts via a now-removed `.profileSummary`
+ * wrapper, `.profileImageFrame`, `.profileImage`, `.profileImagePlaceholder`)
+ * moved into its own dedicated section, see components/admin/
+ * ProfileImagePanel.jsx + .module.css. This block now only carries the
+ * birth date / age `<dl>`, so it composes `tokens` itself and keeps the
+ * same vertical spacing the old wrapper provided.
+ */
+.profileFacts {
+  composes: tokens;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 0;
+  margin-bottom: 1.25rem;
+}
+
+.profileFactRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.profileFactLabel {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+.profileFactValue {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+}
+
 .workspace {
   composes: tokens;
   display: flex;
