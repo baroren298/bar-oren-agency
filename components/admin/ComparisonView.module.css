@@ -223,6 +223,20 @@
   accent-color: var(--admin-accent);
 }
 
+/*
+ * Save Draft sprint — non-blocking conflict notice (required safeguard #6).
+ * Calm, informational tone (not an error color) since the save itself
+ * already succeeded by the time this can show.
+ */
+.conflictNotice {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  background: var(--admin-accent-subtle);
+  border-radius: var(--admin-radius);
+}
+
 @media (max-width: 640px) {
   .fieldRow,
   .fieldRowEditable {
