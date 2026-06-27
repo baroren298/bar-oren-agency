@@ -48,13 +48,18 @@
   gap: 0.25rem;
 }
 
-.brand {
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  margin-block: 0 2rem;
-  margin-inline-start: 0.25rem;
-  color: var(--admin-text-primary);
+.brandLogo {
+  display: block;
+  width: 100%;
+  max-width: 156px;
+  height: auto;
+  /* Align to the sidebar's inline-end (right, in this RTL shell). The
+     inline-end margin matches .navLink's own inline-end padding (0.75rem)
+     so the logo's edge lines up with the nav *text*, not the outer edge
+     of the nav button's hover/active background box. */
+  align-self: flex-end;
+  margin-inline-end: 0.75rem;
+  margin-block: 0 0.5rem;
 }
 
 .nav {
@@ -90,17 +95,14 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Was space-between (title vs. logout button). Now that the generic
+     header title is gone (the sidebar logo carries the branding instead),
+     this keeps the logout button anchored in its original spot rather
+     than drifting to the row's start now that it's the only child. */
+  justify-content: flex-end;
   padding: 1.1rem 2rem;
   background: var(--admin-surface);
   border-bottom: 1px solid var(--admin-border);
-}
-
-.headerTitle {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--admin-text-secondary);
-  margin: 0;
 }
 
 .logoutButton {

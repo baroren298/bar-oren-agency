@@ -19,6 +19,7 @@
  * (needs an onClick handler) — both imported in, not inlined here.
  */
 
+import Image from "next/image";
 import AdminNavLinks from "./AdminNavLinks";
 import AdminLogoutButton from "./AdminLogoutButton";
 import styles from "./admin-shell.module.css";
@@ -28,13 +29,23 @@ export default function AdminShell({ children }) {
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
-        <p className={styles.brand}>{he.shell.brand}</p>
+        {/* Same asset the public site Header uses (components/layout/Header.jsx)
+            — intentionally reused, not copied, so there's one source of truth
+            for the brand mark. Only the admin-local *layout* around it
+            (size/spacing) is independent, per this file's styling-isolation rule. */}
+        <Image
+          src="/images/brand/logo3.png"
+          alt={he.shell.brand}
+          width={600}
+          height={240}
+          priority
+          className={styles.brandLogo}
+        />
         <AdminNavLinks className={styles.nav} />
       </aside>
 
       <div className={styles.main}>
         <header className={styles.header}>
-          <p className={styles.headerTitle}>{he.shell.headerTitle}</p>
           <AdminLogoutButton />
         </header>
 
