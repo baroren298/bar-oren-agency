@@ -22,6 +22,17 @@
 }
 
 /*
+ * "Start Editing" sprint — lays the StatusBadge and StartEditingButton out
+ * side by side in PageHeader's existing `action` slot, instead of just the
+ * single badge that slot held before.
+ */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/*
  * Subtle "מידע טכני" disclosure — Talent Workspace Header Polish sprint.
  *
  * Replaces the old always-visible metaCard (raw slug + raw lifecycle

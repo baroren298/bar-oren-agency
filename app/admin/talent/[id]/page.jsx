@@ -26,11 +26,13 @@
  * proposed column (via `draftValue`); if neither exists, only the
  * Published version is shown, exactly as before this feature existed.
  *
- * Starting a brand-new Draft is intentionally not implemented here — that
- * is the future "Start Editing" action (Published -> click "Start Editing"
- * -> create Draft -> edit -> save -> submit), an explicit user action that
- * belongs behind its own button/handler in a later sprint, never a side
- * effect of a GET/page render.
+ * Starting a brand-new Draft is intentionally not done by this file. The
+ * "Start Editing" sprint adds that as its own explicit user action:
+ * <StartEditingButton> (components/admin/StartEditingButton.jsx) renders
+ * conditionally below, reflecting the exact same `pendingVersion` this page
+ * already read above, and POSTs to app/api/admin/talent/[id]/proposals/
+ * route.js on click — this page itself still performs zero writes on
+ * render, no matter what state the talent is in.
  *
  * Gallery/Socials/SEO sections are untouched by this pass — still the
  * fully local, no-persistence UI from earlier sprints.
@@ -47,6 +49,7 @@ import AdminShell from '../../AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
+import StartEditingButton from '@/components/admin/StartEditingButton';
 import ComparisonView from '@/components/admin/ComparisonView';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
@@ -406,7 +409,19 @@ export default async function AdminTalentDetailPage({ params }) {
       <PageHeader
         title={displayName}
         description={`${he.talent.meta.lastUpdated}: ${formatHebrewDate(lastUpdated)}`}
-        action={<StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />}
+        action={
+          <div className={styles.headerActions}>
+            <StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />
+            {/*
+              Start Editing sprint — explicit user action only, never a side
+              effect of this (pure-read) page load. `pendingVersion` here is
+              exactly the same value loadPendingVersion() already fetched
+              above for the comparison view; this button makes no engine
+              calls of its own, it just reflects that existing read.
+            */}
+            <StartEditingButton talentId={talent.id} pendingStatus={pendingVersion?.status ?? null} />
+          </div>
+        }
       />
 
       <TalentWorkspaceTabs sections={sections} />
