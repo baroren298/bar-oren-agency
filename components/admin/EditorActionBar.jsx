@@ -33,6 +33,14 @@
  *   - saveDraftStatusMessage (string, optional) — overrides the default
  *     copy for the current saveDraftStatus, used for the "error" state's
  *     specific error message.
+ *   - submitStatus ("idle" | "submitting" | "submitted" | "error",
+ *     optional, default "idle") — Submit for Approval sprint (Sprint 1)
+ *     addition, same role as saveDraftStatus above but for the שלח לאישור
+ *     button.
+ *   - submitStatusMessage (string, optional) — overrides the default copy
+ *     for the current submitStatus; also used (while submitStatus is
+ *     "idle") to show the "save your draft first" hint when Submit is
+ *     disabled because of unsaved local edits.
  */
 
 import styles from "./EditorActionBar.module.css";
@@ -46,6 +54,12 @@ const STATUS_COPY = {
   error: he.editor.saveDraft.error,
 };
 
+const SUBMIT_STATUS_COPY = {
+  submitting: he.editor.submit.submitting,
+  submitted: he.editor.submit.submitted,
+  error: he.editor.submit.error,
+};
+
 export default function EditorActionBar({
   onCancel = () => {},
   onSaveDraft = () => {},
@@ -54,8 +68,12 @@ export default function EditorActionBar({
   submitDisabled = true,
   saveDraftStatus = "idle",
   saveDraftStatusMessage,
+  submitStatus = "idle",
+  submitStatusMessage,
 }) {
   const statusText = saveDraftStatus !== "idle" ? saveDraftStatusMessage || STATUS_COPY[saveDraftStatus] : null;
+  const submitText =
+    submitStatus !== "idle" ? submitStatusMessage || SUBMIT_STATUS_COPY[submitStatus] : submitStatusMessage;
 
   return (
     <div className={`${styles.tokens} ${styles.bar}`}>
@@ -77,11 +95,15 @@ export default function EditorActionBar({
         >
           {he.editor.actions.saveDraft}
         </SecondaryButton>
-        <PrimaryButton
-          onClick={onSubmit}
-          disabled={submitDisabled}
-          title={submitDisabled ? he.editor.comingSoon : undefined}
-        >
+        {submitText ? (
+          <span
+            className={submitStatus === "error" ? styles.statusError : styles.statusText}
+            role={submitStatus === "error" ? "alert" : "status"}
+          >
+            {submitText}
+          </span>
+        ) : null}
+        <PrimaryButton onClick={onSubmit} disabled={submitDisabled}>
           {he.editor.actions.submit}
         </PrimaryButton>
       </div>

@@ -80,6 +80,16 @@
  *     component) owns the actual API call. When omitted, the Save Draft
  *     button stays disabled exactly like before this prop existed — purely
  *     additive, no existing caller's behavior changes.
+ *   - onSubmit (async function() => result, optional) — Submit for Approval
+ *     sprint (Sprint 1) addition. Same shape/role as `onSaveDraft` above,
+ *     except it takes no arguments: Submit flips the *already-persisted*
+ *     DRAFT row to PROPOSED server-side (proposalService.submit()) — it
+ *     does not send the in-memory `proposedValues` at all. That's why
+ *     Submit is disabled whenever there are unsaved local edits (see
+ *     `isDirty` below): submitting would otherwise lock in whatever was
+ *     last *saved*, silently discarding anything typed since, which would
+ *     be a confusing, easy-to-miss data loss. When omitted, the Submit
+ *     button stays disabled exactly like before this prop existed.
  *
  * Save Draft sprint additions:
  *   - Dirty-state tracking: the Save Draft button is enabled only once the
@@ -91,6 +101,20 @@
  *     sprint's explicit "don't overbuild tab-switch guards" instruction) —
  *     it does not try to intercept in-app tab switches, only an actual
  *     page unload/reload/close.
+ *
+ * Submit for Approval sprint (Sprint 1) addition:
+ *   - The Submit button is enabled only when `onSubmit` was supplied (i.e.
+ *     the page resolved an editable DRAFT) AND there are no unsaved local
+ *     edits (`!isDirty`) AND nothing else is in flight. It is the server
+ *     (proposalService.submit()'s DRAFT-only guard) that actually enforces
+ *     "only DRAFT can be submitted" — this is just the UI reflecting the
+ *     same state without an extra round trip, same pattern as Save Draft.
+ *     On a successful submit, this component does not flip any local
+ *     "now read-only" state itself — the caller (TalentDetailsEditor) is
+ *     expected to refresh the page, which re-derives `onSaveDraft`/
+ *     `onSubmit` as undefined once the version is no longer DRAFT,
+ *     disabling both buttons the same way they're disabled today when no
+ *     editable Draft exists at all.
  */
 
 import { useEffect, useState } from "react";
@@ -182,7 +206,7 @@ function ProposedField({ field, value, onChange }) {
   );
 }
 
-export default function ComparisonView({ fields, groups, onSaveDraft }) {
+export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit }) {
   const fieldGroups = normalizeGroups({ groups, fields });
   const allFields = fieldGroups.flatMap((group) => group.fields);
 
@@ -198,10 +222,20 @@ export default function ComparisonView({ fields, groups, onSaveDraft }) {
   const [saveStatus, setSaveStatus] = useState("idle"); // idle | saving | saved | error
   const [saveError, setSaveError] = useState(null);
   const [conflictNotice, setConflictNotice] = useState(null);
+  // Submit for Approval sprint (Sprint 1) — mirrors saveStatus/saveError
+  // above, kept as its own state since saving a draft and submitting it are
+  // independent actions that can each succeed/fail on their own.
+  const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
+  const [submitError, setSubmitError] = useState(null);
 
   const isDirty = JSON.stringify(proposedValues) !== JSON.stringify(savedValues);
   const saving = saveStatus === "saving";
-  const saveDraftDisabled = !onSaveDraft || !isDirty || saving;
+  const submitting = submitStatus === "submitting";
+  const saveDraftDisabled = !onSaveDraft || !isDirty || saving || submitting;
+  // Disabled while dirty (required safeguard, see header comment above):
+  // Submit acts on the already-persisted DRAFT row, not on unsaved local
+  // edits, so it must not be clickable while the two have diverged.
+  const submitDisabled = !onSubmit || isDirty || saving || submitting;
 
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
@@ -210,6 +244,14 @@ export default function ComparisonView({ fields, groups, onSaveDraft }) {
     if (saveStatus !== "idle" && saveStatus !== "saving") {
       setSaveStatus("idle");
       setSaveError(null);
+    }
+    // Same for a stale "submitted"/"error" status — a fresh edit makes the
+    // proposed values dirty again anyway (which already disables Submit),
+    // but the leftover status text would otherwise read as misleadingly
+    // current.
+    if (submitStatus !== "idle" && submitStatus !== "submitting") {
+      setSubmitStatus("idle");
+      setSubmitError(null);
     }
   }
 
@@ -248,6 +290,28 @@ export default function ComparisonView({ fields, groups, onSaveDraft }) {
     } catch (error) {
       setSaveStatus("error");
       setSaveError(error?.message || he.editor.saveDraft.error);
+    }
+  }
+
+  // Submit for Approval sprint (Sprint 1) — the only place this component
+  // talks to its caller about submitting. No fetch/URL/talent-specific
+  // logic here either (same required safeguard as handleSaveDraft above):
+  // the caller's `onSubmit` callback owns the actual API call and any
+  // page refresh; this function just calls it and reacts to the outcome.
+  // Takes no arguments — Submit acts on the persisted DRAFT row server-side,
+  // not on `proposedValues` (see header comment on the `onSubmit` prop).
+  async function handleSubmit() {
+    if (!onSubmit || submitDisabled) return;
+
+    setSubmitStatus("submitting");
+    setSubmitError(null);
+
+    try {
+      await onSubmit();
+      setSubmitStatus("submitted");
+    } catch (error) {
+      setSubmitStatus("error");
+      setSubmitError(error?.message || he.editor.submit.error);
     }
   }
 
@@ -350,6 +414,16 @@ export default function ComparisonView({ fields, groups, onSaveDraft }) {
         saveDraftDisabled={saveDraftDisabled}
         saveDraftStatus={saveStatus}
         saveDraftStatusMessage={saveStatus === "error" ? saveError : undefined}
+        onSubmit={handleSubmit}
+        submitDisabled={submitDisabled}
+        submitStatus={submitStatus}
+        submitStatusMessage={
+          submitStatus === "error"
+            ? submitError
+            : onSubmit && isDirty && submitStatus === "idle"
+              ? he.editor.submit.unsavedHint
+              : undefined
+        }
       />
     </div>
   );
