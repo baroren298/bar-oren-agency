@@ -18,10 +18,12 @@
  * Details/Gallery/Socials/SEO/History now each have a real (still fully
  * local, still no persistence) UI — see DetailsSectionContent,
  * GallerySectionContent, SocialsSectionContent, SeoSectionContent,
- * HistorySectionContent below. History Tab Foundation sprint: a read-only
- * <Timeline> of mock events (lib/admin/mock-history.js) — no database, no
- * real audit log, no workflow engine, same "still UI/Foundation only" scope
- * every other section here follows.
+ * HistorySectionContent below. History Tab Real Data sprint: History now
+ * renders <Timeline> from the real `versions` array already fetched on
+ * this page (versionService.listVersionHistory) — see
+ * lib/admin/talent-workspace.js's buildVersionHistoryTimelineItems for the
+ * row -> Timeline-item mapping. lib/admin/mock-history.js is left in place,
+ * unused, per that sprint's explicit scope (not deleted).
  *
  * Database-deferred bridge unchanged: still `force-dynamic` + the
  * `isDatabaseConfigured` guard.
@@ -49,8 +51,8 @@ import {
   formatHebrewDate,
   workflowStatusLabel,
   workflowStatusTone,
+  buildVersionHistoryTimelineItems,
 } from '@/lib/admin/talent-workspace';
-import { getTalentHistory, ACTION_LABEL, ACTION_TONE } from '@/lib/admin/mock-history';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent-detail.module.css';
 
@@ -230,24 +232,20 @@ function SeoSectionContent() {
 }
 
 /*
- * History Tab Foundation sprint — maps lib/admin/mock-history.js's mock
- * events (action keys + raw tone keys) into the resolved
- * { action: label, tone }[] shape <Timeline> expects, the same
- * "resolve labels/tones at the call site, keep the component generic"
- * pattern workflowStatusLabel/workflowStatusTone already use for
- * <StatusBadge> elsewhere on this page. No database, no real audit log —
- * just a local mock feed, same as every other section here this sprint.
+ * History Tab Real Data sprint — renders <Timeline> from the real
+ * version-history rows already fetched on this page
+ * (versionService.listVersionHistory(talentAdapter, id), passed in as
+ * `versions`), instead of lib/admin/mock-history.js's getTalentHistory().
+ * All the row -> { action, date, user, summary, tone } mapping logic lives
+ * in lib/admin/talent-workspace.js's buildVersionHistoryTimelineItems,
+ * which reuses the same workflowStatusLabel/workflowStatusTone helpers
+ * <StatusBadge> uses elsewhere on this page, per that sprint's requirement
+ * to reuse existing label/tone vocabulary rather than inventing a new one.
+ * <Timeline> itself is unchanged — it already renders an EmptyState when
+ * `items` is empty (a brand-new talent with no versions yet).
  */
-function buildHistoryItems(talentSlug) {
-  return getTalentHistory(talentSlug).map((event) => ({
-    ...event,
-    action: ACTION_LABEL[event.action] || event.action,
-    tone: ACTION_TONE[event.action] || 'neutral',
-  }));
-}
-
-function HistorySectionContent({ talentSlug }) {
-  const items = buildHistoryItems(talentSlug);
+function HistorySectionContent({ versions }) {
+  const items = buildVersionHistoryTimelineItems(versions);
   return <Timeline items={items} />;
 }
 
@@ -296,7 +294,7 @@ export default async function AdminTalentDetailPage({ params }) {
       return { ...section, content: <SeoSectionContent /> };
     }
     if (section.key === 'history') {
-      return { ...section, content: <HistorySectionContent talentSlug={talent.slug} /> };
+      return { ...section, content: <HistorySectionContent versions={versions} /> };
     }
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
