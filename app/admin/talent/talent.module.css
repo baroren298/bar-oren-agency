@@ -11,27 +11,180 @@
   composes: tokens from "../../../components/admin/admin-tokens.module.css";
 }
 
+/*
+ * Card grid — Talent List Visual Redesign (Correction sprint). Replaces the
+ * dense horizontal-row layout with a grid of visual cards closer to the
+ * public site's talent grid (components/talent/TalentRoster.module.css),
+ * while staying admin-appropriate: more columns at rest so an Owner can
+ * scan many profiles at once, no hover scale/zoom (not needed for an admin
+ * tool), and the status badge / "פתח תיק" affordance stay as explicit admin
+ * chrome rather than copying the public card's minimal hover-only treatment.
+ */
 .queue {
   composes: tokens;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1.1rem;
 }
 
+@media (max-width: 560px) {
+  .queue {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+/*
+ * Search box — Talent List Polish sprint. Mirrors the existing input
+ * treatment already established in components/admin/SeoFieldRow.module.css
+ * (same border/radius/focus ring tokens) so this reads as part of the same
+ * design system rather than a one-off control.
+ */
+.searchBar {
+  composes: tokens;
+  margin-bottom: 1rem;
+}
+
+.searchInput {
+  width: 100%;
+  max-width: 28rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.6rem 0.85rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.searchInput::placeholder {
+  color: var(--admin-text-muted);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+@media (max-width: 560px) {
+  .searchInput {
+    max-width: none;
+  }
+}
+
+/*
+ * Status filter pills — Talent List Filters sprint. Plain toggle buttons
+ * (role="group" in the JSX), styled close to the existing search input's
+ * border/radius language so the whole filter row reads as one control
+ * cluster, not three unrelated buttons. Client-side only — see
+ * TalentListClient.jsx's STATUS_FILTER/counts logic.
+ */
+.filterBar {
+  composes: tokens;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.filterPill {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filterPill:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-text-primary);
+}
+
+.filterPill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.filterPillActive,
+.filterPillActive:hover {
+  background: var(--admin-accent);
+  border-color: var(--admin-accent);
+  color: #fff;
+}
+
+.filterPillCount {
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+/*
+ * Card shell — Talent List Visual Redesign (Correction sprint). Was a
+ * horizontal row (image left, text right); now a vertical card (image on
+ * top, text below) to read as a visual card grid closer to the public
+ * site, per the correction: "redesign the talent list to feel more like
+ * visual talent cards... larger image, cleaner card layout."
+ */
 .rowLink {
-  display: block;
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
   color: inherit;
   cursor: pointer;
   border-radius: var(--admin-radius-lg);
-  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  height: 100%;
+  /*
+   * Card Polish sprint: the hover lift below is a `box-shadow` + `transform`
+   * pair on this same element with no margin/size change, so it never
+   * reflows neighboring cards in the grid (no layout shift) — the card
+   * just visually lifts in place.
+   */
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
+/*
+ * Card.jsx renders a single <article> child (with its own internal
+ * .body wrapper div from Card.module.css, a different CSS module than
+ * this file) — `flex: 1` plus `display: contents` on the parts of that
+ * structure we don't otherwise style lets .rowMain's own flex column
+ * (below) reach all the way down to fill this link's full grid-stretched
+ * height, so .rowAffordance's `margin-top: auto` pushes it to a
+ * consistent bottom edge across a row of cards regardless of
+ * name/location text length.
+ */
+.rowLink > article {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.rowLink > article > * {
+  display: contents;
+}
+
+/*
+ * Hover/focus lift — Card Polish sprint correction: lighter, more elegant
+ * shadow than the previous treatment (no hard accent-color outline ring,
+ * which read a bit harsh/flashy for a hover state), still clearly
+ * affordant. `translateY` only — never a scale/size change — so cards
+ * never shift their own footprint or push neighbors in the grid.
+ */
 .rowLink:hover,
 .rowLink:focus-visible {
-  box-shadow: 0 4px 14px 0 rgba(31, 28, 23, 0.08), 0 0 0 1px var(--admin-accent);
-  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -8px rgba(31, 28, 23, 0.16), 0 1px 2px rgba(31, 28, 23, 0.06);
+  transform: translateY(-2px);
   outline: none;
+}
+
+.rowLink:focus-visible {
+  box-shadow: 0 10px 24px -8px rgba(31, 28, 23, 0.16), 0 0 0 2px var(--admin-accent);
 }
 
 .rowLink:hover .rowAffordanceArrow,
@@ -41,58 +194,109 @@
 
 .rowMain {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  height: 100%;
+}
+
+/*
+ * Profile image — now the dominant element of the card (correction:
+ * "larger image"), a tall portrait crop matching the public site's card
+ * aspect ratio (components/home/TalentCard.module.css's .imageWrapper),
+ * full card width instead of a fixed small box. Status badge overlays its
+ * top corner so it reads at a glance without competing with the name.
+ * Falls back to the same warm gradient placeholder the public site uses
+ * when a talent has no profileImageAsset yet.
+ */
+.rowThumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--admin-radius-md, 10px);
+  overflow: hidden;
+  /* Card Polish sprint: more breathing room before the name (was 0.65rem). */
+  margin-bottom: 0.9rem;
+}
+
+.rowThumbBadge {
+  position: absolute;
+  top: 0.6rem;
+  inset-inline-start: 0.6rem;
+  z-index: 1;
 }
 
 .rowBody {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
 }
 
 .rowHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  /* Card Polish sprint: more separation from location below (was 0.15rem). */
+  margin-bottom: 0.35rem;
 }
 
+/*
+ * Name — Card Polish sprint: now the card's clear title. Larger, tighter
+ * letter-spacing for a more premium/display feel, and bumped from 700 to
+ * 650-equivalent boldness isn't a real CSS unit, so font-weight stays 700
+ * but size/line-height/spacing changes do the work of making it read as
+ * "the headline" rather than just bold body text.
+ */
 .rowName {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1.18rem;
   font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
   color: var(--admin-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rowMeta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   font-size: 0.82rem;
   color: var(--admin-text-secondary);
+  /* Card Polish sprint: more separation before the social line (was 0.3rem). */
   margin-bottom: 0.5rem;
 }
 
-.rowSummary {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--admin-text-secondary);
-  line-height: 1.45;
+/*
+ * Social preview — correction: "social preview subtle". Smaller and
+ * muted relative to .rowMeta (location), so it reads as a quiet detail
+ * rather than competing for attention.
+ */
+.rowSocial {
+  font-size: 0.74rem;
+  color: var(--admin-text-muted);
+  /* Card Polish sprint: more separation before the affordance (was 0.5rem). */
+  margin-bottom: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /*
- * Open-folder affordance — Talent Workspace Header Polish sprint.
- * A small, low-key "פתח תיק" + arrow at the row's edge so the card reads
- * as clearly clickable, without competing with the talent name.
+ * Open-folder affordance — Talent Workspace Header Polish sprint, pinned
+ * to the card's bottom edge by the Visual Redesign correction (`margin-top:
+ * auto`) so it lines up across a row of cards regardless of name/location
+ * text length. Card Polish sprint added a hairline top border so it reads
+ * as a distinct "action" zone, separated from the info above it rather
+ * than just trailing off the bottom of the text block.
  */
 .rowAffordance {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.35rem;
-  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--admin-border);
   color: var(--admin-text-muted);
   transition: color 0.15s ease;
 }
@@ -103,7 +307,7 @@
 }
 
 .rowAffordanceLabel {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -111,4 +315,34 @@
 .rowAffordanceArrow {
   font-size: 1rem;
   transition: transform 0.15s ease;
+}
+
+/*
+ * Status badge polish — Card Polish sprint, refined in the Talent List
+ * Filters sprint and again in the read-only Polish sprint to read
+ * unambiguously as a display-only label rather than a button: a flat,
+ * small shadow and `pointer-events: none` so it's also structurally
+ * inert — clicks pass straight through to the card link underneath, since
+ * the badge is never meant to be its own click target. The badge itself
+ * (components/admin/StatusBadge.jsx/.module.css) is untouched — this is
+ * just the card's own wrapper, giving it a small opaque backdrop so a
+ * colored pill reads cleanly when it's sitting directly on top of a photo
+ * (every tone, not just "published", needed this: a light-tone pill on a
+ * light part of a photo was illegible before).
+ *
+ * The "published" dot this wrapper briefly grew (Card Polish sprint) was
+ * removed in the read-only Polish sprint — it read too close to an
+ * interactive toggle/switch, which a list-page status label must not look
+ * like. The real visibility ON/OFF control will live on the talent detail
+ * page later, behind a real schema field — not here, and not as a dot.
+ */
+.badgeWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: var(--admin-surface);
+  box-shadow: 0 1px 3px 0 rgba(31, 28, 23, 0.14);
+  pointer-events: none;
 }

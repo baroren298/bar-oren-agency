@@ -11,6 +11,7 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "admin:create-owner": "node scripts/create-owner.mjs",
     "admin:seed-dev-talent": "node scripts/seed-dev-talent.mjs",
+    "admin:migrate-day-import": "node scripts/migrate-day-import.mjs",
     "test": "vitest run"
   },
   "dependencies": {

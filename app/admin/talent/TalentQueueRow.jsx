@@ -1,19 +1,41 @@
 /*
  * TalentQueueRow — Talent Workspace Foundation sprint.
  *
- * One row of the Talent work-queue list (./page.jsx). Local to
- * app/admin/talent/ rather than components/admin/ for now, same reasoning
- * as app/admin/my-work/WorkflowItemCard.jsx: a one-page composition of
+ * One card of the Talent list (./page.jsx). Local to app/admin/talent/
+ * rather than components/admin/ for now, same reasoning as
+ * app/admin/my-work/WorkflowItemCard.jsx: a one-page composition of
  * existing primitives (Card, StatusBadge) with no proven need elsewhere
  * yet. Plain presentational component — no "use client", no hooks.
+ *
+ * Talent List Visual Redesign (Correction sprint): rebuilt as a vertical
+ * card (large image on top, text below) instead of the previous dense
+ * horizontal row, per the corrected direction — "larger image, cleaner
+ * card layout, name prominent, location visible, social preview subtle,
+ * status badge, פתח תיק action, no tag chips in the list."
+ *
+ * Category/tag chips are intentionally removed from this view per that
+ * correction ("hide the category/tag chips... they make the list
+ * visually noisy"). `localizeCategoryLabel` and the underlying
+ * `category`/`tags` data are untouched and still used by
+ * TalentListClient.jsx's search haystack — only the chip *rendering* here
+ * is removed, nothing about the data or localization helper changed.
+ *
+ * Talent List Polish (read-only) sprint: removed the small leading
+ * "published" dot that had been added in the Card Polish sprint — it read
+ * too close to an interactive toggle/switch, which this badge must not be
+ * (the real visibility ON/OFF control will live on the talent detail page
+ * only, behind a real schema field — see TalentListClient.jsx's header
+ * comment). Back to a single, clean <StatusBadge>; no dot, no extra
+ * wrapper markup.
  */
 
 import Link from 'next/link';
 import Card from '@/components/admin/Card';
 import StatusBadge from '@/components/admin/StatusBadge';
+import TalentImage from '@/components/ui/TalentImage';
 import {
   deriveListWorkflowStatus,
-  deriveListSummary,
+  deriveListSocialPreview,
   workflowStatusLabel,
   workflowStatusTone,
 } from '@/lib/admin/talent-workspace';
@@ -22,31 +44,60 @@ import styles from './talent.module.css';
 
 export default function TalentQueueRow({ talent }) {
   const status = deriveListWorkflowStatus(talent);
-  const summary = deriveListSummary(talent);
+  const tone = workflowStatusTone(status);
   const displayName = talent.name || talent.nameEn || talent.slug;
+  const location = talent.location || talent.locationEn;
+  const social = deriveListSocialPreview(talent.socialPreview);
 
   return (
     <Link href={`/admin/talent/${talent.id}`} className={styles.rowLink} aria-label={`${he.talent.list.openFolder}: ${displayName}`}>
       <Card as="article">
         <div className={styles.rowMain}>
+          <div className={styles.rowThumb}>
+            <div className={styles.rowThumbBadge}>
+              <span className={styles.badgeWrap}>
+                <StatusBadge label={workflowStatusLabel(status)} tone={tone} />
+              </span>
+            </div>
+            <TalentImage src={talent.profileImageUrl} alt="" />
+          </div>
+
           <div className={styles.rowBody}>
             <div className={styles.rowHeader}>
               <h3 className={styles.rowName}>{displayName}</h3>
-              <StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />
             </div>
 
             <div className={styles.rowMeta}>
-              <span>
-                {he.talent.meta.lastUpdated}: {he.talent.meta.noDateYet}
-              </span>
+              <span>{location || he.talent.list.noLocation}</span>
             </div>
 
-            <p className={styles.rowSummary}>{summary}</p>
-          </div>
+            {social ? (
+              <p className={styles.rowSocial}>
+                {social.icon} {social.text}
+              </p>
+            ) : null}
 
-          <div className={styles.rowAffordance} aria-hidden="true">
-            <span className={styles.rowAffordanceLabel}>{he.talent.list.openFolder}</span>
-            <span className={styles.rowAffordanceArrow}>‹</span>
+            <div className={styles.rowAffordance} aria-hidden="true">
+              <span className={styles.rowAffordanceLabel}>{he.talent.list.openFolder}</span>
+              {/*
+                RTL Arrow Fix — Talent List Polish sprint. The page is
+                dir="rtl" (app/admin/layout.jsx), and U+2039/U+203A
+                ("‹"/"›") are both in Unicode's BidiMirroring table: inside
+                an RTL run, the browser auto-mirrors whichever one is in
+                the source into the *other* one's glyph. The previous
+                source character here was "‹" ("less-than"-shaped), which
+                — once auto-mirrored for RTL — actually rendered pointing
+                right (toward the label, i.e. backward/into the page, the
+                wrong way for an "open this" affordance). Using "›" as the
+                source character instead means the RTL auto-mirror flips
+                it the other way, rendering as a left-pointing arrow on
+                screen — correct for RTL, where "forward" reads
+                right-to-left, and consistent with this row's existing
+                hover animation (.rowAffordanceArrow's translateX(-3px)
+                already nudges it further left on hover/focus).
+              */}
+              <span className={styles.rowAffordanceArrow}>›</span>
+            </div>
           </div>
         </div>
       </Card>

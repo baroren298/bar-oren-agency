@@ -100,14 +100,42 @@ enum EntityType {
   IMAGE_ASSET
 }
 
-/// Talent social platforms — matches the fixed set already used in
-/// data/talent/index.js (instagram / tiktok / youtube; `followers` there is
-/// explicitly internal-only, never rendered publicly — TalentSocial.
-/// followerCount preserves that).
+/// Talent social platforms. Originally matched only the fixed set used in
+/// data/talent/index.js (instagram / tiktok / youtube); extended for the
+/// Migration Day schema review to cover platforms already offered by the
+/// admin UI's social platform registry (lib/admin/social-platforms.js —
+/// facebook, website) plus Threads, anticipated as a near-term addition.
+/// `followers`/`followerCount` is explicitly internal-only, never rendered
+/// publicly. Adding a new platform later is a normal additive enum
+/// migration (`ALTER TYPE ... ADD VALUE`) — safe, doesn't touch existing
+/// rows — kept as a controlled enum rather than a free string specifically
+/// so platform values can never drift (decision: Migration Day schema
+/// review, multiple-social-accounts sprint).
 enum SocialPlatform {
   INSTAGRAM
   TIKTOK
   YOUTUBE
+  FACEBOOK
+  WEBSITE
+  THREADS
+}
+
+/// Classification label for a single social account row, distinguishing
+/// multiple accounts on the same platform for the same talent (e.g. a
+/// "Main" vs. "Spam" Instagram — the data/talent/index.js `extraSocials`
+/// case this enum replaces). Deliberately a controlled enum, not free
+/// text, to avoid label drift ("Main" / "main" / "MAIN" / "Primary").
+/// OTHER is the one escape hatch — paired with TalentSocial.customLabel
+/// for the rare account that doesn't fit a bucket; customLabel is never
+/// used for sorting/filtering, only display, so it can't reintroduce the
+/// drift this enum exists to prevent.
+enum SocialAccountLabel {
+  MAIN
+  SECONDARY
+  SPAM
+  BRAND
+  PERSONAL
+  OTHER
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -136,6 +164,8 @@ model User {
   approvedSeo           Seo[]             @relation("SeoApprovedBy")
   createdLegalPages     LegalPage[]       @relation("LegalPageCreatedBy")
   approvedLegalPages    LegalPage[]       @relation("LegalPageApprovedBy")
+  createdTalentSocials  TalentSocial[]    @relation("TalentSocialCreatedBy")
+  approvedTalentSocials TalentSocial[]    @relation("TalentSocialApprovedBy")
 
   auditLogsCreated  AuditLog[] @relation("AuditCreatedBy")
   auditLogsUpdated  AuditLog[] @relation("AuditUpdatedBy")
@@ -209,6 +239,24 @@ model TalentVersion {
   profileImagePosition String?
   profileImageScale     Float?
 
+  // Podcast block (Migration Day schema review): mirrors the optional
+  // `podcast` object in data/talent/index.js (currently only Michal Ben
+  // David). Dedicated columns, not JSON or a separate model — a podcast
+  // changes in the same proposal/approval cycle as the rest of the talent
+  // profile (one TalentVersion fetch renders it, no extra join), and the
+  // image follows the same ImageAsset-FK pattern as profileImageAssetId
+  // rather than a bare path string. No podcastTitleEn: the show title is a
+  // proper noun, deliberately identical in both locales in the source data.
+  // Revisit as a dedicated model only if a talent needs multiple shows or
+  // podcast metadata needs to be approved independently of the profile —
+  // neither is true today.
+  podcastTitle         String?
+  podcastDescriptionHe String?
+  podcastDescriptionEn String?
+  podcastImageAssetId  String?
+  podcastImageAsset    ImageAsset? @relation("TalentVersionPodcastImage", fields: [podcastImageAssetId], references: [id])
+  podcastVideoEmbedUrl String?
+
   createdById String
   createdBy   User     @relation("TalentVersionCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime @default(now())
@@ -224,29 +272,59 @@ model TalentVersion {
   @@map("talent_versions")
 }
 
-/// Per-platform social link. Started as a simple proposed/published pair
-/// per Section 3.2 ("promote to full versioning only if needed") rather
-/// than a full version-chain table — cheap to extend later if socials turn
-/// out to change often enough to need history.
+/// One row per social account belonging to a talent. Upgraded (Migration
+/// Day schema review) from the original simple published/proposed-URL pair
+/// to the same dual-axis versioning pattern TalentGalleryImage already
+/// uses, for two reasons: (1) a talent can now have multiple accounts on
+/// the same platform — e.g. Instagram "Main" + Instagram "Spam", the
+/// data/talent/index.js `extraSocials` case — so identity is no longer
+/// "one row per platform"; (2) social account edits must go through the
+/// full Draft → Proposed → Published → approval workflow like every other
+/// entity, with attribution and rejection notes, not bypass it.
+///
+/// lifecycleStatus = visibility (active/hidden/archived/deleted, Section
+/// 5). versionStatus = approval state of this row's metadata
+/// (handle/url/label/sortOrder) — DRAFT/PROPOSED/PUBLISHED/REJECTED/
+/// SUPERSEDED, same enum as TalentVersion. "Which account is current" is
+/// answered by versionStatus + basedOnVersionId, the same way as
+/// elsewhere in this schema — deliberately no @@unique on
+/// (talentId, platform, label): multiple rows legitimately share that
+/// triple across history (each is a different revision of the same
+/// logical account).
 model TalentSocial {
   id       String @id @default(cuid())
   talentId String
   talent   Talent @relation(fields: [talentId], references: [id])
 
-  platform SocialPlatform
+  platform    SocialPlatform
+  label       SocialAccountLabel @default(MAIN)
+  customLabel String? // only meaningful when label = OTHER; display only, never sorted/filtered on
+  handle      String? // e.g. '@almavay' — editable independently of the URL
+  url         String?
+  followerCount Int? // internal-only; never rendered on the public site — now per-account, not per-platform
 
-  publishedUrl String?
-  proposedUrl  String?
-  followerCount Int? // internal-only; never rendered on the public site
+  sortOrder Int?
 
-  status LifecycleStatus @default(ACTIVE)
+  lifecycleStatus LifecycleStatus @default(ACTIVE)
+  versionStatus   VersionStatus   @default(PUBLISHED)
+  basedOnVersionId String?
+  basedOnVersion   TalentSocial?  @relation("TalentSocialBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions TalentSocial[] @relation("TalentSocialBasedOn")
 
-  createdAt DateTime @default(now())
+  createdById String
+  createdBy   User     @relation("TalentSocialCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  approvedById String?
+  approvedBy   User?     @relation("TalentSocialApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  rejectionNote String?
+
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
   deletedBy String?
 
-  @@unique([talentId, platform])
+  @@index([talentId, platform])
   @@map("talent_socials")
 }
 
@@ -312,6 +390,7 @@ model ImageAsset {
 
   galleryUses    TalentGalleryImage[]
   profileUseOf   TalentVersion[]      @relation("TalentVersionProfileImage")
+  podcastUseOf   TalentVersion[]      @relation("TalentVersionPodcastImage")
 
   @@map("image_assets")
 }

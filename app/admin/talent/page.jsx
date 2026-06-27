@@ -28,7 +28,7 @@ import { isDatabaseConfigured } from '@/lib/admin/db';
 import AdminShell from '../AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
-import TalentQueueRow from './TalentQueueRow';
+import TalentListClient from './TalentListClient';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent.module.css';
 
@@ -42,7 +42,7 @@ export default async function AdminTalentListPage() {
   if (!isDatabaseConfigured) {
     return (
       <AdminShell>
-        <PageHeader title={he.talent.list.title} description={he.talent.list.description} />
+        <PageHeader title={he.talent.list.title} />
         <EmptyState
           title={he.talent.list.dbNotConfiguredTitle}
           description={he.talent.list.dbNotConfiguredDescription}
@@ -55,16 +55,12 @@ export default async function AdminTalentListPage() {
 
   return (
     <AdminShell>
-      <PageHeader title={he.talent.list.title} description={he.talent.list.description} />
+      <PageHeader title={he.talent.list.title} />
 
       {talents.length === 0 ? (
         <EmptyState title={he.talent.list.emptyTitle} description={he.talent.list.emptyDescription} />
       ) : (
-        <div className={styles.queue}>
-          {talents.map((talent) => (
-            <TalentQueueRow key={talent.id} talent={talent} />
-          ))}
-        </div>
+        <TalentListClient talents={talents} />
       )}
     </AdminShell>
   );
