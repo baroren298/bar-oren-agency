@@ -64,6 +64,7 @@ import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import StartEditingButton from '@/components/admin/StartEditingButton';
 import ProfileImagePanel from '@/components/admin/ProfileImagePanel';
+import PodcastTab from '@/components/admin/PodcastTab';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
@@ -198,6 +199,34 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           type: 'text',
           value: publishedVersion.locationEn,
           draftValue: pendingVersion ? pending.locationEn : undefined,
+        },
+        // Talent Detail "location & age" cleanup sprint — birthDate/age
+        // moved here from the standalone ProfileSummary block that used to
+        // sit between Profile Image and Podcast (see this file's history).
+        // birthDate is a real, already-writable TalentVersion column (see
+        // talentRepository.updateTalentVersionFields's WRITABLE_COLUMNS
+        // allowlist), so it's a normal editable "date" field, same pattern
+        // as location/locationEn above. age is NOT a column — it's derived
+        // from birthDate via calculateAge() and rendered with the new
+        // "computed" field type, which ComparisonView treats as read-only
+        // text in both the Published and Proposed columns (no input, ever).
+        // Even though `age` rides along in the same fields/values object
+        // ComparisonView's Save Draft sends to the API, the repository's
+        // allowlist silently drops any key that isn't a real column, so it
+        // can never be written — no new DB write capability is introduced.
+        {
+          key: 'birthDate',
+          label: he.talent.fields.birthDate,
+          type: 'date',
+          value: publishedVersion.birthDate,
+          draftValue: pendingVersion ? pending.birthDate : undefined,
+        },
+        {
+          key: 'age',
+          label: he.talent.fields.age,
+          type: 'computed',
+          value: calculateAge(publishedVersion.birthDate),
+          draftValue: pendingVersion ? calculateAge(pending.birthDate) : undefined,
         },
       ],
     },
@@ -342,6 +371,96 @@ function SocialsSectionContent({ socials }) {
 }
 
 /*
+ * Enable Podcast Save sprint — the four podcast scalar fields' ComparisonView
+ * group, same shape buildDetailsGroups above already produces for the
+ * פרטים tab. Deliberately a single unlabeled group (no sub-groups needed for
+ * just four fields) and deliberately only these four: podcastImageAssetId
+ * is not included here because there is no safe existing upload/picker flow
+ * to route an image-replace edit through yet (sprint rule #2/#6) — the
+ * image stays a read-only preview with a disabled "החלף תמונה" placeholder
+ * in <PodcastTab>.
+ */
+function buildPodcastGroups(publishedVersion, pendingVersion) {
+  const published = publishedVersion || {};
+  const pending = pendingVersion || {};
+
+  return [
+    {
+      key: 'podcast',
+      label: null,
+      fields: [
+        {
+          key: 'podcastTitle',
+          label: he.talent.fields.podcastTitle,
+          type: 'text',
+          value: published.podcastTitle,
+          draftValue: pendingVersion ? pending.podcastTitle : undefined,
+        },
+        {
+          key: 'podcastDescriptionHe',
+          label: he.talent.fields.podcastDescriptionHe,
+          type: 'textarea',
+          value: published.podcastDescriptionHe,
+          draftValue: pendingVersion ? pending.podcastDescriptionHe : undefined,
+        },
+        {
+          key: 'podcastDescriptionEn',
+          label: he.talent.fields.podcastDescriptionEn,
+          type: 'textarea',
+          value: published.podcastDescriptionEn,
+          draftValue: pendingVersion ? pending.podcastDescriptionEn : undefined,
+        },
+        {
+          key: 'podcastVideoEmbedUrl',
+          label: he.talent.fields.podcastVideoEmbedUrl,
+          type: 'text',
+          value: published.podcastVideoEmbedUrl,
+          draftValue: pendingVersion ? pending.podcastVideoEmbedUrl : undefined,
+        },
+      ],
+    },
+  ];
+}
+
+/*
+ * Podcast tab sprint, extended by Enable Podcast Save and Podcast Panel
+ * Removal — feeds publishedVersion.podcast* fields into the editable
+ * <PodcastTab>, now the only place podcast data is shown (the standalone
+ * read-only top-of-page preview that used to read these same fields has
+ * been removed). `talentId`/`versionId`/`versionStatus` flow through to
+ * <PodcastTab> -> <TalentDetailsEditor> exactly like DetailsSectionContent
+ * above does for the פרטים tab — the exact same Save Draft/Submit network
+ * call, no new API route, no new save mechanism. Tab still appears for
+ * every talent (sprint requirement #2), including one with no published
+ * version yet — <PodcastTab> itself renders a clear empty state when every
+ * field is empty.
+ */
+function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, displayName }) {
+  const isEditablePending =
+    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
+  const editableVersionId = isEditablePending ? pendingVersion.id : null;
+
+  return (
+    <PodcastTab
+      talentId={talentId}
+      versionId={editableVersionId}
+      versionStatus={isEditablePending ? pendingVersion.status : null}
+      groups={buildPodcastGroups(publishedVersion, pendingVersion)}
+      podcastImageUrl={publishedVersion?.podcastImageAsset?.blobUrl ?? null}
+      podcastVideoEmbedUrl={publishedVersion?.podcastVideoEmbedUrl ?? null}
+      hasPodcastData={Boolean(
+        publishedVersion?.podcastTitle ||
+          publishedVersion?.podcastDescriptionHe ||
+          publishedVersion?.podcastDescriptionEn ||
+          publishedVersion?.podcastImageAsset?.blobUrl ||
+          publishedVersion?.podcastVideoEmbedUrl
+      )}
+      displayName={displayName}
+    />
+  );
+}
+
+/*
  * SEO Editor Foundation sprint — same reasoning as buildSocialLinks above:
  * no seo query exists yet on talentAdapter/versionService (and adding one
  * is out of scope for a UI-only sprint), and data/talent/index.js doesn't
@@ -397,33 +516,16 @@ function HistorySectionContent({ versions }) {
  *
  * Profile Image section sprint — the small circular avatar that used to
  * live in this block moved out into its own dedicated
- * <ProfileImagePanel> (rendered separately below), so this component is
- * now facts-only (birth date / age). No DB read changed: still the same
- * `publishedVersion.birthDate` this always read.
+ * <ProfileImagePanel> (rendered separately below).
+ *
+ * "Location & age" cleanup sprint — this standalone facts block (birth
+ * date / computed age) is now removed entirely. It felt disconnected
+ * floating between Profile Image and Podcast; birthDate/age now render
+ * inside the "מיקום וגיל" group in buildDetailsGroups above instead (see
+ * that function's `location` group), reusing the existing Details
+ * tab/ComparisonView machinery rather than a one-off block. No DB read
+ * changed either time — still the same `publishedVersion.birthDate`.
  */
-function ProfileSummary({ publishedVersion }) {
-  if (!publishedVersion) return null;
-
-  const { birthDate } = publishedVersion;
-  const age = calculateAge(birthDate);
-
-  return (
-    <dl className={styles.profileFacts}>
-      <div className={styles.profileFactRow}>
-        <dt className={styles.profileFactLabel}>{he.talent.detail.profile.birthDate}</dt>
-        <dd className={styles.profileFactValue}>
-          {birthDate ? formatHebrewDate(birthDate) : he.talent.detail.profile.notSet}
-        </dd>
-      </div>
-      <div className={styles.profileFactRow}>
-        <dt className={styles.profileFactLabel}>{he.talent.detail.profile.age}</dt>
-        <dd className={styles.profileFactValue}>
-          {age != null ? he.talent.detail.profile.ageYears(age) : he.talent.detail.profile.notSet}
-        </dd>
-      </div>
-    </dl>
-  );
-}
 
 export default async function AdminTalentDetailPage({ params }) {
   if (!isDatabaseConfigured) {
@@ -486,6 +588,19 @@ export default async function AdminTalentDetailPage({ params }) {
     if (section.key === 'seo') {
       return { ...section, content: <SeoSectionContent /> };
     }
+    if (section.key === 'podcast') {
+      return {
+        ...section,
+        content: (
+          <PodcastSectionContent
+            talentId={talent.id}
+            publishedVersion={publishedVersion}
+            pendingVersion={pendingVersion}
+            displayName={displayName}
+          />
+        ),
+      };
+    }
     if (section.key === 'history') {
       return { ...section, content: <HistorySectionContent versions={versions} /> };
     }
@@ -524,8 +639,6 @@ export default async function AdminTalentDetailPage({ params }) {
           displayName={displayName}
         />
       ) : null}
-
-      <ProfileSummary publishedVersion={publishedVersion} />
 
       <TalentWorkspaceTabs sections={sections} />
 

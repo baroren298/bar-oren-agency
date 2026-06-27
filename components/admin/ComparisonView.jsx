@@ -131,6 +131,7 @@ import styles from "./ComparisonView.module.css";
 import EditorHelperNote from "./EditorHelperNote";
 import EditorActionBar from "./EditorActionBar";
 import { he } from "@/lib/admin/i18n/he";
+import { formatHebrewDate } from "@/lib/admin/talent-workspace";
 
 function normalizeGroups({ groups, fields }) {
   if (groups && groups.length) return groups;
@@ -144,6 +145,17 @@ function formatReadOnlyValue(field) {
   if (type === "boolean") {
     return value ? "כן" : "לא";
   }
+
+  // "Location & age" cleanup sprint — birthDate is a real, editable date
+  // field; format it the same way the rest of the admin formats dates
+  // rather than showing the raw ISO string.
+  if (type === "date") {
+    return value ? formatHebrewDate(value) : "—";
+  }
+
+  // "computed" fields (currently just age, derived from birthDate) are
+  // never stored/editable — the caller passes the already-computed value
+  // and this just falls through to the plain display below.
 
   if (Array.isArray(value)) {
     return value.length ? value.join(", ") : "—";
@@ -201,6 +213,35 @@ function ProposedField({ field, value, onChange }) {
         aria-label={label}
       />
     );
+  }
+
+  // "Location & age" cleanup sprint — first real "date" field (birthDate).
+  // Plain native date input, same editable mechanism every other field on
+  // this proposed column already has; <input type="date"> needs a
+  // YYYY-MM-DD string, so normalize whatever Date/ISO-string shape the
+  // value arrives in.
+  if (type === "date") {
+    const isoValue = value ? new Date(value).toISOString().slice(0, 10) : "";
+    return (
+      <input
+        id={`proposed-${key}`}
+        type="date"
+        className={styles.input}
+        value={isoValue}
+        onChange={(event) => onChange(event.target.value || null)}
+        aria-label={label}
+      />
+    );
+  }
+
+  // "computed" fields (currently just age) are derived, read-only, and
+  // never stored — no input control at all, even in the proposed column,
+  // so there is nothing here to accidentally save/submit. Uses the live
+  // `value` prop (proposedValues[key], seeded from draftValue/value like
+  // every other field) rather than re-deriving from field.value, so it
+  // stays consistent with whatever was seeded.
+  if (type === "computed") {
+    return <span className={styles.readOnlyValue}>{value === null || value === undefined ? "—" : String(value)}</span>;
   }
 
   return (
