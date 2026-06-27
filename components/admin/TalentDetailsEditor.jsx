@@ -39,16 +39,31 @@
  * the next render, which is what actually makes Save Draft (and Submit
  * itself) unavailable afterward — no separate "locked" flag needed here.
  *
+ * "Editable PROPOSED" sprint: `versionId` may now point at either a DRAFT
+ * or a PROPOSED version (the page's own DRAFT-or-PROPOSED gate decides
+ * that, this component just acts on whichever id it's given). The new
+ * `versionStatus` prop is what lets this component (a) tell ComparisonView
+ * to show "עדכן הצעה" instead of "שמור כטיוטה" when editing an already-
+ * PROPOSED version, and (b) only ever wire up `onSubmit` when the version
+ * is still DRAFT — Submit stays DRAFT-only this sprint (no resubmitting an
+ * already-PROPOSED version, no IN_REVIEW, no Owner locking yet).
+ *
  * Props:
  *   - talentId (string, required)
- *   - versionId (string|null) — the editable DRAFT's id, or null if none
+ *   - versionId (string|null) — the editable DRAFT/PROPOSED version's id,
+ *     or null if none
+ *   - versionStatus (string|null, optional) — "DRAFT", "PROPOSED", or null;
+ *     mirrors `versionId`'s presence/absence
  *   - groups (ComparisonView's `groups` prop, passed straight through)
  */
 
 import { useRouter } from "next/navigation";
 import ComparisonView from "./ComparisonView";
+import { VERSION_STATUS } from "@/lib/admin/constants/enums";
 
-export default function TalentDetailsEditor({ talentId, versionId, groups }) {
+export default function TalentDetailsEditor({ talentId, versionId, versionStatus = null, groups }) {
+  const isProposed = versionStatus === VERSION_STATUS.PROPOSED;
+  const isDraft = versionStatus === VERSION_STATUS.DRAFT;
   const router = useRouter();
 
   async function handleSaveDraft(values) {
@@ -92,7 +107,8 @@ export default function TalentDetailsEditor({ talentId, versionId, groups }) {
     <ComparisonView
       groups={groups}
       onSaveDraft={versionId ? handleSaveDraft : undefined}
-      onSubmit={versionId ? handleSubmit : undefined}
+      onSubmit={versionId && isDraft ? handleSubmit : undefined}
+      isProposed={isProposed}
     />
   );
 }

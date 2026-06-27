@@ -191,14 +191,16 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
 }
 
 /*
- * Save Draft sprint — only a DRAFT is editable (server-side authority lives
- * in proposalService.update()'s status guard; this is just the UI
- * reflecting the same rule without an extra round trip). A PROPOSED pending
- * version is shown read-only via ComparisonView's draftValue seeding, same
- * as before this feature existed — its "save draft" capability is simply
- * never wired up, since `talentId`/`versionId` flow through
- * <TalentDetailsEditor>, the one place that owns the actual Save Draft
- * network call (required safeguard #2).
+ * "Editable PROPOSED" sprint — both DRAFT and PROPOSED are now editable
+ * (server-side authority lives in proposalService.update()'s status guard;
+ * this is just the UI reflecting the same rule without an extra round
+ * trip). Product decision: a PROPOSED version stays editable in place until
+ * a future sprint's Owner review locks it — no IN_REVIEW status, no Owner
+ * locking, no Approve/Reject/Publish here. `talentId`/`versionId`/
+ * `versionStatus` flow through <TalentDetailsEditor>, the one place that
+ * owns the actual Save/Update network call (required safeguard #2);
+ * `versionStatus` is what lets it pick the right button label and decide
+ * whether Submit may be offered at all (Submit stays DRAFT-only).
  */
 function DetailsSectionContent({ talentId, publishedVersion, pendingVersion }) {
   if (!publishedVersion) {
@@ -210,12 +212,15 @@ function DetailsSectionContent({ talentId, publishedVersion, pendingVersion }) {
     );
   }
 
-  const draftVersionId = pendingVersion?.status === VERSION_STATUS.DRAFT ? pendingVersion.id : null;
+  const isEditablePending =
+    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
+  const editableVersionId = isEditablePending ? pendingVersion.id : null;
 
   return (
     <TalentDetailsEditor
       talentId={talentId}
-      versionId={draftVersionId}
+      versionId={editableVersionId}
+      versionStatus={isEditablePending ? pendingVersion.status : null}
       groups={buildDetailsGroups(publishedVersion, pendingVersion)}
     />
   );

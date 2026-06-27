@@ -32,7 +32,13 @@
  *     *when* each status applies, the caller (ComparisonView) owns that.
  *   - saveDraftStatusMessage (string, optional) — overrides the default
  *     copy for the current saveDraftStatus, used for the "error" state's
- *     specific error message.
+ *     specific error message, and (per the "Editable PROPOSED" sprint) for
+ *     a PROPOSED-specific "saved" message.
+ *   - saveDraftLabel (string, optional, default he.editor.actions.saveDraft)
+ *     — "Editable PROPOSED" sprint addition. The button's own label is now
+ *     swappable so the caller can show "עדכן הצעה" instead of "שמור כטיוטה"
+ *     while editing an already-PROPOSED version, without this component
+ *     needing to know what a "PROPOSED version" is.
  *   - submitStatus ("idle" | "submitting" | "submitted" | "error",
  *     optional, default "idle") — Submit for Approval sprint (Sprint 1)
  *     addition, same role as saveDraftStatus above but for the שלח לאישור
@@ -68,6 +74,7 @@ export default function EditorActionBar({
   submitDisabled = true,
   saveDraftStatus = "idle",
   saveDraftStatusMessage,
+  saveDraftLabel = he.editor.actions.saveDraft,
   submitStatus = "idle",
   submitStatusMessage,
 }) {
@@ -93,7 +100,7 @@ export default function EditorActionBar({
           disabled={saveDraftDisabled}
           title={saveDraftDisabled ? he.editor.comingSoon : undefined}
         >
-          {he.editor.actions.saveDraft}
+          {saveDraftLabel}
         </SecondaryButton>
         {submitText ? (
           <span

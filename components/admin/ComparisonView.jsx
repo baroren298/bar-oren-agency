@@ -90,6 +90,15 @@
  *     last *saved*, silently discarding anything typed since, which would
  *     be a confusing, easy-to-miss data loss. When omitted, the Submit
  *     button stays disabled exactly like before this prop existed.
+ *   - isProposed (boolean, optional, default false) — "Editable PROPOSED"
+ *     sprint addition. Set by the caller when the version being edited is
+ *     already PROPOSED rather than DRAFT. Purely a presentation switch:
+ *     swaps the Save button's label to "עדכן הצעה" and its "saved"
+ *     confirmation to a proposal-flavored message, and forces Submit off
+ *     regardless of whatever `onSubmit` was passed (Submit stays
+ *     DRAFT-only — resubmitting an already-PROPOSED version is not a thing
+ *     this sprint builds). Does not change save behavior at all; the
+ *     in-place field update is identical either way.
  *
  * Save Draft sprint additions:
  *   - Dirty-state tracking: the Save Draft button is enabled only once the
@@ -206,7 +215,7 @@ function ProposedField({ field, value, onChange }) {
   );
 }
 
-export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit }) {
+export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, isProposed = false }) {
   const fieldGroups = normalizeGroups({ groups, fields });
   const allFields = fieldGroups.flatMap((group) => group.fields);
 
@@ -235,7 +244,15 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit }
   // Disabled while dirty (required safeguard, see header comment above):
   // Submit acts on the already-persisted DRAFT row, not on unsaved local
   // edits, so it must not be clickable while the two have diverged.
-  const submitDisabled = !onSubmit || isDirty || saving || submitting;
+  // "Editable PROPOSED" sprint: also force-disabled whenever `isProposed`,
+  // regardless of whether the caller passed `onSubmit` — Submit is
+  // DRAFT-only (proposalService.submit() still throws on PROPOSED) and this
+  // is a defensive UI-side belt-and-suspenders on top of the caller
+  // already being expected not to pass `onSubmit` for a PROPOSED version.
+  const submitDisabled = !onSubmit || isDirty || saving || submitting || isProposed;
+
+  const saveDraftLabel = isProposed ? he.editor.actions.updateProposal : he.editor.actions.saveDraft;
+  const savedStatusMessage = isProposed ? he.editor.saveDraft.savedProposal : undefined;
 
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
@@ -412,8 +429,9 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit }
         onCancel={handleCancel}
         onSaveDraft={handleSaveDraft}
         saveDraftDisabled={saveDraftDisabled}
+        saveDraftLabel={saveDraftLabel}
         saveDraftStatus={saveStatus}
-        saveDraftStatusMessage={saveStatus === "error" ? saveError : undefined}
+        saveDraftStatusMessage={saveStatus === "error" ? saveError : saveStatus === "saved" ? savedStatusMessage : undefined}
         onSubmit={handleSubmit}
         submitDisabled={submitDisabled}
         submitStatus={submitStatus}
