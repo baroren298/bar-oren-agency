@@ -6,24 +6,34 @@
  * per the product vision — opening a talent should feel like opening
  * their working folder, not a CRUD edit screen.
  *
- * Still strictly read-only, still calling straight into the existing Core
- * Content Engine read path — no new repository/adapter/engine code, no
- * API route, no Prisma changes. The one addition to the data calls already
- * made here (getCurrentPublished, getCurrentDraftOrProposed) is
- * versionService.listVersionHistory, which already existed unused by this
- * page — adding it lets lib/admin/talent-workspace.js derive the real
- * four-state status (including "changes requested", via a REJECTED
- * version) instead of just three, see that module's header comment.
+ * Calls straight into the existing Core Content Engine read path — no new
+ * repository/adapter/engine code, no API route, no Prisma changes. The one
+ * addition to the data calls already made here (getCurrentPublished,
+ * getCurrentDraftOrProposed) is versionService.listVersionHistory, which
+ * already existed unused by this page — adding it lets
+ * lib/admin/talent-workspace.js derive the real four-state status
+ * (including "changes requested", via a REJECTED version) instead of just
+ * three, see that module's header comment.
  *
- * Details/Gallery/Socials/SEO/History now each have a real (still fully
- * local, still no persistence) UI — see DetailsSectionContent,
- * GallerySectionContent, SocialsSectionContent, SeoSectionContent,
- * HistorySectionContent below. History Tab Real Data sprint: History now
- * renders <Timeline> from the real `versions` array already fetched on
- * this page (versionService.listVersionHistory) — see
- * lib/admin/talent-workspace.js's buildVersionHistoryTimelineItems for the
- * row -> Timeline-item mapping. lib/admin/mock-history.js is left in place,
- * unused, per that sprint's explicit scope (not deleted).
+ * Draft Editing Foundation sprint, corrected per architecture review —
+ * Details tab only: `loadPendingVersion()` below is a **pure read**. It
+ * calls `versionService.getCurrentDraftOrProposed` (an existing,
+ * already-read-only method) and nothing else. It NEVER calls
+ * `proposalService.create()` or any other write — opening this page must
+ * never create a Draft or write anything to the database, no matter what
+ * state the talent is in. If a DRAFT or PROPOSED version already exists in
+ * the database, it's loaded and its fields are shown in <ComparisonView>'s
+ * proposed column (via `draftValue`); if neither exists, only the
+ * Published version is shown, exactly as before this feature existed.
+ *
+ * Starting a brand-new Draft is intentionally not implemented here — that
+ * is the future "Start Editing" action (Published -> click "Start Editing"
+ * -> create Draft -> edit -> save -> submit), an explicit user action that
+ * belongs behind its own button/handler in a later sprint, never a side
+ * effect of a GET/page render.
+ *
+ * Gallery/Socials/SEO sections are untouched by this pass — still the
+ * fully local, no-persistence UI from earlier sprints.
  *
  * Database-deferred bridge unchanged: still `force-dynamic` + the
  * `isDatabaseConfigured` guard.
@@ -74,19 +84,42 @@ export const metadata = {
  * reused for Gallery/SEO/Social links/Homepage/etc. later, each with its
  * own grouping.
  */
-function buildDetailsGroups(publishedVersion) {
+/*
+ * `pendingVersion` is optional (null when neither a DRAFT nor a PROPOSED
+ * version exists yet, or it just hasn't been created — see
+ * loadPendingVersion below, which is a pure read and never creates one).
+ * Each field's `draftValue` is left `undefined` whenever there's nothing
+ * pending to read from, which <ComparisonView> already treats as "fall
+ * back to the published value" (its existing, unchanged default).
+ */
+function buildDetailsGroups(publishedVersion, pendingVersion) {
+  const pending = pendingVersion || {};
+
   return [
     {
       key: 'basic',
       label: he.talent.detailGroups.basic,
       fields: [
-        { key: 'name', label: he.talent.fields.name, type: 'text', value: publishedVersion.name },
-        { key: 'nameEn', label: he.talent.fields.nameEn, type: 'text', value: publishedVersion.nameEn },
+        {
+          key: 'name',
+          label: he.talent.fields.name,
+          type: 'text',
+          value: publishedVersion.name,
+          draftValue: pendingVersion ? pending.name : undefined,
+        },
+        {
+          key: 'nameEn',
+          label: he.talent.fields.nameEn,
+          type: 'text',
+          value: publishedVersion.nameEn,
+          draftValue: pendingVersion ? pending.nameEn : undefined,
+        },
         {
           key: 'featured',
           label: he.talent.fields.featured,
           type: 'boolean',
           value: Boolean(publishedVersion.featured),
+          draftValue: pendingVersion ? Boolean(pending.featured) : undefined,
         },
       ],
     },
@@ -94,35 +127,66 @@ function buildDetailsGroups(publishedVersion) {
       key: 'bio',
       label: he.talent.detailGroups.bio,
       fields: [
-        { key: 'bioHe', label: he.talent.fields.bio, type: 'textarea', value: publishedVersion.bioHe },
-        { key: 'bioEn', label: he.talent.fields.bioEn, type: 'textarea', value: publishedVersion.bioEn },
+        {
+          key: 'bioHe',
+          label: he.talent.fields.bio,
+          type: 'textarea',
+          value: publishedVersion.bioHe,
+          draftValue: pendingVersion ? pending.bioHe : undefined,
+        },
+        {
+          key: 'bioEn',
+          label: he.talent.fields.bioEn,
+          type: 'textarea',
+          value: publishedVersion.bioEn,
+          draftValue: pendingVersion ? pending.bioEn : undefined,
+        },
       ],
     },
     {
       key: 'categories',
       label: he.talent.detailGroups.categories,
       fields: [
-        { key: 'category', label: he.talent.fields.category, type: 'list', value: publishedVersion.category },
-        { key: 'tags', label: he.talent.fields.tags, type: 'list', value: publishedVersion.tags },
+        {
+          key: 'category',
+          label: he.talent.fields.category,
+          type: 'list',
+          value: publishedVersion.category,
+          draftValue: pendingVersion ? pending.category : undefined,
+        },
+        {
+          key: 'tags',
+          label: he.talent.fields.tags,
+          type: 'list',
+          value: publishedVersion.tags,
+          draftValue: pendingVersion ? pending.tags : undefined,
+        },
       ],
     },
     {
       key: 'location',
       label: he.talent.detailGroups.location,
       fields: [
-        { key: 'location', label: he.talent.fields.location, type: 'text', value: publishedVersion.location },
+        {
+          key: 'location',
+          label: he.talent.fields.location,
+          type: 'text',
+          value: publishedVersion.location,
+          draftValue: pendingVersion ? pending.location : undefined,
+        },
         {
           key: 'locationEn',
           label: he.talent.fields.locationEn,
           type: 'text',
           value: publishedVersion.locationEn,
+          draftValue: pendingVersion ? pending.locationEn : undefined,
         },
       ],
     },
   ];
 }
 
-function DetailsSectionContent({ publishedVersion }) {
+function DetailsSectionContent({ publishedVersion, pendingVersion }) {
   if (!publishedVersion) {
     return (
       <EmptyState
@@ -132,7 +196,35 @@ function DetailsSectionContent({ publishedVersion }) {
     );
   }
 
-  return <ComparisonView groups={buildDetailsGroups(publishedVersion)} />;
+  return <ComparisonView groups={buildDetailsGroups(publishedVersion, pendingVersion)} />;
+}
+
+/*
+ * Architecture review correction: opening this page must be a pure read —
+ * viewing /admin/talent/[id] may never create a Draft or write anything.
+ * This function does exactly one thing: load whatever pending version
+ * (DRAFT or PROPOSED) already exists via the existing, already-read-only
+ * `versionService.getCurrentDraftOrProposed`. It calls no `insert*`/
+ * `submit*`/`publish*`/`reject*` method, and therefore performs zero
+ * database writes. If nothing is pending, it returns null and the caller
+ * falls back to showing only the Published version — there is no creation
+ * path here at all. Starting a new Draft is a future, explicit user action
+ * ("Start Editing"), not a side effect of loading this page.
+ *
+ * Never throws: an unexpected read failure is caught and logged, then
+ * treated the same as "nothing pending," so a transient engine/DB error
+ * degrades to the published-only view rather than a broken page.
+ *
+ * @param {object} talent - talentAdapter.getParent() result
+ * @returns {Promise<object|null>} the pending DRAFT or PROPOSED version, or null
+ */
+async function loadPendingVersion(talent) {
+  try {
+    return await versionService.getCurrentDraftOrProposed(talentAdapter, talent.id);
+  } catch (error) {
+    console.error('[AdminTalentDetailPage] loadPendingVersion failed, falling back to published-only:', error);
+    return null;
+  }
 }
 
 function PlaceholderSectionContent({ label }) {
@@ -268,8 +360,11 @@ export default async function AdminTalentDetailPage({ params }) {
     notFound();
   }
 
-  const [publishedVersion, versions] = await Promise.all([
+  // Pure reads only — no version is ever created as a side effect of
+  // loading this page (see loadPendingVersion's header comment above).
+  const [publishedVersion, pendingVersion, versions] = await Promise.all([
     versionService.getCurrentPublished(talentAdapter, id),
+    loadPendingVersion(talent),
     versionService.listVersionHistory(talentAdapter, id),
   ]);
 
@@ -279,7 +374,10 @@ export default async function AdminTalentDetailPage({ params }) {
 
   const sections = TALENT_WORKSPACE_SECTIONS.map((section) => {
     if (section.key === 'details') {
-      return { ...section, content: <DetailsSectionContent publishedVersion={publishedVersion} /> };
+      return {
+        ...section,
+        content: <DetailsSectionContent publishedVersion={publishedVersion} pendingVersion={pendingVersion} />,
+      };
     }
     if (section.key === 'gallery') {
       return {

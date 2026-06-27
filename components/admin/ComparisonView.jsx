@@ -41,6 +41,15 @@
  * is one of "text" | "textarea" | "list" | "boolean" ("list" =
  * comma-separated values, e.g. categories/tags).
  *
+ * Draft Editing Foundation sprint addition: a field may now also carry a
+ * `draftValue` — when present, the proposed column's *initial* state seeds
+ * from that real, persisted Draft value instead of from the published
+ * `value`. Omitting `draftValue` falls back to the exact previous behavior
+ * (proposed starts from published), so this is purely additive — no
+ * existing caller's behavior changes unless it opts in. Still no save/API
+ * call here: once seeded, edits still live only in local React state, per
+ * this component's existing scope below.
+ *
  * Profile Editor Foundation sprint additions:
  *   - Fields can now be organized into named groups (e.g. "מידע בסיסי",
  *     "ביוגרפיה") via the new `groups` prop, so a real editor with many
@@ -158,7 +167,7 @@ export default function ComparisonView({ fields, groups }) {
 
   function buildInitialValues() {
     return allFields.reduce((acc, field) => {
-      acc[field.key] = field.value;
+      acc[field.key] = field.draftValue !== undefined ? field.draftValue : field.value;
       return acc;
     }, {});
   }
