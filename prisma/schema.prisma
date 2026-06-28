@@ -153,7 +153,7 @@ model User {
   // Back-relations for every "who did this" pointer elsewhere in the
   // schema. Verbose, but each one corresponds to a real field used by the
   // approval flow (Section 4) or audit log (Section 4.1).
-  uploadedImages        ImageAsset[]      @relation("ImageAssetUploadedBy")
+  uploadedImages        Asset[]      @relation("ImageAssetUploadedBy")
   createdTalentVersions TalentVersion[]   @relation("TalentVersionCreatedBy")
   approvedTalentVersions TalentVersion[]  @relation("TalentVersionApprovedBy")
   createdEntityVersions EntityVersion[]   @relation("EntityVersionCreatedBy")
@@ -237,7 +237,7 @@ model TalentVersion {
   bioEn         String?
 
   profileImageAssetId String?
-  profileImageAsset    ImageAsset? @relation("TalentVersionProfileImage", fields: [profileImageAssetId], references: [id])
+  profileImageAsset    Asset? @relation("TalentVersionProfileImage", fields: [profileImageAssetId], references: [id])
   profileImagePosition String?
   profileImageScale     Float?
 
@@ -256,7 +256,7 @@ model TalentVersion {
   podcastDescriptionHe String?
   podcastDescriptionEn String?
   podcastImageAssetId  String?
-  podcastImageAsset    ImageAsset? @relation("TalentVersionPodcastImage", fields: [podcastImageAssetId], references: [id])
+  podcastImageAsset    Asset? @relation("TalentVersionPodcastImage", fields: [podcastImageAssetId], references: [id])
   podcastVideoEmbedUrl String?
 
   createdById String
@@ -339,7 +339,7 @@ model TalentGalleryImage {
   talent   Talent @relation(fields: [talentId], references: [id])
 
   imageAssetId String
-  imageAsset   ImageAsset @relation(fields: [imageAssetId], references: [id])
+  imageAsset   Asset @relation(fields: [imageAssetId], references: [id])
 
   order       Int
   altHe       String?
@@ -400,17 +400,41 @@ model TalentGalleryImage {
 // Images — canonical asset record (Section 3.2, Section 10).
 // ─────────────────────────────────────────────────────────────────────────
 
+/// Classifies what kind of file an Asset row holds. Added by the Asset
+/// Model Migration (see ASSET_MODEL_MIGRATION_PLAN.md) alongside the
+/// ImageAsset -> Asset rename, ahead of Documents/Video/Audio modules that
+/// don't exist yet. Every row created so far is an image, hence the
+/// default below backfilling existing rows with no manual migration.
+enum AssetKind {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  AUDIO
+  OTHER
+}
+
 /// Every uploaded file, regardless of where it's used (talent profile
 /// photo, gallery image, About founder photo, brand logo). Never
 /// duplicated per use site — referenced by foreign key from
 /// TalentGalleryImage, TalentVersion.profileImageAssetId, etc.
-model ImageAsset {
+///
+/// Renamed from ImageAsset to Asset (Asset Model Migration — see
+/// ASSET_MODEL_MIGRATION_PLAN.md), ahead of confirmed future modules
+/// (Documents, Video, homepage/brand assets) that don't fit an
+/// image-specific name. `@@map("image_assets")` keeps the underlying table
+/// name unchanged — this rename is Prisma-side only, the database itself
+/// is untouched. FK field names that point at this model (imageAssetId,
+/// profileImageAssetId, podcastImageAssetId) deliberately still say
+/// "ImageAsset" — renaming those is a separate, later, purely cosmetic
+/// change (migration plan Section 4), not part of this one.
+model Asset {
   id        String          @id @default(cuid())
   blobUrl   String
   width     Int?
   height    Int?
   mimeType  String?
   sizeBytes Int?
+  kind      AssetKind       @default(IMAGE)
 
   uploadedById String
   uploadedBy   User     @relation("ImageAssetUploadedBy", fields: [uploadedById], references: [id])

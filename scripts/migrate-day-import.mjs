@@ -219,7 +219,7 @@ async function ensureImageAssetByPath(tx, path, ownerId, assetIndex, reverseAsse
   if (!path || !imageExistsOnDisk(path)) return null;
   const existingId = assetIndex.get(path);
   if (existingId) return existingId;
-  const created = await tx.imageAsset.create({
+  const created = await tx.asset.create({
     data: { blobUrl: path, uploadedById: ownerId, status: LIFECYCLE_STATUS.ACTIVE },
   });
   assetIndex.set(path, created.id);
@@ -740,7 +740,7 @@ async function executeReset(prisma, manifest) {
   if (manifest.talentIds.length) await prisma.talent.deleteMany({ where: { id: { in: manifest.talentIds } } });
   for (const id of manifest.imageAssetIds || []) {
     try {
-      await prisma.imageAsset.delete({ where: { id } });
+      await prisma.asset.delete({ where: { id } });
     } catch (err) {
       console.warn(`[migrate-day-import] reset: could not delete ImageAsset ${id} (${redactSecrets(err.message)}) — leaving it.`);
     }
@@ -972,7 +972,7 @@ async function main() {
     }
 
     // ── Build read-only indices (Section 3.3 / 4) ──
-    const existingAssets = await prisma.imageAsset.findMany({ select: { id: true, blobUrl: true } });
+    const existingAssets = await prisma.asset.findMany({ select: { id: true, blobUrl: true } });
     const assetIndex = new Map(existingAssets.map((a) => [a.blobUrl, a.id]));
     const reverseAssetIndex = new Map(existingAssets.map((a) => [a.id, a.blobUrl]));
 
