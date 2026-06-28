@@ -77,9 +77,11 @@ import SocialAccountCard from "./SocialLinkRow";
 import AddSocialAccountForm from "./AddSocialAccountForm";
 import EmptyState from "./EmptyState";
 import EditorActionBar from "./EditorActionBar";
+import PrimaryButton from "./PrimaryButton";
 import { he } from "@/lib/admin/i18n/he";
 import { SOCIAL_PLATFORMS, SOCIAL_ACCOUNT_LABELS, getPlatformEntry } from "@/lib/admin/social-platforms";
 import { VERSION_STATUS } from "@/lib/admin/constants/enums";
+import { filterUnresolvedRejectedSocials } from "@/lib/admin/social-review";
 
 function withKeys(accounts) {
   // Real DB rows already have a stable `id`; reuse it as the React/local-
@@ -131,15 +133,63 @@ function PersistenceModeNote() {
 
 /*
  * Owner Approve/Reject (Social Links) sprint — one notice per REJECTED
- * TalentSocial row, rendered above the comparison columns. Read-only: this
- * is purely a "here's what the Owner said" surface, the same way
- * SocialLinksOwnerReview's columns are read-only diffs — fixing a rejected
- * account still happens by editing whichever proposed account card already
- * exists for it below (or re-adding it), there is no separate "resolve
- * rejection" control in this sprint's scope.
+ * TalentSocial row, rendered above the comparison columns, so the editor
+ * sees the Owner's note right next to where they'll fix it — not only in
+ * the History tab.
+ *
+ * Rejected Resubmission Recovery sprint — no longer purely read-only: each
+ * notice now carries a "המשך תיקון" / "Continue fixing" action
+ * (socialsService.resumeRejected via POST .../socials/[socialId]/resume)
+ * that creates a fresh, editable DRAFT continuing that account's lineage
+ * (see that service method's header comment for how `basedOnVersionId` is
+ * preserved/anchored). `rejectedSocials` is expected to already be filtered
+ * to only the *unresolved* rejections (social-review.js's
+ * `filterUnresolvedRejectedSocials`, applied by the parent component below)
+ * — once the new Draft this button creates exists, a fresh `router.refresh()`
+ * re-derives that filtered list and this notice disappears on its own,
+ * with no separate "dismiss" control needed.
+ *
+ * Each rejected row owns its own loading/error state (keyed by account id)
+ * so resuming one account's notice never disables another's button.
  */
-function RejectedSocialsNotice({ rejectedSocials }) {
+function RejectedSocialsNotice({ talentId, rejectedSocials }) {
+  const router = useRouter();
+  const [resumingId, setResumingId] = useState(null);
+  const [resumeErrors, setResumeErrors] = useState({});
+
   if (!rejectedSocials || rejectedSocials.length === 0) return null;
+
+  async function handleResume(accountId) {
+    if (!talentId || resumingId) return;
+
+    setResumingId(accountId);
+    setResumeErrors((previous) => ({ ...previous, [accountId]: null }));
+
+    try {
+      const response = await fetch(`/api/admin/talent/${talentId}/socials/${accountId}/resume`, {
+        method: "POST",
+      });
+      const body = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(body.error || he.social.rejectionNotice.resumeError);
+      }
+
+      // Mirrors handleSubmit's pattern below: the new Draft this just
+      // created lives only in the database until the Server Component tree
+      // re-fetches, which is also what makes this notice disappear (the
+      // page's filtered rejectedSocials list now finds a newer row in this
+      // account's lineage).
+      router.refresh();
+    } catch (error) {
+      setResumeErrors((previous) => ({
+        ...previous,
+        [accountId]: error?.message || he.social.rejectionNotice.resumeError,
+      }));
+    } finally {
+      setResumingId(null);
+    }
+  }
 
   return (
     <div className={styles.previewNotice} role="alert">
@@ -150,11 +200,29 @@ function RejectedSocialsNotice({ rejectedSocials }) {
       {rejectedSocials.map((account) => {
         const platformEntry = getPlatformEntry(account.platform);
         const platformLabel = platformEntry?.label || account.platform;
+        const isResuming = resumingId === account.id;
+        const resumeError = resumeErrors[account.id];
         return (
-          <p key={account.id} className={styles.previewNoticeBody}>
-            <strong>{platformLabel}{account.handle ? ` (@${account.handle.replace(/^@+/, "")})` : ""}:</strong>{" "}
-            {he.social.rejectionNotice.noteLabel}: {account.rejectionNote}
-          </p>
+          <div key={account.id} className={styles.previewNoticeBody}>
+            <p>
+              <strong>{platformLabel}{account.handle ? ` (@${account.handle.replace(/^@+/, "")})` : ""}:</strong>{" "}
+              {he.social.rejectionNotice.noteLabel}: {account.rejectionNote}
+            </p>
+            {talentId ? (
+              <PrimaryButton
+                type="button"
+                onClick={() => handleResume(account.id)}
+                disabled={Boolean(resumingId)}
+              >
+                {isResuming ? he.social.rejectionNotice.resuming : he.social.rejectionNotice.resumeAction}
+              </PrimaryButton>
+            ) : null}
+            {resumeError ? (
+              <p className={styles.previewNoticeBody} role="alert">
+                {resumeError}
+              </p>
+            ) : null}
+          </div>
         );
       })}
     </div>
@@ -172,6 +240,17 @@ export default function SocialLinksEditor({
   const router = useRouter();
   const hasPersistence = Boolean(talentId);
   const initialSeed = draftSocials.length > 0 ? draftSocials : publishedSocials;
+
+  // Rejected Resubmission Recovery sprint — hide any REJECTED notice that's
+  // already been superseded by a newer row in the same lineage (e.g. a
+  // Draft created via the "Continue fixing" button below, or any other
+  // edit that happened since). See social-review.js's
+  // filterUnresolvedRejectedSocials for the matching rule.
+  const unresolvedRejectedSocials = filterUnresolvedRejectedSocials(rejectedSocials, [
+    ...publishedSocials,
+    ...draftSocials,
+    ...rejectedSocials,
+  ]);
 
   const [proposedAccounts, setProposedAccounts] = useState(() => withKeys(initialSeed));
   const [savedAccounts, setSavedAccounts] = useState(() => withKeys(initialSeed));
@@ -309,7 +388,7 @@ export default function SocialLinksEditor({
 
   return (
     <div className={styles.tokens}>
-      <RejectedSocialsNotice rejectedSocials={rejectedSocials} />
+      <RejectedSocialsNotice talentId={talentId} rejectedSocials={unresolvedRejectedSocials} />
       <div className={styles.comparison}>
         <section className={styles.publishedSection} aria-label={he.social.publishedEyebrowTitle}>
           <header className={styles.eyebrow}>
