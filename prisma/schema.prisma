@@ -166,6 +166,8 @@ model User {
   approvedLegalPages    LegalPage[]       @relation("LegalPageApprovedBy")
   createdTalentSocials  TalentSocial[]    @relation("TalentSocialCreatedBy")
   approvedTalentSocials TalentSocial[]    @relation("TalentSocialApprovedBy")
+  createdGalleryImages  TalentGalleryImage[] @relation("TalentGalleryImageCreatedBy")
+  approvedGalleryImages TalentGalleryImage[] @relation("TalentGalleryImageApprovedBy")
 
   auditLogsCreated  AuditLog[] @relation("AuditCreatedBy")
   auditLogsUpdated  AuditLog[] @relation("AuditUpdatedBy")
@@ -356,11 +358,41 @@ model TalentGalleryImage {
   basedOnVersion   TalentGalleryImage?  @relation("GalleryImageBasedOn", fields: [basedOnVersionId], references: [id])
   basedOnRevisions TalentGalleryImage[] @relation("GalleryImageBasedOn")
 
+  // Lifecycle audit trail — mirrors TalentSocial's createdById/approvedById/
+  // approvedAt/rejectionNote so Gallery shares the same Draft -> Proposed ->
+  // Approved/Rejected contract as Social Links (see ADMIN_PANEL_PLAN.md
+  // Section 5).
+  //
+  // Gallery migration backfill-safety fix — unlike TalentSocial (whose
+  // table was created with createdById already NOT NULL, so it was never
+  // populated without one), talent_gallery_images already had rows before
+  // this column existed (historical/imported gallery data with no known
+  // author). Making createdById required would need a real backfill
+  // (assigning every existing row to some User) before the column could be
+  // added NOT NULL, which this sprint has no safe, non-destructive way to
+  // do (there's no "system" or "import" user to attribute old rows to, and
+  // guessing one would be fabricating audit history). createdById is
+  // therefore nullable here, diverging from TalentSocial/TalentVersion on
+  // purpose: every *new* DRAFT/PROPOSED row created from now on through
+  // galleryService.insertDraftGalleryImage still always sets it (that
+  // method still requires `createdById` in its own argument — only the
+  // column itself relaxed), so the audit trail is complete for everything
+  // going forward; only pre-existing historical rows are allowed to have
+  // it unset.
+  createdById String?
+  createdBy   User?    @relation("TalentGalleryImageCreatedBy", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("TalentGalleryImageApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  rejectionNote String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
   deletedBy String?
 
+  @@index([talentId])
   @@map("talent_gallery_images")
 }
 

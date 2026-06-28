@@ -67,6 +67,7 @@ import ProfileImagePanel from '@/components/admin/ProfileImagePanel';
 import PodcastTab from '@/components/admin/PodcastTab';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
+import GalleryOwnerReview from '@/components/admin/GalleryOwnerReview';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import SocialLinksOwnerReview from '@/components/admin/SocialLinksOwnerReview';
 import SeoEditor from '@/components/admin/SeoEditor';
@@ -313,23 +314,71 @@ function PlaceholderSectionContent({ label }) {
  * data/talent/index.js read with the real published gallery rows
  * (talentAdapter.getGalleryImages, already filtered to
  * versionStatus=PUBLISHED + lifecycleStatus=ACTIVE by the repository), and
- * normalizes them into the same flat { src, alt } shape
- * MediaGalleryEditor/PublishedMediaGrid/GalleryImageCard already expect —
- * the editor component itself is untouched. `altHe` is used when present
- * (DB-authored alt text); falls back to the same generated
- * "<name> — תמונה N" label the mock data path used, so a row with no alt
- * text yet still renders identically to before. Read-only.
+ * normalizes them into a flat row shape MediaGalleryEditor/
+ * PublishedMediaGrid/GalleryImageCard/GalleryOwnerReview already expect —
+ * `src`/`alt` for display, plus every editable field (`altHe`, `altEn`,
+ * `position`, `scale`, `mobileOrder`) and lifecycle metadata
+ * (`versionStatus`, `basedOnVersionId`, `rejectionNote`, `createdBy`,
+ * `createdAt`) the new persistence-aware editor and Owner Review panel
+ * need. `altHe` is used for display when present (DB-authored alt text);
+ * falls back to the same generated "<name> — תמונה N" label the mock data
+ * path used, so a row with no alt text yet still renders identically to
+ * before. Read-only — this function never writes anything.
  */
 function buildGalleryImages(galleryImages, displayName) {
   return (galleryImages || []).map((row, index) => ({
+    id: row.id,
+    imageAssetId: row.imageAssetId,
     src: row.imageAsset?.blobUrl ?? null,
     alt: row.altHe || he.gallery.imageAlt(displayName, index),
+    altHe: row.altHe ?? null,
+    altEn: row.altEn ?? null,
+    order: row.order,
+    position: row.position ?? null,
+    scale: row.scale ?? null,
+    mobileOrder: row.mobileOrder ?? null,
+    versionStatus: row.versionStatus,
+    basedOnVersionId: row.basedOnVersionId ?? null,
+    rejectionNote: row.rejectionNote ?? null,
+    createdBy: row.createdBy ?? null,
+    createdAt: row.createdAt ?? null,
   }));
 }
 
-function GallerySectionContent({ galleryImages, displayName }) {
-  const images = buildGalleryImages(galleryImages, displayName);
-  return <MediaGalleryEditor publishedImages={images} />;
+/*
+ * Gallery Sprint 1 — mirrors SocialsSectionContent exactly: a read-only
+ * <GalleryOwnerReview> (renders nothing when there's no submitted
+ * proposal) above the now persistence-aware <MediaGalleryEditor>, fed by
+ * the three new pure-read talentAdapter calls below
+ * (getDraftOrProposedGalleryImages/getProposedGalleryImages/
+ * getRejectedGalleryImages — same "SELECT only, nothing written as a side
+ * effect of viewing this page" guarantee every other read on this page
+ * already has).
+ */
+function GallerySectionContent({
+  talentId,
+  galleryImages,
+  draftGalleryImages,
+  proposedGalleryImages,
+  rejectedGalleryImages,
+  displayName,
+}) {
+  const publishedImages = buildGalleryImages(galleryImages, displayName);
+  const draftImages = buildGalleryImages(draftGalleryImages, displayName);
+  const proposedImages = buildGalleryImages(proposedGalleryImages, displayName);
+  const rejectedImages = buildGalleryImages(rejectedGalleryImages, displayName);
+
+  return (
+    <>
+      <GalleryOwnerReview talentId={talentId} publishedImages={publishedImages} proposedImages={proposedImages} />
+      <MediaGalleryEditor
+        talentId={talentId}
+        publishedImages={publishedImages}
+        draftImages={draftImages}
+        rejectedImages={rejectedImages}
+      />
+    </>
+  );
 }
 
 /*
@@ -580,7 +629,9 @@ export default async function AdminTalentDetailPage({ params }) {
   // guarantee: getProposedSocials also calls nothing but a SELECT.
   // rejectedSocials added by the Owner Approve/Reject (Social Links)
   // sprint, same guarantee: getRejectedSocials also calls nothing but a
-  // SELECT.
+  // SELECT. draftGalleryImages/proposedGalleryImages/rejectedGalleryImages
+  // added by Gallery Sprint 1, same guarantee as their Social Links
+  // siblings — each is a SELECT via talentAdapter, nothing written.
   const [
     publishedVersion,
     pendingVersion,
@@ -590,6 +641,9 @@ export default async function AdminTalentDetailPage({ params }) {
     draftSocials,
     proposedSocials,
     rejectedSocials,
+    draftGalleryImages,
+    proposedGalleryImages,
+    rejectedGalleryImages,
   ] = await Promise.all([
       versionService.getCurrentPublished(talentAdapter, id),
       loadPendingVersion(talent),
@@ -599,6 +653,9 @@ export default async function AdminTalentDetailPage({ params }) {
       talentAdapter.getDraftOrProposedSocials(talent.id),
       talentAdapter.getProposedSocials(talent.id),
       talentAdapter.getRejectedSocials(talent.id),
+      talentAdapter.getDraftOrProposedGalleryImages(talent.id),
+      talentAdapter.getProposedGalleryImages(talent.id),
+      talentAdapter.getRejectedGalleryImages(talent.id),
     ]);
 
   const status = deriveDetailWorkflowStatus(versions);
@@ -622,7 +679,16 @@ export default async function AdminTalentDetailPage({ params }) {
     if (section.key === 'gallery') {
       return {
         ...section,
-        content: <GallerySectionContent galleryImages={galleryImages} displayName={displayName} />,
+        content: (
+          <GallerySectionContent
+            talentId={talent.id}
+            galleryImages={galleryImages}
+            draftGalleryImages={draftGalleryImages}
+            proposedGalleryImages={proposedGalleryImages}
+            rejectedGalleryImages={rejectedGalleryImages}
+            displayName={displayName}
+          />
+        ),
       };
     }
     if (section.key === 'socials') {

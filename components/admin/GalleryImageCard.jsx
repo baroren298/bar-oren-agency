@@ -33,8 +33,16 @@
  * an otherwise read-only-looking thumbnail reads as "this is saved." The
  * badge + tooltips are the fix; no behavior changes.
  *
+ * Gallery Sprint 1 — adds real metadata-editing inputs (altHe, altEn,
+ * position, scale, mobileOrder) via a new `onChange(field, value)` prop,
+ * mirroring SocialAccountCard's onChange pattern. These fields are the
+ * only thing that actually persists this sprint (through
+ * MediaGalleryEditor's Save Draft / Submit) — Replace/Add/Upload remain
+ * untouched and disabled, exactly as before.
+ *
  * Props:
- *   - image ({ src, alt })
+ *   - image ({ src, alt, altHe, altEn, position, scale, mobileOrder })
+ *   - onChange(field, value) — called for each metadata field edit
  *   - onRemove, onMoveUp, onMoveDown (function)
  *   - isFirst, isLast (boolean) — disable the relevant move button at the
  *     edges of the list
@@ -47,12 +55,15 @@ import { he } from "@/lib/admin/i18n/he";
 
 export default function GalleryImageCard({
   image,
+  onChange = () => {},
   onRemove = () => {},
   onMoveUp = () => {},
   onMoveDown = () => {},
   isFirst = false,
   isLast = false,
 }) {
+  const fields = he.gallery.fields;
+
   return (
     <div className={`${styles.tokens} ${styles.card}`}>
       <div className={styles.imageWrapper}>
@@ -96,6 +107,71 @@ export default function GalleryImageCard({
         <SecondaryButton onClick={onRemove} className={styles.removeButton} title={he.gallery.removeHint}>
           {he.gallery.actions.remove}
         </SecondaryButton>
+      </div>
+
+      <div className={styles.metaFields}>
+        <label className={styles.fieldRow}>
+          <span className={styles.fieldLabel}>{fields.altHe}</span>
+          <input
+            type="text"
+            className={styles.fieldInput}
+            value={image.altHe ?? ""}
+            placeholder={fields.altHePlaceholder}
+            onChange={(event) => onChange("altHe", event.target.value)}
+          />
+        </label>
+
+        <label className={styles.fieldRow}>
+          <span className={styles.fieldLabel}>{fields.altEn}</span>
+          <input
+            type="text"
+            className={styles.fieldInput}
+            value={image.altEn ?? ""}
+            placeholder={fields.altEnPlaceholder}
+            onChange={(event) => onChange("altEn", event.target.value)}
+          />
+        </label>
+
+        <label className={styles.fieldRow}>
+          <span className={styles.fieldLabel}>{fields.position}</span>
+          <input
+            type="text"
+            className={styles.fieldInput}
+            value={image.position ?? ""}
+            placeholder={fields.positionPlaceholder}
+            title={fields.positionHelper}
+            onChange={(event) => onChange("position", event.target.value)}
+          />
+        </label>
+
+        <label className={styles.fieldRow}>
+          <span className={styles.fieldLabel}>{fields.scale}</span>
+          <input
+            type="number"
+            step="0.05"
+            min="0"
+            className={styles.fieldInput}
+            value={image.scale ?? ""}
+            title={fields.scaleHelper}
+            onChange={(event) =>
+              onChange("scale", event.target.value === "" ? null : Number(event.target.value))
+            }
+          />
+        </label>
+
+        <label className={styles.fieldRow}>
+          <span className={styles.fieldLabel}>{fields.mobileOrder}</span>
+          <input
+            type="number"
+            step="1"
+            className={styles.fieldInput}
+            value={image.mobileOrder ?? ""}
+            title={fields.mobileOrderHelper}
+            onChange={(event) =>
+              onChange("mobileOrder", event.target.value === "" ? null : Number(event.target.value))
+            }
+          />
+        </label>
       </div>
     </div>
   );

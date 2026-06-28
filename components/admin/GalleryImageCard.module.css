@@ -99,3 +99,45 @@
   font-size: 0.78rem;
   padding: 0.3rem 0.6rem;
 }
+
+/*
+ * Gallery Sprint 1 — metadata editing fields (alt text, crop position,
+ * scale, mobile order). Deliberately plain stacked label+input rows,
+ * matching SocialLinkRow's field density rather than introducing a new
+ * input style — this card was never meant to look more elaborate than a
+ * social account card, just for a different entity.
+ */
+.metaFields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+.fieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fieldLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+.fieldInput {
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.3rem 0.5rem;
+}
+
+.fieldInput:focus {
+  outline: 2px solid var(--admin-accent-strong);
+  outline-offset: 1px;
+}
