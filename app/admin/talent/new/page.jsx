@@ -26,7 +26,7 @@ import styles from './new-talent.module.css';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'הוספת מיוצג חדש — ניהול',
+  title: 'יצירת מיוצג חדש — ניהול',
 };
 
 export default function NewTalentPage() {

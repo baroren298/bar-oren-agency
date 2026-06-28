@@ -36,10 +36,22 @@
  *     race between the early read and the write).
  *
  * Deliberately out of scope for this route, per the product decision —
- * categories, birth date, location, and Hebrew/English bio are no longer
- * collected at creation time at all (not just "optional"); they, along with
- * gallery/socials/SEO and primary image upload (no upload pipeline exists
- * yet), are completed afterward via the talent's normal edit workflow.
+ * categories, birth date, and location are not collected at creation time at
+ * all (not just "optional"); they, along with gallery/socials/SEO, are
+ * completed afterward via the talent's normal edit workflow.
+ *
+ * Create Talent Sprint 1: widened to also accept `bioHe` (Hebrew short bio)
+ * and `profileImageAssetId` (an already-uploaded Asset's id, from the
+ * existing POST /api/admin/assets/upload?purpose=profile endpoint — see
+ * NewTalentForm.jsx). Both optional, both passed straight through to
+ * `fields` exactly like `nameEn` already was — no new validation rule, no
+ * new repository/adapter method: `talentRepository.
+ * createTalentWithInitialVersion` already writes both columns (they were
+ * always part of TalentVersion's schema), this route just wasn't forwarding
+ * them yet. `profileImageAssetId` is not existence-checked here; an invalid
+ * id surfaces as a Prisma foreign-key error, caught by the generic
+ * try/catch below and reported as the same friendly serverError — consistent
+ * with how every other FK on this model is handled today.
  */
 
 import { NextResponse } from 'next/server';
@@ -74,6 +86,11 @@ export async function POST(request) {
   const slug = typeof body.slug === 'string' ? body.slug.trim().toLowerCase() : '';
   const name = typeof body.name === 'string' ? body.name.trim() : '';
   const nameEn = typeof body.nameEn === 'string' ? body.nameEn.trim() : '';
+  const bioHe = typeof body.bioHe === 'string' ? body.bioHe.trim() : '';
+  const profileImageAssetId =
+    typeof body.profileImageAssetId === 'string' && body.profileImageAssetId.trim()
+      ? body.profileImageAssetId.trim()
+      : null;
 
   const fieldErrors = {};
   if (!name) fieldErrors.name = he.talent.create.errors.nameRequired;
@@ -104,6 +121,8 @@ export async function POST(request) {
   const fields = {
     name,
     nameEn: nameEn || null,
+    bioHe: bioHe || null,
+    profileImageAssetId,
   };
 
   // Belt-and-suspenders: the manual checks above already cover everything
