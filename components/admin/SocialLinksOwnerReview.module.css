@@ -209,6 +209,59 @@
   color: var(--admin-text-muted);
 }
 
+/* Owner Approve/Reject (Social Links) sprint — actions row + reject-note
+ * form appended below each ReviewItemCard's existing Current/Proposed
+ * columns. Kept visually distinct (top border) so it reads as "what you can
+ * do about this" rather than a third diff column. */
+.actionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+.rejectForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+.rejectNoteLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.rejectNoteTextarea {
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface);
+  color: var(--admin-text-primary);
+  resize: vertical;
+}
+
+.actionError {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--admin-status-danger-text);
+}
+
+.actionDoneNote {
+  margin: 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--admin-border);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-status-success-text);
+}
+
 @media (max-width: 640px) {
   .tokens {
     padding: 1.25rem 1.25rem;

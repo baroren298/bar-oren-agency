@@ -367,15 +367,27 @@ function GallerySectionContent({ galleryImages, displayName }) {
  * <SocialLinksOwnerReview> renders nothing itself when proposedSocials is
  * empty, so this is purely additive — <SocialLinksEditor>'s own behavior is
  * untouched.
+ *
+ * Owner Approve/Reject (Social Links) sprint — `talentId` now also flows
+ * into <SocialLinksOwnerReview> (its new Approve/Request-changes buttons
+ * need it to know where to POST), and `rejectedSocials` flows into
+ * <SocialLinksEditor> (talentAdapter.getRejectedSocials, another pure read)
+ * so a rejected account's Owner note renders right above the editor instead
+ * of only being visible in the History tab.
  */
-function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials }) {
+function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials, rejectedSocials }) {
   return (
     <>
-      <SocialLinksOwnerReview publishedSocials={socials || []} proposedSocials={proposedSocials || []} />
+      <SocialLinksOwnerReview
+        talentId={talentId}
+        publishedSocials={socials || []}
+        proposedSocials={proposedSocials || []}
+      />
       <SocialLinksEditor
         talentId={talentId}
         publishedSocials={socials || []}
         draftSocials={draftSocials || []}
+        rejectedSocials={rejectedSocials || []}
       />
     </>
   );
@@ -566,8 +578,19 @@ export default async function AdminTalentDetailPage({ params }) {
   // getDraftOrProposedSocials also calls nothing but a SELECT.
   // proposedSocials added by the Owner Review (Social Links) sprint, same
   // guarantee: getProposedSocials also calls nothing but a SELECT.
-  const [publishedVersion, pendingVersion, versions, socials, galleryImages, draftSocials, proposedSocials] =
-    await Promise.all([
+  // rejectedSocials added by the Owner Approve/Reject (Social Links)
+  // sprint, same guarantee: getRejectedSocials also calls nothing but a
+  // SELECT.
+  const [
+    publishedVersion,
+    pendingVersion,
+    versions,
+    socials,
+    galleryImages,
+    draftSocials,
+    proposedSocials,
+    rejectedSocials,
+  ] = await Promise.all([
       versionService.getCurrentPublished(talentAdapter, id),
       loadPendingVersion(talent),
       versionService.listVersionHistory(talentAdapter, id),
@@ -575,6 +598,7 @@ export default async function AdminTalentDetailPage({ params }) {
       talentAdapter.getGalleryImages(talent.id),
       talentAdapter.getDraftOrProposedSocials(talent.id),
       talentAdapter.getProposedSocials(talent.id),
+      talentAdapter.getRejectedSocials(talent.id),
     ]);
 
   const status = deriveDetailWorkflowStatus(versions);
@@ -610,6 +634,7 @@ export default async function AdminTalentDetailPage({ params }) {
             socials={socials}
             draftSocials={draftSocials}
             proposedSocials={proposedSocials}
+            rejectedSocials={rejectedSocials}
           />
         ),
       };

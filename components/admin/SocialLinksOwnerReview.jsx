@@ -1,28 +1,42 @@
+"use client";
+
 /*
- * SocialLinksOwnerReview — Owner Review (Social Links) sprint.
+ * SocialLinksOwnerReview — Owner Review (Social Links) sprint, extended by
+ * the Owner Approve/Reject (Social Links) sprint.
  *
- * Read-only panel showing exactly what a submitted Social Links proposal
- * (TalentSocial rows with versionStatus = PROPOSED) would change, before
- * any approval action exists. Renders above <SocialLinksEditor> on the
- * Socials tab, conditionally — only when at least one PROPOSED row exists
- * for the talent — and never modifies that editor's behavior.
+ * Was (Owner Review sprint): a read-only panel showing exactly what a
+ * submitted Social Links proposal (TalentSocial rows with versionStatus =
+ * PROPOSED) would change, with no approve/reject/publish controls — none of
+ * those API routes existed yet.
  *
- * Deliberately has NO approve/reject/publish controls: no API route for
- * any of those exists yet for Social Links (confirmed by inspecting every
- * app/api/admin/talent/[id]/socials* route — only Save Draft and Submit
- * exist), so per this sprint's explicit scope this stays informational
- * only. Wiring real actions in is future work, same as ComparisonView's
- * "Editable PROPOSED... until a future sprint's Owner review locks it"
- * note already flags.
+ * Is: every reviewed item that has a `proposed` row now gets two real
+ * actions — "אשר ופרסם" (Approve, POST .../socials/[socialId]/approve) and
+ * "בקש שינויים" (Request changes / Reject, which reveals a required note
+ * field before POSTing .../socials/[socialId]/reject). Becoming a "use
+ * client" component is the only structural change this required: the
+ * existing diff/comparison markup (AccountFieldsReadOnly, the
+ * Current/Proposed columns, the summary row) is completely unchanged — only
+ * each ReviewItemCard gained an actions row beneath its columns.
  *
- * Visual language deliberately mirrors ComparisonView / SocialLinksEditor's
- * "Current Published / Proposed" eyebrow + card structure (see
- * SocialLinksOwnerReview.module.css), but per-account, side-by-side, with a
- * status badge driven by lib/admin/social-review.js's diff — the first real
- * diff in the admin panel (every other `.changeDot`-style placeholder
- * elsewhere is still inert).
+ * Both actions are Owner-only at the API layer (requireOwner) — this
+ * component does not attempt its own role gating; if a non-Owner session
+ * somehow renders this panel and clicks Approve/Reject, the route returns
+ * 403 and the Hebrew error (he.social.errors.notOwner) is shown inline, the
+ * same way any other failed action here is shown.
+ *
+ * On success, each action calls `router.refresh()` so the Server Component
+ * page re-reads `proposedSocials`/`socials` (Approve) or the rejected-rows
+ * read that feeds the editor's rejection notice (Reject) — this component
+ * itself never holds the source of truth, it only triggers the same
+ * Server-Component re-fetch every other admin action in this codebase
+ * already uses (see StartEditingButton.jsx).
  *
  * Props:
+ *   - talentId (string, optional) — the Talent id. Required for the new
+ *     Approve/Reject actions to have somewhere to POST to; when absent
+ *     (e.g. a future isolated/storybook-style render), the actions row is
+ *     simply not rendered and this falls back to the original read-only
+ *     behavior.
  *   - publishedSocials (TalentSocial[], optional, default []) — current
  *     Published+Active rows (same shape as SocialLinksEditor's
  *     `publishedSocials`).
@@ -30,8 +44,12 @@
  *     PROPOSED rows for this talent (talentAdapter.getProposedSocials).
  */
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./SocialLinksOwnerReview.module.css";
 import StatusBadge from "./StatusBadge";
+import PrimaryButton from "./PrimaryButton";
+import SecondaryButton from "./SecondaryButton";
 import { he } from "@/lib/admin/i18n/he";
 import { getPlatformEntry } from "@/lib/admin/social-platforms";
 import {
@@ -145,7 +163,144 @@ function AccountFieldsReadOnly({ account, changedFields = [] }) {
   );
 }
 
-function ReviewItemCard({ item }) {
+/*
+ * Owner Approve/Reject (Social Links) sprint — the new actions row for one
+ * review item. Owns its own small bit of local state (idle / confirming a
+ * rejection note / submitting / done / error) — nothing here is lifted to
+ * the parent panel, since each card's action is independent of every other
+ * card's.
+ */
+function ReviewItemActions({ talentId, socialId }) {
+  const router = useRouter();
+  const [mode, setMode] = useState("idle"); // idle | confirmingReject | done
+  const [status, setStatus] = useState("idle"); // idle | submitting | error
+  const [error, setError] = useState(null);
+  const [note, setNote] = useState("");
+  const [doneAction, setDoneAction] = useState(null); // "approved" | "rejected"
+
+  const actionsCopy = he.social.review.actions;
+
+  async function handleApprove() {
+    setStatus("submitting");
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/talent/${talentId}/socials/${socialId}/approve`, {
+        method: "POST",
+      });
+      const body = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(body.error || actionsCopy.genericError);
+      }
+
+      setStatus("idle");
+      setMode("done");
+      setDoneAction("approved");
+      router.refresh();
+    } catch (err) {
+      setStatus("error");
+      setError(err?.message || actionsCopy.genericError);
+    }
+  }
+
+  async function handleConfirmReject() {
+    if (!note.trim()) {
+      setStatus("error");
+      setError(he.social.errors.rejectionNoteRequired);
+      return;
+    }
+
+    setStatus("submitting");
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/talent/${talentId}/socials/${socialId}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rejectionNote: note.trim() }),
+      });
+      const body = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(body.error || actionsCopy.genericError);
+      }
+
+      setStatus("idle");
+      setMode("done");
+      setDoneAction("rejected");
+      router.refresh();
+    } catch (err) {
+      setStatus("error");
+      setError(err?.message || actionsCopy.genericError);
+    }
+  }
+
+  if (mode === "done") {
+    return (
+      <p className={styles.actionDoneNote} role="status">
+        {doneAction === "approved" ? actionsCopy.approved : actionsCopy.rejected}
+      </p>
+    );
+  }
+
+  if (mode === "confirmingReject") {
+    return (
+      <div className={styles.rejectForm}>
+        <label className={styles.rejectNoteLabel} htmlFor={`reject-note-${socialId}`}>
+          {actionsCopy.rejectionNoteLabel}
+        </label>
+        <textarea
+          id={`reject-note-${socialId}`}
+          className={styles.rejectNoteTextarea}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder={actionsCopy.rejectionNotePlaceholder}
+          rows={3}
+          disabled={status === "submitting"}
+        />
+        {status === "error" && error ? (
+          <p className={styles.actionError} role="alert">
+            {error}
+          </p>
+        ) : null}
+        <div className={styles.actionsRow}>
+          <SecondaryButton
+            onClick={() => {
+              setMode("idle");
+              setStatus("idle");
+              setError(null);
+            }}
+            disabled={status === "submitting"}
+          >
+            {actionsCopy.cancel}
+          </SecondaryButton>
+          <PrimaryButton onClick={handleConfirmReject} disabled={status === "submitting"}>
+            {status === "submitting" ? actionsCopy.rejecting : actionsCopy.confirmReject}
+          </PrimaryButton>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.actionsRow}>
+      {status === "error" && error ? (
+        <p className={styles.actionError} role="alert">
+          {error}
+        </p>
+      ) : null}
+      <SecondaryButton onClick={() => setMode("confirmingReject")} disabled={status === "submitting"}>
+        {actionsCopy.requestChanges}
+      </SecondaryButton>
+      <PrimaryButton onClick={handleApprove} disabled={status === "submitting"}>
+        {status === "submitting" ? actionsCopy.approving : actionsCopy.approve}
+      </PrimaryButton>
+    </div>
+  );
+}
+
+function ReviewItemCard({ item, talentId }) {
   const { status, published, proposed, changedFields } = item;
   const statusLabel = he.social.review.status[status] || status;
   const tone = STATUS_TONE[status] || "neutral";
@@ -178,11 +333,13 @@ function ReviewItemCard({ item }) {
           </section>
         ) : null}
       </div>
+
+      {proposed && talentId ? <ReviewItemActions talentId={talentId} socialId={proposed.id} /> : null}
     </div>
   );
 }
 
-export default function SocialLinksOwnerReview({ publishedSocials = [], proposedSocials = [] }) {
+export default function SocialLinksOwnerReview({ talentId = null, publishedSocials = [], proposedSocials = [] }) {
   if (!proposedSocials || proposedSocials.length === 0) {
     return null;
   }
@@ -215,7 +372,7 @@ export default function SocialLinksOwnerReview({ publishedSocials = [], proposed
 
       <div className={styles.itemList}>
         {items.map((item) => (
-          <ReviewItemCard key={item.key} item={item} />
+          <ReviewItemCard key={item.key} item={item} talentId={talentId} />
         ))}
       </div>
 
