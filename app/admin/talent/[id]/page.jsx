@@ -68,6 +68,7 @@ import PodcastTab from '@/components/admin/PodcastTab';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
 import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
+import SocialLinksOwnerReview from '@/components/admin/SocialLinksOwnerReview';
 import SeoEditor from '@/components/admin/SeoEditor';
 import Timeline from '@/components/admin/Timeline';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
@@ -356,14 +357,27 @@ function GallerySectionContent({ galleryImages, displayName }) {
  * — when that list is non-empty, SocialLinksEditor seeds its proposed
  * column from it instead of from `socials`, so a saved-but-not-yet-
  * submitted draft survives a page refresh.
+ *
+ * Owner Review (Social Links) sprint — `proposedSocials` now also flows
+ * through (talentAdapter.getProposedSocials, another pure read, same
+ * guarantee as above: a SELECT filtered to versionStatus=PROPOSED, nothing
+ * written as a side effect of viewing this page). When non-empty, a
+ * read-only <SocialLinksOwnerReview> panel renders above the existing
+ * editor, showing the Owner exactly what the submitted proposal changes.
+ * <SocialLinksOwnerReview> renders nothing itself when proposedSocials is
+ * empty, so this is purely additive — <SocialLinksEditor>'s own behavior is
+ * untouched.
  */
-function SocialsSectionContent({ talentId, socials, draftSocials }) {
+function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials }) {
   return (
-    <SocialLinksEditor
-      talentId={talentId}
-      publishedSocials={socials || []}
-      draftSocials={draftSocials || []}
-    />
+    <>
+      <SocialLinksOwnerReview publishedSocials={socials || []} proposedSocials={proposedSocials || []} />
+      <SocialLinksEditor
+        talentId={talentId}
+        publishedSocials={socials || []}
+        draftSocials={draftSocials || []}
+      />
+    </>
   );
 }
 
@@ -550,7 +564,9 @@ export default async function AdminTalentDetailPage({ params }) {
   // getGalleryImages call nothing but a SELECT. draftSocials added by the
   // Social Links persistence sprint, same guarantee:
   // getDraftOrProposedSocials also calls nothing but a SELECT.
-  const [publishedVersion, pendingVersion, versions, socials, galleryImages, draftSocials] =
+  // proposedSocials added by the Owner Review (Social Links) sprint, same
+  // guarantee: getProposedSocials also calls nothing but a SELECT.
+  const [publishedVersion, pendingVersion, versions, socials, galleryImages, draftSocials, proposedSocials] =
     await Promise.all([
       versionService.getCurrentPublished(talentAdapter, id),
       loadPendingVersion(talent),
@@ -558,6 +574,7 @@ export default async function AdminTalentDetailPage({ params }) {
       talentAdapter.getSocials(talent.id),
       talentAdapter.getGalleryImages(talent.id),
       talentAdapter.getDraftOrProposedSocials(talent.id),
+      talentAdapter.getProposedSocials(talent.id),
     ]);
 
   const status = deriveDetailWorkflowStatus(versions);
@@ -588,7 +605,12 @@ export default async function AdminTalentDetailPage({ params }) {
       return {
         ...section,
         content: (
-          <SocialsSectionContent talentId={talent.id} socials={socials} draftSocials={draftSocials} />
+          <SocialsSectionContent
+            talentId={talent.id}
+            socials={socials}
+            draftSocials={draftSocials}
+            proposedSocials={proposedSocials}
+          />
         ),
       };
     }
