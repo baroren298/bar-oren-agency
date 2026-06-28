@@ -347,9 +347,24 @@ function GallerySectionContent({ galleryImages, displayName }) {
  * card out, for every published+active TalentSocial row, including any
  * additional accounts that share a platform, and including THREADS rows
  * now that the editor's platform registry has a slot for them.
+ *
+ * Social Links persistence sprint — `talentId`/`draftSocials` now also flow
+ * through. `draftSocials` is whichever DRAFT or PROPOSED TalentSocial rows
+ * already exist for this talent (talentAdapter.getDraftOrProposedSocials,
+ * a pure read, same "never created as a side effect of viewing this page"
+ * guarantee `loadPendingVersion` above already documents for TalentVersion)
+ * — when that list is non-empty, SocialLinksEditor seeds its proposed
+ * column from it instead of from `socials`, so a saved-but-not-yet-
+ * submitted draft survives a page refresh.
  */
-function SocialsSectionContent({ socials }) {
-  return <SocialLinksEditor publishedSocials={socials || []} />;
+function SocialsSectionContent({ talentId, socials, draftSocials }) {
+  return (
+    <SocialLinksEditor
+      talentId={talentId}
+      publishedSocials={socials || []}
+      draftSocials={draftSocials || []}
+    />
+  );
 }
 
 /*
@@ -532,14 +547,18 @@ export default async function AdminTalentDetailPage({ params }) {
   // loading this page (see loadPendingVersion's header comment above).
   // socials/galleryImages added by the Talent Detail DB Read Integration
   // sprint, same pure-read guarantee: talentAdapter.getSocials/
-  // getGalleryImages call nothing but a SELECT.
-  const [publishedVersion, pendingVersion, versions, socials, galleryImages] = await Promise.all([
-    versionService.getCurrentPublished(talentAdapter, id),
-    loadPendingVersion(talent),
-    versionService.listVersionHistory(talentAdapter, id),
-    talentAdapter.getSocials(talent.id),
-    talentAdapter.getGalleryImages(talent.id),
-  ]);
+  // getGalleryImages call nothing but a SELECT. draftSocials added by the
+  // Social Links persistence sprint, same guarantee:
+  // getDraftOrProposedSocials also calls nothing but a SELECT.
+  const [publishedVersion, pendingVersion, versions, socials, galleryImages, draftSocials] =
+    await Promise.all([
+      versionService.getCurrentPublished(talentAdapter, id),
+      loadPendingVersion(talent),
+      versionService.listVersionHistory(talentAdapter, id),
+      talentAdapter.getSocials(talent.id),
+      talentAdapter.getGalleryImages(talent.id),
+      talentAdapter.getDraftOrProposedSocials(talent.id),
+    ]);
 
   const status = deriveDetailWorkflowStatus(versions);
   const lastUpdated = deriveLastUpdated(versions, talent);
@@ -566,7 +585,12 @@ export default async function AdminTalentDetailPage({ params }) {
       };
     }
     if (section.key === 'socials') {
-      return { ...section, content: <SocialsSectionContent socials={socials} /> };
+      return {
+        ...section,
+        content: (
+          <SocialsSectionContent talentId={talent.id} socials={socials} draftSocials={draftSocials} />
+        ),
+      };
     }
     if (section.key === 'seo') {
       return { ...section, content: <SeoSectionContent /> };

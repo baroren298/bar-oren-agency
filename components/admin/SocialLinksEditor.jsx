@@ -3,66 +3,66 @@
 /*
  * SocialLinksEditor — Social Links Editor Foundation sprint, redesigned by
  * the Socials Tab Multi-Account UI sprint, restyled by the Socials Tab
- * Visual Polish sprint (presentation only — see SocialLinkRow.jsx's own
- * docstring for what changed there; this file's state/handlers/props are
- * untouched, only `.cardList` was renamed to `.accountList`/
- * `.accountListEditable` and the preview notice below was lightened to
- * match ComparisonView's `.conflictNotice`).
+ * Visual Polish sprint, connected to real persistence by the Social Links
+ * persistence sprint.
  *
- * Was: one fixed row per platform, fed by a flat `{ [platformKey]: string }`
- * map — a shape that could only ever show one account per platform, so a
- * second Instagram ("Spam") was silently dropped before it reached this
- * component (the collapsing happened one level up, in
- * app/admin/talent/[id]/page.jsx's `buildSocialLinks`).
+ * Was (every prior sprint through Visual Polish): a list editor over the
+ * raw `TalentSocial` rows, but strictly local-state-only — "ביטול שינויים"
+ * worked, "שמור כטיוטה"/"שלח לאישור" were hard-hidden
+ * (`showSaveDraft={false} showSubmit={false}`) because no save path existed
+ * for social rows yet.
  *
- * Is: a list editor over the *raw* `TalentSocial` rows the DB already
- * returns — `talentRepository.getPublishedSocialsForTalent` never collapsed
- * multiple accounts per platform (see that file's own docstring), only this
- * UI did. `buildSocialLinks` is gone; the talent workspace page now passes
- * every published row straight through as `publishedSocials`, and this
- * component renders one <SocialAccountCard> per row, full stop.
+ * Is: the proposed column now seeds from a real persisted Draft/Proposed
+ * set when one exists (`draftSocials`, read by
+ * talentAdapter.getDraftOrProposedSocials — see
+ * app/admin/talent/[id]/page.jsx), falling back to the published rows when
+ * it doesn't, exactly the same "draftValue falls back to value" pattern
+ * ComparisonView already established for TalentVersion fields. Save Draft
+ * and Submit are real network calls now (against the new
+ * app/api/admin/talent/[id]/socials[/submit] routes, backed by
+ * lib/admin/engine/socialsService.js) — same "thin client wrapper owns the
+ * fetch calls, not the generic editor" split TalentDetailsEditor already
+ * uses for TalentVersion, just folded into this one component instead of a
+ * separate wrapper, since SocialAccountCard/AddSocialAccountForm (this
+ * component's children) were never split out as a generic, entity-agnostic
+ * ComparisonView-style component the way פרטים/פודקאסט were.
  *
- * Same "Current Published / Proposed Update" philosophy as before: the
- * employee always sees what's actually live (read-only cards) and
- * separately shapes a proposed set of accounts beneath it (editable cards
- * + an "add platform" form) — nothing here ever touches the live site.
+ * Still exactly the same "Current Published / Proposed Update" philosophy:
+ * the employee always sees what's actually live (read-only cards) and
+ * separately shapes a proposed set of accounts beneath it — nothing here
+ * ever touches the live site. Gallery and SEO are explicitly NOT touched by
+ * this sprint and remain preview-only.
  *
- * Entity-agnostic, same reasoning as its siblings: this component knows
- * nothing about "talent" specifically, only a `publishedSocials` array
- * ({ id, platform, label, customLabel, handle, url, sortOrder }[]) and a
- * `platforms`/`labels` registry — reusable later for agency social links,
- * contact info, footer links, or brand pages.
- *
- * Strictly UI-only, per this sprint's explicit scope (same as before, just
- * restated for the new shape):
- *   - No real persistence, no API calls, no database writes. Editing an
- *     existing card's fields and adding a new card via
- *     <AddSocialAccountForm> are both real against the in-memory
- *     `proposedAccounts` array (same "local state isn't persistence"
- *     reasoning ComparisonView/MediaGalleryEditor already use for their
- *     own real-but-local actions) — refreshing the page discards everything.
- *   - "ביטול שינויים" resets `proposedAccounts` back to the published list
- *     (discarding any local edits/additions). "שמור כטיוטה"/"שלח לאישור"
- *     stay disabled placeholders via EditorActionBar's existing defaults —
- *     no safe save path exists for social rows yet
- *     (talentRepository.proposeTalentSocial is still an unimplemented stub).
- *   - <PreviewModeNotice> below states this explicitly, same honesty
- *     pattern MediaGalleryEditor's own notice already established, since
- *     this tab can now do more than the old "type into 5 fixed fields."
- *
- * Future Ready: adding a new platform is still a one-line addition to
- * lib/admin/social-platforms.js (see THREADS); no change needed here.
+ * Per this sprint's explicit scope:
+ *   - No redesign: every existing card/form/markup is unchanged; only the
+ *     state/handlers around them changed.
+ *   - No delete/remove-account control exists (none did before either —
+ *     SocialLinkRow.jsx still has no such button); this sprint doesn't add
+ *     one.
+ *   - Validation errors come back from the server (lib/admin/engine/
+ *     socialsService.js's blocking validation) and are shown as a single,
+ *     clear Hebrew summary plus a per-account note where possible, reusing
+ *     `he.social.errors`.
  *
  * Props:
+ *   - talentId (string, optional) — the Talent id. When absent, this
+ *     component falls back to the original, fully local preview-only
+ *     behavior (no talentId means there's nowhere to save to) — this keeps
+ *     the component usable standalone/in isolation exactly like before.
  *   - publishedSocials ({ id, platform, label, customLabel, handle, url,
  *     sortOrder }[], optional, default []) — every published+active
  *     TalentSocial row, already in display order (repository-sorted).
- *     Multiple rows may share a platform; none are dropped.
+ *   - draftSocials ({ id, platform, label, customLabel, handle, url,
+ *     sortOrder, versionStatus, basedOnVersionId }[], optional, default
+ *     []) — every DRAFT or PROPOSED TalentSocial row already saved for
+ *     this talent. When non-empty, the proposed column seeds from this
+ *     instead of `publishedSocials`.
  *   - platforms ({ key, label, icon }[], optional, default SOCIAL_PLATFORMS)
  *   - labels ({ value, label }[], optional, default SOCIAL_ACCOUNT_LABELS)
  */
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./SocialLinksEditor.module.css";
 import SocialAccountCard from "./SocialLinkRow";
 import AddSocialAccountForm from "./AddSocialAccountForm";
@@ -70,19 +70,38 @@ import EmptyState from "./EmptyState";
 import EditorActionBar from "./EditorActionBar";
 import { he } from "@/lib/admin/i18n/he";
 import { SOCIAL_PLATFORMS, SOCIAL_ACCOUNT_LABELS } from "@/lib/admin/social-platforms";
+import { VERSION_STATUS } from "@/lib/admin/constants/enums";
 
 function withKeys(accounts) {
-  // Real published rows already have a stable DB `id`; reuse it as the
-  // React/local-state key so edits target the right card.
+  // Real DB rows already have a stable `id`; reuse it as the React/local-
+  // state key so edits target the right card. A brand-new, not-yet-saved
+  // account (added via the form, never persisted) has no `id` yet — see
+  // handleAdd's `local-N` key below.
   return accounts.map((account) => ({ ...account, _key: account.id }));
 }
 
+// Only the fields the server actually accepts/returns are compared for
+// dirty-state tracking and sent over the wire — `_key` is local-only React
+// bookkeeping and `versionStatus`/`basedOnVersionId` are server-decided, not
+// something this editor ever sets directly.
+function toComparablePayload(accounts) {
+  return accounts.map((account) => ({
+    id: account.id || null,
+    platform: account.platform,
+    label: account.label,
+    customLabel: account.customLabel ?? null,
+    handle: account.handle ?? null,
+    url: account.url ?? null,
+    sortOrder: account.sortOrder ?? null,
+  }));
+}
+
 /*
- * Gallery-specific stand-in for the retired shared <EditorHelperNote>,
- * reused here for the same reason MediaGalleryEditor introduced it: this
- * tab can now genuinely add/edit accounts in memory, so a generic "this is
- * a proposed update, save a draft" message would overstate what's actually
- * wired (no save/submit path exists for social rows yet).
+ * Stand-in for the retired shared <EditorHelperNote>, same reasoning
+ * MediaGalleryEditor/SeoEditor's own per-tab notices already document: this
+ * tab's actual capabilities have changed over time, so its honesty notice
+ * needs to say the true thing for whichever mode it's in right now, not a
+ * generic "save a draft" message that may or may not apply.
  */
 function PreviewModeNotice() {
   return (
@@ -93,26 +112,84 @@ function PreviewModeNotice() {
   );
 }
 
+function PersistenceModeNote() {
+  return (
+    <div className={styles.previewNotice} role="note">
+      <p className={styles.previewNoticeBody}>{he.editor.helperNote.body}</p>
+    </div>
+  );
+}
+
 export default function SocialLinksEditor({
+  talentId = null,
   publishedSocials = [],
+  draftSocials = [],
   platforms = SOCIAL_PLATFORMS,
   labels = SOCIAL_ACCOUNT_LABELS,
 }) {
-  const [proposedAccounts, setProposedAccounts] = useState(() => withKeys(publishedSocials));
+  const router = useRouter();
+  const hasPersistence = Boolean(talentId);
+  const initialSeed = draftSocials.length > 0 ? draftSocials : publishedSocials;
+
+  const [proposedAccounts, setProposedAccounts] = useState(() => withKeys(initialSeed));
+  const [savedAccounts, setSavedAccounts] = useState(() => withKeys(initialSeed));
   // Monotonic counter for client-only ids on accounts added via the form —
   // never sent anywhere, just needs to be unique within this render tree.
   const [nextLocalId, setNextLocalId] = useState(1);
+
+  const [saveDraftStatus, setSaveDraftStatus] = useState("idle"); // idle | saving | saved | error
+  const [saveDraftError, setSaveDraftError] = useState(null);
+  const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
+  const [submitError, setSubmitError] = useState(null);
+
+  const isDirty =
+    JSON.stringify(toComparablePayload(proposedAccounts)) !==
+    JSON.stringify(toComparablePayload(savedAccounts));
+  const saving = saveDraftStatus === "saving";
+  const submitting = submitStatus === "submitting";
+  const hasDraftRows = savedAccounts.some((account) => account.versionStatus === VERSION_STATUS.DRAFT);
+
+  const saveDraftDisabled = !hasPersistence || !isDirty || saving || submitting;
+  const submitDisabled = !hasPersistence || isDirty || saving || submitting || !hasDraftRows;
+
+  const saveDraftDisabledReason = !hasPersistence
+    ? undefined
+    : !isDirty
+      ? he.editor.saveDraft.disabledNoChanges
+      : undefined;
+  const submitDisabledReason = !hasPersistence
+    ? undefined
+    : isDirty
+      ? he.editor.submit.unsavedHint
+      : !hasDraftRows
+        ? he.social.errors.nothingToSubmit
+        : undefined;
+
+  function clearStatuses() {
+    if (saveDraftStatus !== "idle" && saveDraftStatus !== "saving") {
+      setSaveDraftStatus("idle");
+      setSaveDraftError(null);
+    }
+    if (submitStatus !== "idle" && submitStatus !== "submitting") {
+      setSubmitStatus("idle");
+      setSubmitError(null);
+    }
+  }
 
   function handleFieldChange(key, field, value) {
     setProposedAccounts((previous) =>
       previous.map((account) => (account._key === key ? { ...account, [field]: value } : account))
     );
+    clearStatuses();
   }
 
-  // Local-only reset — never talks to a server, just discards whatever the
-  // employee typed/added and snaps the proposed list back to published.
+  // Resets back to whatever was last actually saved (or, if nothing has
+  // been saved yet this session, the original published/draft seed) —
+  // never talks to a server.
   function handleCancel() {
-    setProposedAccounts(withKeys(publishedSocials));
+    setProposedAccounts(savedAccounts);
+    setSaveDraftStatus("idle");
+    setSaveDraftError(null);
   }
 
   // Appends, never replaces — this is what guarantees a second Instagram
@@ -124,6 +201,68 @@ export default function SocialLinksEditor({
       { ...newAccount, id: null, sortOrder: null, _key: `local-${nextLocalId}` },
     ]);
     setNextLocalId((n) => n + 1);
+    clearStatuses();
+  }
+
+  async function handleSaveDraft() {
+    if (!hasPersistence || saveDraftDisabled) return;
+
+    setSaveDraftStatus("saving");
+    setSaveDraftError(null);
+
+    try {
+      const response = await fetch(`/api/admin/talent/${talentId}/socials`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accounts: toComparablePayload(proposedAccounts) }),
+      });
+
+      const body = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (body.code === "VALIDATION_FAILED") {
+          throw new Error(he.social.errors.validationSummary);
+        }
+        throw new Error(body.error || he.social.errors.serverError);
+      }
+
+      const saved = withKeys(body.accounts || []);
+      setProposedAccounts(saved);
+      setSavedAccounts(saved);
+      setSaveDraftStatus("saved");
+    } catch (error) {
+      setSaveDraftStatus("error");
+      setSaveDraftError(error?.message || he.social.errors.networkError);
+    }
+  }
+
+  async function handleSubmit() {
+    if (!hasPersistence || submitDisabled) return;
+
+    setSubmitStatus("submitting");
+    setSubmitError(null);
+
+    try {
+      const response = await fetch(`/api/admin/talent/${talentId}/socials/submit`, {
+        method: "POST",
+      });
+
+      const body = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(body.error || he.social.errors.serverError);
+      }
+
+      setSubmitStatus("submitted");
+      // Re-fetch the Server Component tree so the page's own
+      // getDraftOrProposedSocials read picks up the new PROPOSED status —
+      // same pattern TalentDetailsEditor.handleSubmit already uses for
+      // TalentVersion.
+      router.refresh();
+    } catch (error) {
+      setSubmitStatus("error");
+      setSubmitError(error?.message || he.social.errors.networkError);
+    }
   }
 
   return (
@@ -173,7 +312,7 @@ export default function SocialLinksEditor({
                 <SocialAccountCard
                   key={account._key}
                   account={account}
-                  showNotSavedBadge
+                  showNotSavedBadge={!account.id}
                   onChange={(field, value) => handleFieldChange(account._key, field, value)}
                 />
               ))}
@@ -183,8 +322,27 @@ export default function SocialLinksEditor({
         </section>
       </div>
 
-      <PreviewModeNotice />
-      <EditorActionBar onCancel={handleCancel} showSaveDraft={false} showSubmit={false} />
+      {hasPersistence ? <PersistenceModeNote /> : <PreviewModeNotice />}
+      {saveDraftStatus === "error" && saveDraftError ? (
+        <p className={styles.previewNoticeBody} role="alert">
+          {saveDraftError}
+        </p>
+      ) : null}
+      <EditorActionBar
+        onCancel={handleCancel}
+        onSaveDraft={handleSaveDraft}
+        onSubmit={handleSubmit}
+        showSaveDraft={hasPersistence}
+        showSubmit={hasPersistence}
+        saveDraftDisabled={saveDraftDisabled}
+        saveDraftDisabledReason={saveDraftDisabledReason}
+        saveDraftStatus={saveDraftStatus}
+        saveDraftStatusMessage={saveDraftStatus === "error" ? saveDraftError : undefined}
+        submitDisabled={submitDisabled}
+        submitDisabledReason={submitDisabledReason}
+        submitStatus={submitStatus}
+        submitStatusMessage={submitStatus === "error" ? submitError : undefined}
+      />
     </div>
   );
 }
