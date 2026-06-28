@@ -25,6 +25,23 @@
  * via PublishedMediaGrid), and separately shapes a proposed gallery
  * beneath it — nothing here ever touches the live site directly.
  *
+ * UPDATED — Gallery Upload Sprint 2: "Add Image" is now real. Picking a
+ * file in AddImageCard calls handleUploadImage below, which POSTs
+ * multipart FormData to /api/admin/assets/upload (purpose=gallery) and, on
+ * success, appends a new row straight into the in-memory proposed grid —
+ * carrying only `imageAssetId` (no `id` yet, since no TalentGalleryImage
+ * row exists until Save Draft). It renders immediately via the existing,
+ * unchanged GalleryImageCard, with the same metadata fields editable and
+ * the same Remove/Reorder behavior as any other proposed row. Save Draft's
+ * existing PATCH call is what actually creates the TalentGalleryImage row
+ * (galleryService.saveDraft's pre-existing "no id, has imageAssetId"
+ * branch — see that file) — toComparablePayload below now forwards
+ * `imageAssetId` for any row that has no `id` yet, which it previously
+ * dropped (dead code until this sprint, since no row could ever lack an
+ * `id` before). GalleryImageCard's "החלף" button and AddImageCard's
+ * disabled/no-talentId fallback are unchanged — still no replace, no
+ * drag/drop, no bulk upload, no media library, no crop UI.
+ *
  * Per Gallery Sprint 1's explicit scope:
  *   - Existing images only. There is still no Add Image / Replace Image /
  *     Upload — AddImageCard and GalleryImageCard's "החלף" button stay
@@ -184,9 +201,12 @@ function RejectedGalleryImagesNotice({ talentId, rejectedImages }) {
 function withKeys(images) {
   // Real DB rows already have a stable `id`; reuse it as the React/local-
   // state key so edits target the right card — mirrors SocialLinksEditor's
-  // withKeys exactly. Unlike Social, there is no "brand-new, not-yet-saved"
-  // case here (no Add Image this sprint), so every row is expected to
-  // already have an `id`.
+  // withKeys exactly. Only ever called on rows that came from the server
+  // (the initial seed, or a Save Draft response) — both always have a real
+  // `id` by the time they reach here. A freshly-uploaded, not-yet-saved row
+  // (Gallery Upload Sprint 2) is appended directly in handleUploadImage
+  // with its own explicit `_key`, bypassing this helper, since it has no
+  // `id` yet.
   return images.map((image) => ({ ...image, _key: image.id }));
 }
 
@@ -194,9 +214,17 @@ function withKeys(images) {
 // over the wire for Save Draft — `order` is recomputed from the row's
 // current position in this array (reordering's actual effect), not read
 // off the row itself, since move up/down only mutate local array order.
+//
+// Gallery Upload Sprint 2: a freshly-uploaded row has no `id` yet (only
+// `imageAssetId`, set by handleUploadImage below) — forward it so
+// galleryService.saveDraft's existing "no id, has imageAssetId" branch can
+// insert the new TalentGalleryImage row. Rows that already have an `id`
+// never need imageAssetId on the wire (the server already knows it from
+// the existing row), so this only adds the field for the new-row case.
 function toComparablePayload(images) {
   return images.map((image, index) => ({
     id: image.id,
+    ...(image.id ? {} : { imageAssetId: image.imageAssetId }),
     order: index,
     altHe: image.altHe ?? null,
     altEn: image.altEn ?? null,
@@ -236,6 +264,15 @@ export default function MediaGalleryEditor({
   const [saveDraftError, setSaveDraftError] = useState(null);
   const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
   const [submitError, setSubmitError] = useState(null);
+
+  // Gallery Upload Sprint 2 — local-only state for the AddImageCard upload
+  // trigger. Deliberately separate from saveDraftStatus/submitStatus: an
+  // upload is its own network call (POST /api/admin/assets/upload), not a
+  // Save Draft, and can fail or succeed independently of whether the grid
+  // has ever been saved.
+  const [uploadStatus, setUploadStatus] = useState("idle"); // idle | uploading | error
+  const [uploadError, setUploadError] = useState(null);
+  const uploading = uploadStatus === "uploading";
 
   const isDirty =
     JSON.stringify(toComparablePayload(proposedImages)) !== JSON.stringify(toComparablePayload(savedImages));
@@ -301,6 +338,63 @@ export default function MediaGalleryEditor({
       return next;
     });
     clearStatuses();
+  }
+
+  // Gallery Upload Sprint 2 — uploads one file via the existing
+  // /api/admin/assets/upload route, then appends the result straight into
+  // the in-memory proposed grid (no id yet, just imageAssetId — see
+  // toComparablePayload's header comment for how Save Draft turns this
+  // into a real row). Mirrors handleSaveDraft's fetch/error-handling shape
+  // below, but never touches saveDraftStatus/submitStatus — this is a
+  // separate network call with its own idle/uploading/error state.
+  async function handleUploadImage(file) {
+    if (!hasPersistence || uploading) return;
+
+    setUploadStatus("uploading");
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("purpose", "gallery");
+
+      const response = await fetch("/api/admin/assets/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const body = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(body.error || he.gallery.uploadGenericError);
+      }
+
+      const asset = body.asset;
+      setProposedImages((previous) => [
+        ...previous,
+        {
+          _key: `new-${asset.id}`,
+          imageAssetId: asset.id,
+          src: asset.blobUrl,
+          alt: he.gallery.newImageAlt,
+          altHe: null,
+          altEn: null,
+          position: null,
+          scale: null,
+          // Sensible defaults: append at the end of both the desktop and
+          // mobile order — toComparablePayload recomputes `order` from
+          // array position on save anyway, but mobileOrder has no such
+          // recompute, so it's seeded explicitly here.
+          order: previous.length,
+          mobileOrder: previous.length,
+        },
+      ]);
+      setUploadStatus("idle");
+      clearStatuses();
+    } catch (error) {
+      setUploadStatus("error");
+      setUploadError(error?.message || he.gallery.uploadGenericError);
+    }
   }
 
   async function handleSaveDraft() {
@@ -396,7 +490,14 @@ export default function MediaGalleryEditor({
           <EmptyState
             title={emptyProposedTitle}
             description={emptyProposedDescription}
-            action={<AddImageCard className={styles.emptyProposedAction} />}
+            action={
+              <AddImageCard
+                className={styles.emptyProposedAction}
+                onUpload={hasPersistence ? handleUploadImage : null}
+                uploading={uploading}
+                error={uploadStatus === "error" ? uploadError : null}
+              />
+            }
           />
         ) : (
           <div className={styles.proposedGrid}>
@@ -412,7 +513,11 @@ export default function MediaGalleryEditor({
                 onMoveDown={() => handleMove(index, 1)}
               />
             ))}
-            <AddImageCard />
+            <AddImageCard
+              onUpload={hasPersistence ? handleUploadImage : null}
+              uploading={uploading}
+              error={uploadStatus === "error" ? uploadError : null}
+            />
           </div>
         )}
       </section>
