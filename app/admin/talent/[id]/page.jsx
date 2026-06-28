@@ -336,38 +336,19 @@ function GallerySectionContent({ galleryImages, displayName }) {
  * (talentAdapter.getSocials, already filtered to versionStatus=PUBLISHED +
  * lifecycleStatus=ACTIVE by the repository).
  *
- * <SocialLinksEditor> renders exactly one row per platform (a single
- * string|null value) — that UI shape predates this sprint and isn't
- * changed here. The schema now allows multiple accounts per platform
- * (TalentSocial.label), so for each platform this picks the MAIN-labeled
- * account if one exists, else the first published one, same precedence
- * `talentRepository.listTalents` already uses for its roster "social
- * preview" column — chosen for consistency, not invented here. Any
- * additional accounts on the same platform (e.g. a second "Spam" Instagram)
- * are not lost from the database, just not displayed on this page without
- * a UI change, which is out of this sprint's scope (see summary).
- *
- * Only the platforms <SocialLinksEditor>'s default registry
- * (lib/admin/social-platforms.js) knows about — instagram/tiktok/youtube/
- * facebook/website — are mapped; a THREADS row (schema-only platform, no
- * UI slot yet) is likewise not displayed, same reasoning.
+ * Socials Tab Multi-Account UI sprint — `buildSocialLinks` (which used to
+ * collapse every platform's rows down to one MAIN-or-first pick, silently
+ * dropping any second account like a "Spam" Instagram) is removed.
+ * `getPublishedSocialsForTalent`'s own docstring already says rows are
+ * "intentionally not collapsed" at the query layer — only this page's old
+ * mapping was doing the collapsing. `socials` is now passed straight
+ * through to <SocialLinksEditor> as `publishedSocials`: one DB row in, one
+ * card out, for every published+active TalentSocial row, including any
+ * additional accounts that share a platform, and including THREADS rows
+ * now that the editor's platform registry has a slot for them.
  */
-function buildSocialLinks(socials) {
-  const platformKeys = { INSTAGRAM: 'instagram', TIKTOK: 'tiktok', YOUTUBE: 'youtube', FACEBOOK: 'facebook', WEBSITE: 'website' };
-  const links = { instagram: null, tiktok: null, youtube: null, facebook: null, website: null };
-
-  for (const [dbPlatform, key] of Object.entries(platformKeys)) {
-    const accountsForPlatform = (socials || []).filter((s) => s.platform === dbPlatform);
-    const chosen = accountsForPlatform.find((s) => s.label === 'MAIN') || accountsForPlatform[0] || null;
-    links[key] = chosen ? (chosen.url || chosen.handle || null) : null;
-  }
-
-  return links;
-}
-
 function SocialsSectionContent({ socials }) {
-  const publishedLinks = buildSocialLinks(socials);
-  return <SocialLinksEditor publishedLinks={publishedLinks} />;
+  return <SocialLinksEditor publishedSocials={socials || []} />;
 }
 
 /*

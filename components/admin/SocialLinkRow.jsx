@@ -1,86 +1,208 @@
 /*
- * SocialLinkRow — Social Links Editor Foundation sprint.
+ * SocialLinkRow → SocialAccountCard — Social Links Editor Foundation
+ * sprint, redesigned for multi-account support by the Socials Tab
+ * Multi-Account UI sprint, restyled by the Socials Tab Visual Polish
+ * sprint.
  *
- * A single platform row inside SocialLinksEditor: icon + platform name +
- * either a read-only value (published column) or a text input (proposed
- * column), plus a reserved "future status" slot. Mirrors GalleryImageCard's
- * role in MediaGalleryEditor — the one piece that knows how to render a
- * single entry — but stays a plain presentational component (no hooks, no
- * "use client") since unlike a gallery card it never owns any state itself;
- * SocialLinksEditor is the only thing that touches `proposedValues`.
+ * Visual Polish sprint — presentation only, same as ComparisonView's own
+ * "UX Polish" follow-up: no prop, state, or behavior changed here, only
+ * how one account renders. Was a self-contained bordered/shadowed "card"
+ * per account, with a select/badge floating to the right of the header and
+ * an absolutely-positioned "לא נשמר" pill — visually unlike every other
+ * admin tab. Is now a small field group that reuses ComparisonView's own
+ * grid language (a fixed-width label column + a value column, the same
+ * `.fieldRow`/`.fieldRowEditable` shape Details already uses) so a list of
+ * accounts reads like the rest of the CMS, not a one-off widget:
  *
- * Entity-agnostic on purpose, same reasoning as ComparisonView/
- * MediaGalleryEditor: this file knows nothing about "talent" specifically,
- * only a `platform` ({ key, label, icon }) and a value, so the same row
- * backs agency social links, contact info, footer links, or brand pages
- * later — only the `platforms` array passed in changes.
+ *   platform (group heading)
+ *     ↓
+ *   סוג חשבון (account type)
+ *     ↓
+ *   [תווית מותאמת — only when type is "אחר"]
+ *     ↓
+ *   שם משתמש (handle)
+ *     ↓
+ *   קישור (url)
+ *     ↓
+ *   תצוגה מקדימה (preview) — small, muted, never bold/colored
  *
- * Future Ready (explicitly NOT implemented this sprint, per scope):
- *   - URL validation / username validation
- *   - Link preview
- *   - Copy link / Open in new tab
- * The `.futureActionButton` below is a disabled, tooltipped placeholder for
- * "open link"/"copy link" — same honest-disabled-button pattern as
- * GalleryImageCard's "החלף" and AddImageCard, so it reads as "not built
- * yet," not as a broken click. Wiring it up is a later sprint's job and
- * shouldn't need any change to this component's shape.
+ * The previously-reserved "open link / copy link" placeholder buttons are
+ * removed: they were always `disabled` with a "coming soon" tooltip (pure
+ * visual noise, zero functionality), and removing an inert disabled button
+ * doesn't change what this component can do. If that affordance gets built
+ * for real in a future sprint, it has the same field-row to land in.
  *
- * Props:
- *   - platform ({ key, label, icon }) — from lib/admin/social-platforms.js
- *   - value (string|null)
+ * Handle/url/preview are Latin-script values rendered inside an RTL (Hebrew)
+ * page — without `dir="ltr"` a value like "@almavay" can visually reorder
+ * to "almavay@". Every place one of those three appears (read-only text,
+ * input, or preview line) is wrapped/marked `dir="ltr"` for that reason.
+ *
+ * Props (unchanged):
+ *   - account ({ platform, label, customLabel, handle, url })
  *   - readOnly (boolean, optional, default false)
- *   - onChange (function, optional) — (value: string) => void, ignored when
- *     readOnly
+ *   - onChange (function, optional) — (field, value) => void, ignored when
+ *     readOnly. field is one of "label" | "customLabel" | "handle" | "url".
+ *   - showNotSavedBadge (boolean, optional, default false) — still shown,
+ *     just as a small muted inline note next to the platform name now
+ *     instead of a colored pill stacked on top of the card.
  */
 
 import styles from "./SocialLinkRow.module.css";
 import { he } from "@/lib/admin/i18n/he";
+import { getPlatformEntry, SOCIAL_ACCOUNT_LABELS } from "@/lib/admin/social-platforms";
 
-export default function SocialLinkRow({ platform, value, readOnly = false, onChange = () => {} }) {
-  const { key, label, icon } = platform;
+/**
+ * Strips every leading "@" off a handle, e.g. "@@almavay" -> "almavay",
+ * "@almavay" -> "almavay", "almavay" -> "almavay". The one normalization
+ * primitive everything below builds on.
+ */
+function stripLeadingAt(handle) {
+  if (!handle) return handle;
+  return handle.replace(/^@+/, "");
+}
+
+/**
+ * Read-only / preview display form — always exactly one leading "@", no
+ * matter how the value happens to be stored ("almavay", "@almavay", or a
+ * defensively-handled "@@almavay" all become "@almavay"). Used by
+ * buildPreview below and by the Handle field's read-only (Published) text.
+ * Display-only: the stored handle itself is never modified.
+ */
+function normalizeHandleDisplay(handle) {
+  if (!handle) return handle;
+  return `@${stripLeadingAt(handle)}`;
+}
+
+function buildPreview(handle, url) {
+  if (handle) return normalizeHandleDisplay(handle);
+  if (url) {
+    try {
+      const parsed = new URL(url);
+      const path = parsed.pathname && parsed.pathname !== "/" ? parsed.pathname : "";
+      return `${parsed.hostname.replace(/^www\./, "")}${path}`;
+    } catch {
+      return url;
+    }
+  }
+  return null;
+}
+
+export default function SocialLinkRow({
+  account,
+  readOnly = false,
+  onChange = () => {},
+  showNotSavedBadge = false,
+}) {
+  const { platform, label, customLabel, handle, url } = account;
+  const platformEntry = getPlatformEntry(platform);
+  const platformLabel = platformEntry?.label || platform;
+  const platformIcon = platformEntry?.icon || "🔗";
+  const labelText = he.social.labels[label] || label;
+  const preview = buildPreview(handle, url);
+  const isOther = label === "OTHER";
+
+  const fieldRowClass = readOnly ? styles.fieldRow : styles.fieldRowEditable;
 
   return (
-    <div className={readOnly ? styles.row : styles.rowEditable}>
-      <div className={styles.platform}>
+    <div className={styles.accountGroup}>
+      <div className={styles.accountHeader}>
         <span className={styles.platformIcon} aria-hidden="true">
-          {icon}
+          {platformIcon}
         </span>
-        <span className={styles.platformLabel}>{label}</span>
+        <span className={styles.platformName}>{platformLabel}</span>
+        {showNotSavedBadge ? <span className={styles.notSavedHint}>{he.social.previewBadge}</span> : null}
       </div>
 
-      <div className={styles.valueArea}>
-        {readOnly ? (
-          <span className={value ? styles.readOnlyValue : styles.emptyValue}>
-            {value || he.social.notSet}
+      <div className={styles.fieldList}>
+        <div className={fieldRowClass}>
+          <span className={styles.fieldLabel}>{he.social.fields.label}</span>
+          {readOnly ? (
+            <span className={styles.readOnlyValue}>{labelText}</span>
+          ) : (
+            <select
+              className={styles.select}
+              value={label}
+              onChange={(event) => onChange("label", event.target.value)}
+              aria-label={he.social.fields.label}
+            >
+              {SOCIAL_ACCOUNT_LABELS.map((entry) => (
+                <option key={entry.value} value={entry.value}>
+                  {entry.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {isOther ? (
+          <div className={fieldRowClass}>
+            <span className={styles.fieldLabel}>{he.social.fields.customLabel}</span>
+            {readOnly ? (
+              <span className={customLabel ? styles.readOnlyValue : styles.emptyValue}>
+                {customLabel || he.social.notSet}
+              </span>
+            ) : (
+              <input
+                type="text"
+                className={styles.input}
+                value={customLabel ?? ""}
+                placeholder={he.social.fields.customLabelPlaceholder}
+                onChange={(event) => onChange("customLabel", event.target.value)}
+                aria-label={he.social.fields.customLabel}
+              />
+            )}
+          </div>
+        ) : null}
+
+        <div className={fieldRowClass}>
+          <span className={styles.fieldLabel}>{he.social.fields.handle}</span>
+          {readOnly ? (
+            <span dir="ltr" className={handle ? styles.readOnlyValueLtr : styles.emptyValue}>
+              {normalizeHandleDisplay(handle) || he.social.notSet}
+            </span>
+          ) : (
+            <input
+              type="text"
+              dir="ltr"
+              className={`${styles.input} ${styles.inputLtr}`}
+              value={stripLeadingAt(handle) ?? ""}
+              placeholder={he.social.fields.handlePlaceholder}
+              // Employees work with the username only here — any leading
+              // "@" typed or pasted (including doubled, "@@almavay") is
+              // stripped immediately, so the field never shows or stores
+              // (locally) a "@"-prefixed value. The Preview row below still
+              // renders it with exactly one "@" via normalizeHandleDisplay.
+              onChange={(event) => onChange("handle", stripLeadingAt(event.target.value))}
+              aria-label={he.social.fields.handle}
+            />
+          )}
+        </div>
+
+        <div className={fieldRowClass}>
+          <span className={styles.fieldLabel}>{he.social.fields.url}</span>
+          {readOnly ? (
+            <span dir="ltr" className={url ? styles.readOnlyValueLtr : styles.emptyValue}>
+              {url || he.social.notSet}
+            </span>
+          ) : (
+            <input
+              type="text"
+              dir="ltr"
+              className={`${styles.input} ${styles.inputLtr}`}
+              value={url ?? ""}
+              placeholder={he.social.fields.urlPlaceholder}
+              onChange={(event) => onChange("url", event.target.value)}
+              aria-label={he.social.fields.url}
+            />
+          )}
+        </div>
+
+        <div className={styles.previewRow}>
+          <span className={styles.fieldLabel}>{he.social.fields.preview}</span>
+          <span dir="ltr" className={preview ? styles.previewValue : styles.emptyValue}>
+            {preview || he.social.noPreview}
           </span>
-        ) : (
-          <input
-            id={`social-${key}`}
-            type="text"
-            className={styles.input}
-            value={value ?? ""}
-            placeholder={he.social.inputPlaceholder(label)}
-            onChange={(event) => onChange(event.target.value)}
-            aria-label={label}
-          />
-        )}
-      </div>
-
-      {/*
-       * Reserved "future status" slot (sprint's UX requirement). Always
-       * rendered so every row's height/alignment stays identical whether or
-       * not a future feature is wired — purely inert today, no aria role of
-       * its own beyond the disabled button it wraps.
-       */}
-      <div className={styles.futureActions}>
-        <button
-          type="button"
-          className={styles.futureActionButton}
-          disabled
-          title={he.social.comingSoon}
-        >
-          {readOnly ? he.social.actions.openLink : he.social.actions.copyLink}
-        </button>
+        </div>
       </div>
     </div>
   );

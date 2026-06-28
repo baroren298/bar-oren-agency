@@ -13,9 +13,8 @@
  *     be "two ratios at once" — 3 / 4 is the one used for the photo's most
  *     prominent placement, so that's what this preview targets. The old
  *     circular avatar didn't represent either ratio at all.
- *  2. Framing — its own titled section ("תמונת פרופיל") with a one-line
- *     explanation that this is the talent's primary published image,
- *     instead of an unlabelled thumbnail floating next to the name.
+ *  2. Framing — its own titled section ("תמונת פרופיל") instead of an
+ *     unlabelled thumbnail floating next to the name.
  *
  * Still read-only: this renders profileImagePosition/profileImageScale
  * with the exact same object-position / transform: scale technique the
@@ -52,7 +51,6 @@ export default function ProfileImagePanel({ imageUrl, profileImagePosition, prof
         <h2 id="profile-image-heading" className={styles.title}>
           {copy.sectionTitle}
         </h2>
-        <p className={styles.description}>{copy.sectionDescription}</p>
       </div>
 
       <div className={styles.body}>

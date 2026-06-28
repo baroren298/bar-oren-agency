@@ -85,9 +85,50 @@
   color: var(--admin-accent-strong);
 }
 
-.rowList {
+/*
+ * Account list — Socials Tab Visual Polish sprint. Each <SocialAccountCard>
+ * is no longer a bordered box (see SocialLinkRow.module.css), just a field
+ * group, so accounts need a divider between them instead of card-to-card
+ * gap; a top border on every account after the first does that job, the
+ * same way ComparisonView relies on borders rather than boxes.
+ */
+.accountList,
+.accountListEditable {
   display: flex;
   flex-direction: column;
+}
+
+.accountList > :global(div) + :global(div),
+.accountListEditable > :global(div) + :global(div) {
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+/*
+ * Honesty notice — same role as MediaGalleryEditor's <PreviewModeNotice>,
+ * restyled to match ComparisonView's `.conflictNotice`: a calm, borderless,
+ * tinted line rather than a bordered callout box, so it reads as a quiet
+ * footnote instead of competing with the account list above it.
+ */
+.previewNotice {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--admin-radius);
+  background: var(--admin-accent-subtle);
+}
+
+.previewNoticeTitle {
+  margin: 0 0 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--admin-text-secondary);
+}
+
+.previewNoticeBody {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--admin-text-muted);
 }
 
 @media (max-width: 640px) {

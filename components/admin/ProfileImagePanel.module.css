@@ -23,7 +23,6 @@
 .heading {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
 }
 
 .title {
@@ -31,12 +30,6 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--admin-text-primary);
-}
-
-.description {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--admin-text-secondary);
 }
 
 .body {
