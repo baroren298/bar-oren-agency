@@ -25,6 +25,14 @@
  * flags, so the same card can later back talent galleries, homepage
  * media, or any other CMS image collection.
  *
+ * Gallery UX Polish sprint — adds a small "לא נשמר" (not saved) badge over
+ * every card, and clarifying `title` tooltips on Move/Remove. Those two
+ * buttons genuinely mutate the in-memory proposed grid (see this file's
+ * header comment above and MediaGalleryEditor.jsx), so unlike Replace/Add
+ * they were never disabled — but with no visual cue, a working button on
+ * an otherwise read-only-looking thumbnail reads as "this is saved." The
+ * badge + tooltips are the fix; no behavior changes.
+ *
  * Props:
  *   - image ({ src, alt })
  *   - onRemove, onMoveUp, onMoveDown (function)
@@ -49,6 +57,7 @@ export default function GalleryImageCard({
     <div className={`${styles.tokens} ${styles.card}`}>
       <div className={styles.imageWrapper}>
         <Image src={image.src} alt={image.alt} fill sizes="240px" className={styles.image} />
+        <span className={styles.previewBadge}>{he.gallery.previewBadge}</span>
       </div>
 
       <div className={styles.actions}>
@@ -68,7 +77,7 @@ export default function GalleryImageCard({
             onClick={onMoveUp}
             disabled={isFirst}
             aria-label={he.gallery.actions.moveUp}
-            title={he.gallery.actions.moveUp}
+            title={he.gallery.moveHint}
           >
             ↑
           </button>
@@ -78,13 +87,13 @@ export default function GalleryImageCard({
             onClick={onMoveDown}
             disabled={isLast}
             aria-label={he.gallery.actions.moveDown}
-            title={he.gallery.actions.moveDown}
+            title={he.gallery.moveHint}
           >
             ↓
           </button>
         </div>
 
-        <SecondaryButton onClick={onRemove} className={styles.removeButton}>
+        <SecondaryButton onClick={onRemove} className={styles.removeButton} title={he.gallery.removeHint}>
           {he.gallery.actions.remove}
         </SecondaryButton>
       </div>

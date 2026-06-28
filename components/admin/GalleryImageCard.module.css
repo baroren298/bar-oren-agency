@@ -24,6 +24,26 @@
   object-fit: cover;
 }
 
+/*
+ * Gallery UX Polish sprint — small "לא נשמר" tag on every proposed card.
+ * Reorder/remove genuinely mutate this card's position/presence in the
+ * in-memory grid, so it needs its own reminder that none of that is
+ * persisted, distinct from the section-level PreviewModeNotice.
+ */
+.previewBadge {
+  position: absolute;
+  top: 0.4rem;
+  inset-inline-start: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  line-height: 1.4;
+}
+
 .actions {
   display: flex;
   align-items: center;

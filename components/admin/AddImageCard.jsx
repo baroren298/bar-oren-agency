@@ -12,14 +12,26 @@
  * Entity-agnostic: no props about what kind of gallery it's appended to,
  * so the same card works for talent galleries, homepage media, or any
  * other future CMS image collection.
+ *
+ * Props:
+ *   - className (string, optional) — Gallery UX Polish sprint addition, so
+ *     the empty-state caller (MediaGalleryEditor) can give this card a
+ *     sane fixed width when it isn't sitting inside the proposed grid's
+ *     own column tracks. Purely additive: omitted, this renders exactly
+ *     as before.
  */
 
 import styles from "./AddImageCard.module.css";
 import { he } from "@/lib/admin/i18n/he";
 
-export default function AddImageCard() {
+export default function AddImageCard({ className = "" }) {
   return (
-    <button type="button" className={`${styles.tokens} ${styles.card}`} disabled title={he.gallery.addImageComingSoon}>
+    <button
+      type="button"
+      className={`${styles.tokens} ${styles.card} ${className}`}
+      disabled
+      title={he.gallery.addImageComingSoon}
+    >
       <span className={styles.label}>{he.gallery.actions.addImage}</span>
     </button>
   );

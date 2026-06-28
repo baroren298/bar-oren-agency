@@ -1,32 +1,29 @@
 /*
- * EditorHelperNote — Profile Editor Foundation sprint.
+ * EditorHelperNote — Profile Editor Foundation sprint, retired by the
+ * "Remove Shared Helper Note" polish sprint.
  *
- * A small, calm note shown at the bottom of an editing workspace (today:
- * the talent פרטים editor via ComparisonView; meant to be reused unchanged
- * by Gallery/SEO/Social/Homepage editors later). It exists purely to make
- * three things obvious to an employee who has never used this screen
- * before, without any CMS/developer wording:
- *   - this is a *proposed* update, not the live site,
- *   - nothing publishes until the owner approves it,
- *   - they're allowed to save a draft and come back later — they don't
- *     have to finish everything in one sitting.
+ * Used to render a small, calm note above the action bar in every editor
+ * built on ComparisonView (Details, Podcast) plus SeoEditor and
+ * SocialLinksEditor: "this is a proposed update, nothing publishes until
+ * the owner approves it, you can save a draft and continue later."
  *
- * Plain presentational component (no hooks, no "use client") so it can be
- * dropped into a Server Component tree just as easily as a Client one.
- * Copy lives in lib/admin/i18n/he.js (he.editor.helperNote) rather than
- * being hardcoded here, same pattern as every other admin string.
+ * Removed per explicit instruction, everywhere it appeared, without a
+ * replacement message. Left as a no-op (rather than deleted, or removed
+ * from each of its ~3 call sites individually) so every existing
+ * `import EditorHelperNote from "./EditorHelperNote"` / `<EditorHelperNote />`
+ * in ComparisonView.jsx / SeoEditor.jsx / SocialLinksEditor.jsx keeps
+ * resolving and rendering exactly nothing — one edit, every consumer
+ * inherits it, zero risk of missing a call site. Rendering `null` means no
+ * DOM node is produced, so the flex-column `gap` those callers already use
+ * between their fields and <EditorActionBar> simply doesn't apply to a
+ * nonexistent child — no extra empty space is left behind, and no other
+ * spacing/layout change was needed.
+ *
+ * he.editor.helperNote (lib/admin/i18n/he.js) is intentionally left in
+ * place, unused — copy data, not logic; removing it isn't necessary to
+ * remove the message and risks nothing by staying.
  */
 
-import styles from "./EditorHelperNote.module.css";
-import { he } from "@/lib/admin/i18n/he";
-
 export default function EditorHelperNote() {
-  return (
-    <div className={`${styles.tokens} ${styles.note}`} role="note">
-      <span className={styles.icon} aria-hidden="true">
-        💡
-      </span>
-      <p className={styles.text}>{he.editor.helperNote.body}</p>
-    </div>
-  );
+  return null;
 }
