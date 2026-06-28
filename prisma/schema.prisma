@@ -436,6 +436,24 @@ model Asset {
   sizeBytes Int?
   kind      AssetKind       @default(IMAGE)
 
+  // Upload Sprint 1 (GALLERY_UPLOAD_SPRINT_1_ARCHITECTURE.md §3) — additive
+  // fields needed for the storage abstraction (lib/storage/) to function
+  // correctly once more than one provider exists. `provider` identifies
+  // which StorageProvider implementation can manage this row (which one to
+  // call for delete/getSignedUrl); `providerKey` is that provider's own
+  // identifier for the file (distinct from `blobUrl`, which is the URL a
+  // browser/<img> loads and may not be usable for management operations,
+  // e.g. a signed URL that expires or a private-bucket key). Defaulted to
+  // 'local' so every pre-existing row (the Migration Day import, which
+  // predates any real upload code) backfills correctly with no manual data
+  // migration, mirroring how `kind AssetKind @default(IMAGE)` was added.
+  // `originalFilename` is display/audit only — the actual stored object key
+  // is always randomly generated (lib/storage/utils/keyGen.js), never
+  // derived from this value.
+  provider         String  @default("local")
+  providerKey      String?
+  originalFilename String?
+
   uploadedById String
   uploadedBy   User     @relation("ImageAssetUploadedBy", fields: [uploadedById], references: [id])
   uploadedAt   DateTime @default(now())
