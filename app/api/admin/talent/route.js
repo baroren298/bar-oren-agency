@@ -1,14 +1,15 @@
 /*
- * POST /api/admin/talent — "Add New Talent" sprint.
+ * POST /api/admin/talent — "Add New Talent" flow, revised per product
+ * decision: creating a talent must NOT publish it directly.
  *
  * Creates a brand-new Talent (parent row) plus its first TalentVersion, in
- * response to an explicit POST from the new /admin/talent/new form. Per the
- * sprint's product decision ("Owner-created talent can be created directly
- * as the initial editable/published admin record" — only OWNER exists at
- * launch, Section 11), the first version is written straight as PUBLISHED;
- * see talentRepository.createTalentWithInitialVersion's header comment for
- * the full reasoning. Every subsequent edit to this talent still goes
- * through the unchanged Draft -> Proposed -> Approve -> Publish flow.
+ * response to an explicit POST from the new /admin/talent/new form. The
+ * first version is written as DRAFT — an initial, editable admin record
+ * only, with no public effect — see talentRepository.
+ * createTalentWithInitialVersion's header comment for the full reasoning.
+ * The admin/employee is redirected to the talent detail page to complete
+ * profile details, gallery, socials, and SEO; only after that does the
+ * normal Draft -> Proposed -> Approve -> Publish flow apply, unchanged.
  *
  * Pattern matches the existing proposals route (app/api/admin/talent/[id]/
  * proposals/route.js): an API Route, not a Server Action; requireUser()
@@ -21,21 +22,24 @@
  * service layer to add here.
  *
  * Validation:
- *   - name, slug, bioHe are required (he.talent.create copy explains why in
- *     the UI: these are the minimum fields needed for a usable profile).
+ *   - name (Hebrew name) and slug are required — the only two fields the
+ *     simplified create form collects that the talent record actually
+ *     needs to exist. nameEn (English name) is collected by the same form
+ *     but optional here, consistent with the rest of this schema (e.g.
+ *     TalentVersion.nameEn is a nullable column) — it can be filled in
+ *     immediately afterward on the talent detail page if left blank.
  *   - slug must be lowercase ASCII letters/digits/hyphens only, matching the
  *     public site's existing slug shape (data/talent/index.js).
  *   - slug uniqueness is checked twice: an early read (getParentBySlug, for
  *     a fast/friendly error) and the DB's own `@unique` constraint inside
  *     the repository's transaction (the authoritative check — closes the
  *     race between the early read and the write).
- *   - category, location, birthDate, bioEn are optional.
  *
- * Out of scope this sprint (see ADMIN_TALENT_DETAIL_AUDIT-adjacent product
- * decision): primary image upload (no upload pipeline exists yet —
- * imageAssetRepository.uploadImage is still an unimplemented stub) and any
- * Gallery/Socials/SEO data — those are added afterward via the talent's
- * normal edit workflow, not at creation time.
+ * Deliberately out of scope for this route, per the product decision —
+ * categories, birth date, location, and Hebrew/English bio are no longer
+ * collected at creation time at all (not just "optional"); they, along with
+ * gallery/socials/SEO and primary image upload (no upload pipeline exists
+ * yet), are completed afterward via the talent's normal edit workflow.
  */
 
 import { NextResponse } from 'next/server';
@@ -69,12 +73,7 @@ export async function POST(request) {
 
   const slug = typeof body.slug === 'string' ? body.slug.trim().toLowerCase() : '';
   const name = typeof body.name === 'string' ? body.name.trim() : '';
-  const bioHe = typeof body.bioHe === 'string' ? body.bioHe.trim() : '';
-  const location = typeof body.location === 'string' ? body.location.trim() : '';
-  const bioEn = typeof body.bioEn === 'string' ? body.bioEn.trim() : '';
-  const category = Array.isArray(body.category)
-    ? body.category.filter((c) => typeof c === 'string' && c.trim())
-    : [];
+  const nameEn = typeof body.nameEn === 'string' ? body.nameEn.trim() : '';
 
   const fieldErrors = {};
   if (!name) fieldErrors.name = he.talent.create.errors.nameRequired;
@@ -82,17 +81,6 @@ export async function POST(request) {
     fieldErrors.slug = he.talent.create.errors.slugRequired;
   } else if (!SLUG_PATTERN.test(slug)) {
     fieldErrors.slug = he.talent.create.errors.slugInvalid;
-  }
-  if (!bioHe) fieldErrors.bioHe = he.talent.create.errors.bioRequired;
-
-  let birthDate = null;
-  if (body.birthDate) {
-    const parsed = new Date(body.birthDate);
-    if (Number.isNaN(parsed.getTime())) {
-      fieldErrors.birthDate = he.talent.create.errors.birthDateInvalid;
-    } else {
-      birthDate = parsed;
-    }
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -115,11 +103,7 @@ export async function POST(request) {
 
   const fields = {
     name,
-    category,
-    location: location || null,
-    birthDate,
-    bioHe,
-    bioEn: bioEn || null,
+    nameEn: nameEn || null,
   };
 
   // Belt-and-suspenders: the manual checks above already cover everything
@@ -143,15 +127,15 @@ export async function POST(request) {
 
     // Audit trail: reuse the existing PROPOSAL_CREATED -> ACTION_TYPE.CREATED
     // mapping (auditLogListener.js) rather than adding a new EVENT_TYPE for
-    // a single-route action — "a version was created" is true here too, it
-    // just happens to already be PUBLISHED. See that listener's header
-    // comment for the parallel, already-documented VERSION_PUBLISHED gap.
+    // a single-route action — "a version was created" is true here, as a
+    // DRAFT (not published). See that listener's header comment for the
+    // parallel, already-documented VERSION_PUBLISHED gap.
     await eventService.emit(EVENT_TYPE.PROPOSAL_CREATED, {
       entityType: talentAdapter.entityType,
       entityId: talent.id,
       actorId: session.userId,
       payload: { versionId: version.id, fields: { ...fields, slug } },
-      metadata: { directPublish: true },
+      metadata: { initialStatus: 'DRAFT' },
     });
 
     return NextResponse.json({ talent, version }, { status: 201 });

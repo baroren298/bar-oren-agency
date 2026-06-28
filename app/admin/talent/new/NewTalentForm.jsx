@@ -1,27 +1,26 @@
 "use client";
 
 /*
- * NewTalentForm — "Add New Talent" sprint.
+ * NewTalentForm — Add New Talent flow, revised per product decision:
+ * creating a talent must NOT publish it directly, and this form is
+ * deliberately reduced to the three true initial fields a talent record
+ * needs to exist at all: Hebrew name, English name, and slug.
  *
  * Plain create form (not <ComparisonView> — there is nothing to compare
- * against yet, this is the talent's very first version). Owns all local
- * form state, client-side validation (a fast-feedback mirror of the
- * server's real validation in app/api/admin/talent/route.js — the server
- * is still the actual authority), the POST request, and Hebrew error
- * display.
+ * against yet, this is the talent's very first version, created as a
+ * DRAFT). Owns all local form state, client-side validation (a
+ * fast-feedback mirror of the server's real validation in
+ * app/api/admin/talent/route.js — the server is still the actual
+ * authority), the POST request, and Hebrew error display.
  *
- * Fields match prisma/schema.prisma's TalentVersion columns exactly,
- * limited to this sprint's "minimum required" scope (see he.talent.create
- * for the explicit, in-UI note on what's deliberately not supported yet:
- * a separate role/title, a short bio/excerpt, and a profile image — none
- * have a column/pipeline to write to today). English-language variants
- * (nameEn/locationEn/bioEn) are intentionally limited to bioEn here, kept
- * minimal per this sprint's "small and focused" scope — nameEn/locationEn
- * can be filled in afterward via the talent's normal Draft editing flow
- * (TalentDetailsEditor), which already supports every TalentVersion field.
+ * Category, location, birth date, and Hebrew/English bio are no longer
+ * collected here — they, along with gallery/socials/SEO, are filled in
+ * afterward on the talent's detail page (TalentDetailsEditor), which
+ * already supports every TalentVersion field. Only after that does the
+ * normal Draft -> Proposed -> Approve -> Publish workflow apply.
  *
  * On success: redirects to /admin/talent/[id] (the new talent's detail
- * page), per this sprint's required behavior.
+ * page), per the product decision.
  */
 
 import { useState } from "react";
@@ -29,11 +28,9 @@ import { useRouter } from "next/navigation";
 import PrimaryButton from "@/components/admin/PrimaryButton";
 import SecondaryButton from "@/components/admin/SecondaryButton";
 import { he } from "@/lib/admin/i18n/he";
-import { siteConfig } from "@/data/site";
 import styles from "./new-talent.module.css";
 
 const COPY = he.talent.create;
-const CATEGORY_OPTIONS = siteConfig.categories.filter((category) => category.key !== "all");
 
 // Mirrors the server's SLUG_PATTERN (app/api/admin/talent/route.js) — a
 // fast client-side check only; the server re-validates regardless.
@@ -41,12 +38,8 @@ const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 const EMPTY_FORM = {
   name: "",
+  nameEn: "",
   slug: "",
-  location: "",
-  birthDate: "",
-  category: [],
-  bioHe: "",
-  bioEn: "",
 };
 
 export default function NewTalentForm() {
@@ -67,15 +60,6 @@ export default function NewTalentForm() {
     });
   }
 
-  function toggleCategory(key) {
-    setForm((previous) => ({
-      ...previous,
-      category: previous.category.includes(key)
-        ? previous.category.filter((c) => c !== key)
-        : [...previous.category, key],
-    }));
-  }
-
   function validateClientSide() {
     const errors = {};
     if (!form.name.trim()) errors.name = COPY.errors.nameRequired;
@@ -86,8 +70,6 @@ export default function NewTalentForm() {
     } else if (!SLUG_PATTERN.test(slug)) {
       errors.slug = COPY.errors.slugInvalid;
     }
-
-    if (!form.bioHe.trim()) errors.bioHe = COPY.errors.bioRequired;
 
     return errors;
   }
@@ -111,12 +93,8 @@ export default function NewTalentForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name.trim(),
+          nameEn: form.nameEn.trim() || null,
           slug: form.slug.trim().toLowerCase(),
-          location: form.location.trim() || null,
-          birthDate: form.birthDate || null,
-          category: form.category,
-          bioHe: form.bioHe.trim(),
-          bioEn: form.bioEn.trim() || null,
         }),
       });
 
@@ -159,6 +137,19 @@ export default function NewTalentForm() {
         </label>
 
         <label className={styles.field}>
+          <span className={styles.fieldLabel}>{COPY.fields.nameEn}</span>
+          <input
+            type="text"
+            dir="ltr"
+            className={styles.input}
+            value={form.nameEn}
+            placeholder={COPY.fields.nameEnPlaceholder}
+            onChange={(event) => updateField("nameEn", event.target.value)}
+          />
+          {fieldErrors.nameEn ? <span className={styles.fieldError}>{fieldErrors.nameEn}</span> : null}
+        </label>
+
+        <label className={styles.field}>
           <span className={styles.fieldLabel}>{COPY.fields.slug}</span>
           <input
             type="text"
@@ -169,76 +160,14 @@ export default function NewTalentForm() {
             onChange={(event) => updateField("slug", event.target.value)}
           />
           <span className={styles.fieldHelper}>{COPY.fields.slugHelper}</span>
+          {form.slug.trim() ? (
+            <span className={styles.slugPreview} dir="ltr">
+              {COPY.fields.slugPreviewPrefix}
+              {form.slug.trim().toLowerCase()}
+            </span>
+          ) : null}
           {fieldErrors.slug ? <span className={styles.fieldError}>{fieldErrors.slug}</span> : null}
         </label>
-
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{COPY.fields.location}</span>
-          <input
-            type="text"
-            className={styles.input}
-            value={form.location}
-            placeholder={COPY.fields.locationPlaceholder}
-            onChange={(event) => updateField("location", event.target.value)}
-          />
-        </label>
-
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>{COPY.fields.birthDate}</span>
-          <input
-            type="date"
-            className={styles.input}
-            value={form.birthDate}
-            onChange={(event) => updateField("birthDate", event.target.value)}
-          />
-          {fieldErrors.birthDate ? (
-            <span className={styles.fieldError}>{fieldErrors.birthDate}</span>
-          ) : null}
-        </label>
-      </div>
-
-      <fieldset className={styles.field}>
-        <span className={styles.fieldLabel}>{COPY.fields.category}</span>
-        <div className={styles.categoryGrid}>
-          {CATEGORY_OPTIONS.map((category) => (
-            <label key={category.key} className={styles.categoryOption}>
-              <input
-                type="checkbox"
-                checked={form.category.includes(category.key)}
-                onChange={() => toggleCategory(category.key)}
-              />
-              {category.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>{COPY.fields.bioHe}</span>
-        <textarea
-          className={styles.textarea}
-          rows={5}
-          value={form.bioHe}
-          placeholder={COPY.fields.bioHePlaceholder}
-          onChange={(event) => updateField("bioHe", event.target.value)}
-        />
-        {fieldErrors.bioHe ? <span className={styles.fieldError}>{fieldErrors.bioHe}</span> : null}
-      </label>
-
-      <label className={styles.field}>
-        <span className={styles.fieldLabel}>{COPY.fields.bioEn}</span>
-        <textarea
-          dir="ltr"
-          className={styles.textarea}
-          rows={3}
-          value={form.bioEn}
-          onChange={(event) => updateField("bioEn", event.target.value)}
-        />
-      </label>
-
-      <div className={styles.unsupportedNote}>
-        <p className={styles.unsupportedTitle}>{COPY.unsupportedNote.title}</p>
-        <p className={styles.unsupportedDescription}>{COPY.unsupportedNote.description}</p>
       </div>
 
       <div className={styles.actions}>

@@ -1,16 +1,29 @@
 /*
- * NewTalentPage / NewTalentForm styles — "Add New Talent" sprint. Reuses
- * the shared admin design tokens (components/admin/admin-tokens.module.css)
- * via `composes`, same pattern as AddSocialAccountForm.module.css, so this
- * new page matches the rest of the admin panel (RTL, warm-light surface,
- * one accent color) without inventing a parallel palette.
+ * NewTalentPage / NewTalentForm styles — "Add New Talent" sprint, restyled
+ * by the "Add New Talent layout fix" pass. Reuses the shared admin design
+ * tokens (components/admin/admin-tokens.module.css) via `composes`, same
+ * pattern as AddSocialAccountForm.module.css, so this new page matches the
+ * rest of the admin panel (RTL, warm-light surface, one accent color)
+ * without inventing a parallel palette.
+ *
+ * Layout fix sprint — visual/layout only, no field/validation/submit
+ * change: the page wrapper now caps at a comfortable reading width
+ * (max-width: 640px) and centers itself inside AdminShell's wider
+ * `.content` column (960px), instead of stretching the form edge-to-edge.
+ * The two-column `.fieldGrid` is gone — every field now stacks in a single
+ * column (simpler, robust, never cramped), per this sprint's "prefer a
+ * simple one-column layout" decision. Labels were already above inputs;
+ * that's unchanged.
  */
 
 .tokens {
   composes: tokens from "../../../../components/admin/admin-tokens.module.css";
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.1rem;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .backLink {
@@ -27,8 +40,8 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
-  padding: 1.5rem;
+  gap: 1.4rem;
+  padding: 2rem;
   border-radius: var(--admin-radius-lg);
   background: var(--admin-surface);
   border: 1px solid var(--admin-border);
@@ -44,16 +57,22 @@
   font-weight: 600;
 }
 
+/*
+ * Single column now (was a 2-column grid) — every field stacks full-width,
+ * top to bottom, regardless of viewport. Kept as its own class (rather than
+ * folding into .form) so NewTalentForm.jsx's markup didn't need to change.
+ */
 .fieldGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
+  width: 100%;
   border: none;
   padding: 0;
   margin: 0;
@@ -76,6 +95,16 @@
   color: var(--admin-status-danger-text);
 }
 
+/*
+ * Add New Talent flow revision — small live "/talent/<slug>" preview
+ * under the slug field's helper text, per the product decision's
+ * "optional preview" requirement.
+ */
+.slugPreview {
+  font-size: 0.78rem;
+  color: var(--admin-text-secondary);
+}
+
 .input,
 .textarea {
   width: 100%;
@@ -96,53 +125,37 @@
   box-shadow: 0 0 0 3px var(--admin-accent-subtle);
 }
 
-.categoryGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 1.1rem;
-  margin-top: 0.3rem;
-}
-
-.categoryOption {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.88rem;
-  color: var(--admin-text-primary);
-}
-
-.unsupportedNote {
-  border-radius: var(--admin-radius);
-  background: var(--admin-accent-subtle);
-  padding: 0.85rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.unsupportedTitle {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--admin-accent-strong);
-}
-
-.unsupportedDescription {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--admin-text-secondary);
-}
-
 .actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 0.6rem;
-  padding-top: 0.4rem;
+  padding-top: 0.9rem;
   border-top: 1px solid var(--admin-border);
 }
 
+/*
+ * Mobile — the page wrapper and form padding relax to single-column/
+ * full-width so nothing overflows a narrow viewport; buttons stack
+ * full-width with the primary action (submit) on top, same visual
+ * priority order the desktop's flex-end already implies.
+ */
 @media (max-width: 640px) {
-  .fieldGrid {
-    grid-template-columns: 1fr;
+  .tokens {
+    max-width: 100%;
+  }
+
+  .form {
+    padding: 1.25rem;
+    gap: 1.1rem;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .actions > * {
+    width: 100%;
   }
 }
