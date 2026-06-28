@@ -23,32 +23,63 @@
 }
 
 /*
- * Gallery Upload Sprint 2 — the real upload trigger. Layout-compatible
- * with .card above (same aspect-ratio card sits in the same grid track);
- * only the interactive states differ now that this can actually be
- * clicked.
+ * Gallery UX Polish sprint — the modern click-or-drop zone. Same .card
+ * footprint as the disabled placeholder above (same aspect-ratio, same grid
+ * track), now laid out as a small stack (icon / "גרור תמונות לכאן" / "או" /
+ * "לחץ לבחירת קבצים") instead of one centered label, and interactive: a
+ * native HTML5 drag-and-drop target plus a click target for the hidden
+ * file input.
  */
-.uploadWrapper {
-  display: flex;
+.dropzone {
   flex-direction: column;
-  gap: 0.4rem;
-}
-
-.uploadCard {
+  gap: 0.3rem;
   cursor: pointer;
   opacity: 1;
   color: var(--admin-text-secondary);
-  transition: background-color 150ms ease, color 150ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
-.uploadCard:hover:not(:disabled) {
+.dropzone:hover,
+.dropzone:focus-visible {
+  background: var(--admin-surface);
+  border-color: var(--admin-accent-strong);
+  color: var(--admin-text-primary);
+}
+
+.dropzone:focus-visible {
+  outline: 2px solid var(--admin-accent-strong);
+  outline-offset: 2px;
+}
+
+/*
+ * Drag-over feedback — applied while a file is dragged over the zone (see
+ * AddImageCard.jsx's onDragEnter/onDragOver). Deliberately stronger than
+ * :hover (solid border + accent background) since this is the one moment
+ * the employee needs unambiguous "drop here" confirmation.
+ */
+.dropzoneActive {
+  border-style: solid;
+  border-color: var(--admin-accent-strong);
   background: var(--admin-surface);
   color: var(--admin-text-primary);
 }
 
-.uploadCard:disabled {
-  cursor: default;
-  opacity: 0.7;
+.dropzoneIcon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.dropzoneLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.dropzoneOr {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  pointer-events: none;
 }
 
 .hiddenInput {
@@ -61,10 +92,4 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.uploadError {
-  font-size: 0.75rem;
-  color: var(--admin-status-danger-text);
-  margin: 0;
 }

@@ -1,52 +1,52 @@
 /*
- * AddImageCard — Gallery Editor Foundation sprint, wired to a real upload
- * by Gallery Upload Sprint 2.
+ * AddImageCard — Gallery Editor Foundation sprint, wired to a real upload by
+ * Gallery Upload Sprint 2, rebuilt as a modern click-or-drop zone by the
+ * Gallery UX Polish sprint.
  *
- * Was (through Gallery Upload Sprint 1): UI groundwork only — no upload, no
- * file picker — rendered disabled with a "coming soon" tooltip, matching
- * EditorActionBar's existing disabled-button pattern.
+ * Was (through Gallery Upload Sprint 2): a single dashed-border button —
+ * click to open a single-file picker, "מעלה..."/error text swapped in via
+ * `uploading`/`error` props the caller owned.
  *
- * Is: when a caller supplies `onUpload`, this becomes the real "+ העלה
- * תמונה" affordance — a hidden file input behind a button, restricted to
- * the same image mime types the upload route/validation profile accept
- * (lib/storage/utils/validationProfiles.js's "gallery" profile: jpeg/png/
- * webp). Selecting a file calls `onUpload(file)`; the caller
- * (MediaGalleryEditor) owns the actual POST to
- * /api/admin/assets/upload and what happens with the result — this
- * component only renders the trigger and the uploading/error state handed
- * back to it via props, exactly like GalleryImageCard never owns the
- * network call for Save Draft.
+ * Is: a full click-or-drag-and-drop zone, multi-file from both paths
+ * (`<input multiple>` for the picker, `event.dataTransfer.files` for a
+ * drop), restricted to the same image mime types the upload route/
+ * validation profile accept (lib/storage/utils/validationProfiles.js's
+ * "gallery" profile: jpeg/png/webp) via the input's `accept` attribute —
+ * advisory only; the server is still the real gatekeeper for every file.
+ * `onSelectFiles(files: File[])` is called once with every file picked or
+ * dropped in a single interaction; the caller (MediaGalleryEditor) owns
+ * uploading each one, one request per file, against the unchanged
+ * /api/admin/assets/upload route, and renders its own per-file progress/
+ * error cards (UploadingImageCard) — this component never tracks upload
+ * state itself anymore, only selection.
  *
- * Per Gallery Upload Sprint 2's explicit scope: still no drag/drop, no
- * multi-file/bulk selection, no crop/replace UI — `onUpload` is omitted
- * entirely (preview mode / no talentId), so this renders exactly as before:
- * disabled, with the original "coming soon" tooltip.
+ * Per this sprint's explicit scope: no bulk-upload redesign of the backend,
+ * no crop/replace UI — `onSelectFiles` is omitted entirely (preview mode /
+ * no talentId), so this renders exactly as before: disabled, with the
+ * original "coming soon" tooltip.
  *
- * Entity-agnostic: no props about what kind of gallery it's appended to,
- * so the same card works for talent galleries, homepage media, or any
- * other future CMS image collection.
+ * Entity-agnostic: no props about what kind of gallery it's appended to, so
+ * the same card works for talent galleries, homepage media, or any other
+ * future CMS image collection.
  *
  * Props:
  *   - className (string, optional)
- *   - onUpload (function(file): void, optional) — when provided, the card
- *     becomes a real upload trigger; when omitted, behaves exactly as the
- *     original disabled placeholder.
- *   - uploading (boolean, optional, default false) — caller is mid-upload;
- *     disables the trigger and swaps in the "מעלה..." label.
- *   - error (string, optional) — caller's last upload error, rendered
- *     beneath the card so a failed upload is never silent.
+ *   - onSelectFiles (function(File[]): void, optional) — when provided, the
+ *     card becomes a real click-or-drop zone; when omitted, behaves exactly
+ *     as the original disabled placeholder.
  */
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import styles from "./AddImageCard.module.css";
 import { he } from "@/lib/admin/i18n/he";
 
 const ACCEPTED_MIME_TYPES = "image/jpeg,image/png,image/webp";
 
-export default function AddImageCard({ className = "", onUpload = null, uploading = false, error = null }) {
+export default function AddImageCard({ className = "", onSelectFiles = null }) {
   const fileInputRef = useRef(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
-  if (!onUpload) {
+  if (!onSelectFiles) {
     return (
       <button
         type="button"
@@ -59,45 +59,79 @@ export default function AddImageCard({ className = "", onUpload = null, uploadin
     );
   }
 
+  function openPicker() {
+    fileInputRef.current?.click();
+  }
+
   function handleFileChange(event) {
-    const file = event.target.files && event.target.files[0];
-    // Reset immediately so selecting the same file again still fires
-    // onChange (browsers otherwise treat re-picking an identical path as a
-    // no-op change event).
+    const files = event.target.files;
+    // Reset immediately so re-picking the same file(s) still fires onChange
+    // (browsers otherwise treat re-selecting an identical path as a no-op).
     event.target.value = "";
-    if (file) {
-      onUpload(file);
+    if (files && files.length > 0) {
+      onSelectFiles(Array.from(files));
+    }
+  }
+
+  function handleDragOver(event) {
+    // Required so the browser allows a drop here instead of opening/
+    // navigating to the dragged file.
+    event.preventDefault();
+    setIsDragOver(true);
+  }
+
+  function handleDragLeave(event) {
+    event.preventDefault();
+    setIsDragOver(false);
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    setIsDragOver(false);
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      onSelectFiles(Array.from(files));
+    }
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openPicker();
     }
   }
 
   return (
-    <div className={styles.uploadWrapper}>
-      <button
-        type="button"
-        className={`${styles.tokens} ${styles.card} ${styles.uploadCard} ${className}`}
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-        aria-busy={uploading}
-      >
-        <span className={styles.label}>
-          {uploading ? he.gallery.actions.uploading : he.gallery.actions.uploadImage}
-        </span>
-      </button>
+    <div
+      className={`${styles.tokens} ${styles.card} ${styles.dropzone} ${
+        isDragOver ? styles.dropzoneActive : ""
+      } ${className}`}
+      role="button"
+      tabIndex={0}
+      aria-label={he.gallery.actions.uploadImage}
+      onClick={openPicker}
+      onKeyDown={handleKeyDown}
+      onDragEnter={handleDragOver}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <span className={styles.dropzoneIcon} aria-hidden="true">
+        📷
+      </span>
+      <span className={styles.dropzoneLabel}>{he.gallery.actions.dropHint}</span>
+      <span className={styles.dropzoneOr}>{he.gallery.actions.or}</span>
+      <span className={styles.dropzoneLabel}>{he.gallery.actions.uploadImage}</span>
       <input
         ref={fileInputRef}
         type="file"
         accept={ACCEPTED_MIME_TYPES}
+        multiple
         className={styles.hiddenInput}
         onChange={handleFileChange}
-        disabled={uploading}
         tabIndex={-1}
         aria-hidden="true"
       />
-      {error ? (
-        <p className={styles.uploadError} role="alert">
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }

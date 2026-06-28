@@ -2,36 +2,7 @@
  * GalleryImageCard — Gallery Editor Foundation sprint.
  *
  * A single image card inside the "Proposed Update" half of a gallery
- * editor (MediaGalleryEditor.jsx). Prepares the visual language for three
- * future actions — Replace / Remove / Reorder — without implementing the
- * real work behind any of them yet, per this sprint's explicit scope (no
- * upload, no Cloudinary, no file picker, no persistence):
- *
- *   - "הסר" (Remove) really does call `onRemove` — removing a card from
- *     the in-memory proposed array is a local-state operation, not
- *     persistence, the same reasoning ComparisonView already applies to
- *     "ביטול שינויים" (see that file's header comment).
- *   - "הזז למעלה" / "הזז למטה" (Reorder) also really call
- *     `onMoveUp`/`onMoveDown` — swapping two entries in the local array.
- *     No drag-and-drop library, just simple, accessible buttons; disabled
- *     at the start/end of the list rather than hidden, so the grid's
- *     shape never jumps around as the employee reorders.
- *   - "החלף" (Replace) is left disabled with a tooltip — it would need a
- *     real file picker / upload pipeline, which is explicitly out of
- *     scope this sprint. Disabled + tooltip (not a silent no-op) matches
- *     EditorActionBar's existing "coming soon" pattern.
- *
- * Entity-agnostic: takes only an `image` ({ src, alt }) and position
- * flags, so the same card can later back talent galleries, homepage
- * media, or any other CMS image collection.
- *
- * Gallery UX Polish sprint — adds a small "לא נשמר" (not saved) badge over
- * every card, and clarifying `title` tooltips on Move/Remove. Those two
- * buttons genuinely mutate the in-memory proposed grid (see this file's
- * header comment above and MediaGalleryEditor.jsx), so unlike Replace/Add
- * they were never disabled — but with no visual cue, a working button on
- * an otherwise read-only-looking thumbnail reads as "this is saved." The
- * badge + tooltips are the fix; no behavior changes.
+ * editor (MediaGalleryEditor.jsx).
  *
  * Gallery Sprint 1 — adds real metadata-editing inputs (altHe, altEn,
  * position, scale, mobileOrder) via a new `onChange(field, value)` prop,
@@ -40,35 +11,83 @@
  * MediaGalleryEditor's Save Draft / Submit) — Replace/Add/Upload remain
  * untouched and disabled, exactly as before.
  *
+ * Gallery Upload Sprint 2 fix-up — the five metadata inputs below are now
+ * collapsed behind a "ערוך פרטים נוספים" disclosure, closed by default, so
+ * a proposed card reads as a compact thumbnail + action row again (this is
+ * purely a default-collapsed `useState`, not a removal — every field is
+ * still rendered, still wired to the same `onChange`, and still part of
+ * the Save Draft payload the moment it's edited; collapsing it only hides
+ * the DOM nodes, it never clears a value). No props changed.
+ *
+ * Gallery UX Polish sprint — the "הזז למעלה"/"הזז למטה" buttons are gone.
+ * Reordering is now drag-and-drop via @dnd-kit/sortable's `useSortable`
+ * (replacing an earlier framer-motion `Reorder.Item` attempt, which wasn't
+ * grid-aware — dnd-kit's `rectSortingStrategy`, wired up in
+ * MediaGalleryEditor.jsx's `<DndContext>`/`<SortableContext>`, is built
+ * specifically for multi-column grid reordering). The card's visual
+ * position in the grid IS the order; no order number is ever shown to the
+ * employee, and the `isFirst`/`isLast`/`onMoveUp`/`onMoveDown` props are
+ * gone along with the buttons (MediaGalleryEditor derives the persisted
+ * `order` from the sorted array's position, exactly as it derived it from
+ * array position before — see toComparablePayload, unchanged).
+ *
+ * Drag is started only from the small "⠿" handle — `attributes` and
+ * `listeners` from `useSortable` are spread onto that button only, not the
+ * card root (dnd-kit's documented "drag handle" pattern), so clicking
+ * Remove, the details toggle, or any metadata input never accidentally
+ * starts a drag.
+ *
+ * Note: unlike the framer-motion attempt, dnd-kit's `attributes` makes the
+ * handle keyboard-operable out of the box (focus it, Space to pick up,
+ * arrow keys to move, Space to drop) once MediaGalleryEditor's
+ * `<DndContext>` registers a KeyboardSensor — see that file. This closes
+ * the keyboard-accessibility gap the previous attempt left open.
+ *
  * Props:
  *   - image ({ src, alt, altHe, altEn, position, scale, mobileOrder })
  *   - onChange(field, value) — called for each metadata field edit
- *   - onRemove, onMoveUp, onMoveDown (function)
- *   - isFirst, isLast (boolean) — disable the relevant move button at the
- *     edges of the list
+ *   - onRemove (function)
  */
 
+import { useState } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import styles from "./GalleryImageCard.module.css";
 import SecondaryButton from "./SecondaryButton";
 import { he } from "@/lib/admin/i18n/he";
 
-export default function GalleryImageCard({
-  image,
-  onChange = () => {},
-  onRemove = () => {},
-  onMoveUp = () => {},
-  onMoveDown = () => {},
-  isFirst = false,
-  isLast = false,
-}) {
+export default function GalleryImageCard({ image, onChange = () => {}, onRemove = () => {} }) {
   const fields = he.gallery.fields;
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: image._key,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
-    <div className={`${styles.tokens} ${styles.card}`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.tokens} ${styles.card} ${isDragging ? styles.dragging : ""}`}
+    >
       <div className={styles.imageWrapper}>
         <Image src={image.src} alt={image.alt} fill sizes="240px" className={styles.image} />
         <span className={styles.previewBadge}>{he.gallery.previewBadge}</span>
+        <button
+          type="button"
+          className={styles.dragHandle}
+          aria-label={he.gallery.dragReorderHint}
+          title={he.gallery.dragReorderHint}
+          {...attributes}
+          {...listeners}
+        >
+          ⠿
+        </button>
       </div>
 
       <div className={styles.actions}>
@@ -81,98 +100,86 @@ export default function GalleryImageCard({
           {he.gallery.actions.replace}
         </button>
 
-        <div className={styles.reorderActions}>
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={onMoveUp}
-            disabled={isFirst}
-            aria-label={he.gallery.actions.moveUp}
-            title={he.gallery.moveHint}
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={onMoveDown}
-            disabled={isLast}
-            aria-label={he.gallery.actions.moveDown}
-            title={he.gallery.moveHint}
-          >
-            ↓
-          </button>
-        </div>
-
         <SecondaryButton onClick={onRemove} className={styles.removeButton} title={he.gallery.removeHint}>
           {he.gallery.actions.remove}
         </SecondaryButton>
       </div>
 
-      <div className={styles.metaFields}>
-        <label className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{fields.altHe}</span>
-          <input
-            type="text"
-            className={styles.fieldInput}
-            value={image.altHe ?? ""}
-            placeholder={fields.altHePlaceholder}
-            onChange={(event) => onChange("altHe", event.target.value)}
-          />
-        </label>
+      <button
+        type="button"
+        className={styles.detailsToggle}
+        onClick={() => setDetailsOpen((previous) => !previous)}
+        aria-expanded={detailsOpen}
+      >
+        {detailsOpen ? he.gallery.fields.detailsToggleHide : he.gallery.fields.detailsToggleShow}
+      </button>
 
-        <label className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{fields.altEn}</span>
-          <input
-            type="text"
-            className={styles.fieldInput}
-            value={image.altEn ?? ""}
-            placeholder={fields.altEnPlaceholder}
-            onChange={(event) => onChange("altEn", event.target.value)}
-          />
-        </label>
+      {detailsOpen ? (
+        <div className={styles.metaFields}>
+          <label className={styles.fieldRow}>
+            <span className={styles.fieldLabel}>{fields.altHe}</span>
+            <input
+              type="text"
+              className={styles.fieldInput}
+              value={image.altHe ?? ""}
+              placeholder={fields.altHePlaceholder}
+              onChange={(event) => onChange("altHe", event.target.value)}
+            />
+          </label>
 
-        <label className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{fields.position}</span>
-          <input
-            type="text"
-            className={styles.fieldInput}
-            value={image.position ?? ""}
-            placeholder={fields.positionPlaceholder}
-            title={fields.positionHelper}
-            onChange={(event) => onChange("position", event.target.value)}
-          />
-        </label>
+          <label className={styles.fieldRow}>
+            <span className={styles.fieldLabel}>{fields.altEn}</span>
+            <input
+              type="text"
+              className={styles.fieldInput}
+              value={image.altEn ?? ""}
+              placeholder={fields.altEnPlaceholder}
+              onChange={(event) => onChange("altEn", event.target.value)}
+            />
+          </label>
 
-        <label className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{fields.scale}</span>
-          <input
-            type="number"
-            step="0.05"
-            min="0"
-            className={styles.fieldInput}
-            value={image.scale ?? ""}
-            title={fields.scaleHelper}
-            onChange={(event) =>
-              onChange("scale", event.target.value === "" ? null : Number(event.target.value))
-            }
-          />
-        </label>
+          <label className={styles.fieldRow}>
+            <span className={styles.fieldLabel}>{fields.position}</span>
+            <input
+              type="text"
+              className={styles.fieldInput}
+              value={image.position ?? ""}
+              placeholder={fields.positionPlaceholder}
+              title={fields.positionHelper}
+              onChange={(event) => onChange("position", event.target.value)}
+            />
+          </label>
 
-        <label className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{fields.mobileOrder}</span>
-          <input
-            type="number"
-            step="1"
-            className={styles.fieldInput}
-            value={image.mobileOrder ?? ""}
-            title={fields.mobileOrderHelper}
-            onChange={(event) =>
-              onChange("mobileOrder", event.target.value === "" ? null : Number(event.target.value))
-            }
-          />
-        </label>
-      </div>
+          <label className={styles.fieldRow}>
+            <span className={styles.fieldLabel}>{fields.scale}</span>
+            <input
+              type="number"
+              step="0.05"
+              min="0"
+              className={styles.fieldInput}
+              value={image.scale ?? ""}
+              title={fields.scaleHelper}
+              onChange={(event) =>
+                onChange("scale", event.target.value === "" ? null : Number(event.target.value))
+              }
+            />
+          </label>
+
+          <label className={styles.fieldRow}>
+            <span className={styles.fieldLabel}>{fields.mobileOrder}</span>
+            <input
+              type="number"
+              step="1"
+              className={styles.fieldInput}
+              value={image.mobileOrder ?? ""}
+              title={fields.mobileOrderHelper}
+              onChange={(event) =>
+                onChange("mobileOrder", event.target.value === "" ? null : Number(event.target.value))
+              }
+            />
+          </label>
+        </div>
+      ) : null}
     </div>
   );
 }

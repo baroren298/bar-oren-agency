@@ -25,6 +25,49 @@
 }
 
 /*
+ * Gallery UX Polish sprint — drag handle for @dnd-kit/sortable's
+ * useSortable (see GalleryImageCard.jsx). `attributes`/`listeners` are
+ * spread only onto this button, never the card root, so dragging never
+ * fights with clicking Remove, the details toggle, or a metadata input.
+ * Replaces the old "הזז למעלה"/"הזז למטה" buttons (.reorderActions/
+ * .iconButton, removed below).
+ */
+.dragHandle {
+  position: absolute;
+  top: 0.4rem;
+  inset-inline-end: 0.4rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--admin-text-secondary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/*
+ * Applied to the card currently being dragged (useSortable's isDragging) —
+ * a quiet visual cue (reduced opacity, raised above siblings) distinct from
+ * dnd-kit's own transform/transition (handled inline in GalleryImageCard.jsx
+ * via CSS.Transform), which animates the *other* cards shifting out of the
+ * way.
+ */
+.dragging {
+  opacity: 0.6;
+  z-index: 10;
+}
+
+/*
  * Gallery UX Polish sprint — small "לא נשמר" tag on every proposed card.
  * Reorder/remove genuinely mutate this card's position/presence in the
  * in-memory grid, so it needs its own reminder that none of that is
@@ -64,40 +107,35 @@
   opacity: 0.7;
 }
 
-.reorderActions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.iconButton {
-  width: 1.7rem;
-  height: 1.7rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  line-height: 1;
-  color: var(--admin-text-secondary);
-  background: transparent;
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius);
-  cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease;
-}
-
-.iconButton:hover:not(:disabled) {
-  background: var(--admin-accent-subtle);
-  color: var(--admin-text-primary);
-}
-
-.iconButton:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
 .removeButton {
   font-size: 0.78rem;
   padding: 0.3rem 0.6rem;
+}
+
+/*
+ * Gallery Upload Sprint 2 fix-up — disclosure trigger for .metaFields
+ * below, closed by default so the card stays a compact thumbnail + action
+ * row until an editor actually wants to touch alt text/crop/scale/mobile
+ * order. Plain text-button styling, deliberately quieter than
+ * .actionButton (this isn't a third peer action alongside Replace/Remove,
+ * it's a "show more" toggle for the row underneath it).
+ */
+.detailsToggle {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.detailsToggle:hover {
+  color: var(--admin-text-primary);
 }
 
 /*

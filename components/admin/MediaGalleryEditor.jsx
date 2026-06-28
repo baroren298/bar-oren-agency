@@ -42,6 +42,32 @@
  * disabled/no-talentId fallback are unchanged — still no replace, no
  * drag/drop, no bulk upload, no media library, no crop UI.
  *
+ * UPDATED — Gallery UX Polish sprint: "Add Image" now accepts several files
+ * at once (click-multi-select or drag-and-drop onto AddImageCard's new
+ * modern drop zone), each uploaded sequentially via the same unchanged
+ * /api/admin/assets/upload call handleUploadImage used to make, one POST
+ * per file. `uploadQueue` replaces the old single uploadStatus/uploadError
+ * pair with one entry per in-flight file (rendered as UploadingImageCard
+ * placeholders in the grid) so a failed file shows its own inline error and
+ * dismiss button without blocking or hiding any other file's upload or any
+ * already-completed image. Reordering is now drag-and-drop instead of
+ * Up/Down buttons; `handleMove` is gone, replaced by `handleDragEnd` below.
+ * `toComparablePayload` is unchanged — it still derives `order` from each
+ * row's position in `proposedImages`, which is now set by dragging instead
+ * of by button clicks.
+ *
+ * UPDATED again — same sprint: the first reorder pass used framer-motion's
+ * `<Reorder.Group>` (framer-motion was already a project dependency), but
+ * its single-axis swap logic isn't grid-aware and felt imprecise across a
+ * 4-column wrapping grid. Replaced with @dnd-kit/core + @dnd-kit/sortable +
+ * @dnd-kit/utilities (newly installed for this purpose), which ship a
+ * `rectSortingStrategy` built specifically for multi-column grid reordering.
+ * `<DndContext>` + `<SortableContext>` wrap the grid below; `handleDragEnd`
+ * uses `arrayMove` on `active.id`/`over.id` (both `_key`s) to produce the
+ * new order. AddImageCard/UploadingImageCard render as plain siblings
+ * inside the same grid — they are not part of `SortableContext`'s `items`,
+ * so they're never drag targets, only the real image cards are.
+ *
  * Per Gallery Sprint 1's explicit scope:
  *   - Existing images only. There is still no Add Image / Replace Image /
  *     Upload — AddImageCard and GalleryImageCard's "החלף" button stay
@@ -82,10 +108,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates, arrayMove } from "@dnd-kit/sortable";
 import styles from "./MediaGalleryEditor.module.css";
 import PublishedMediaGrid from "./PublishedMediaGrid";
 import GalleryImageCard from "./GalleryImageCard";
 import AddImageCard from "./AddImageCard";
+import UploadingImageCard from "./UploadingImageCard";
 import EmptyState from "./EmptyState";
 import EditorActionBar from "./EditorActionBar";
 import PrimaryButton from "./PrimaryButton";
@@ -265,14 +294,26 @@ export default function MediaGalleryEditor({
   const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
   const [submitError, setSubmitError] = useState(null);
 
-  // Gallery Upload Sprint 2 — local-only state for the AddImageCard upload
-  // trigger. Deliberately separate from saveDraftStatus/submitStatus: an
-  // upload is its own network call (POST /api/admin/assets/upload), not a
-  // Save Draft, and can fail or succeed independently of whether the grid
-  // has ever been saved.
-  const [uploadStatus, setUploadStatus] = useState("idle"); // idle | uploading | error
-  const [uploadError, setUploadError] = useState(null);
-  const uploading = uploadStatus === "uploading";
+  // Gallery UX Polish sprint — one entry per in-flight upload, replacing
+  // Gallery Upload Sprint 2's single uploadStatus/uploadError pair now that
+  // several files can upload at once. Deliberately separate from
+  // saveDraftStatus/submitStatus: an upload is its own network call (POST
+  // /api/admin/assets/upload per file), not a Save Draft, and can fail or
+  // succeed independently of whether the grid has ever been saved or of any
+  // other file in the same batch.
+  // Shape: { clientId, fileName, file, status: "uploading" | "error", error }
+  const [uploadQueue, setUploadQueue] = useState([]);
+
+  // Gallery UX Polish sprint — PointerSensor handles mouse/touch drag from
+  // the card's handle (a small `distance` threshold avoids hijacking a
+  // plain click on the handle as an accidental drag); KeyboardSensor makes
+  // the same handle operable with Space/arrow keys/Space, since dnd-kit's
+  // `attributes` (spread onto the handle in GalleryImageCard.jsx) wire up
+  // the necessary aria/tabIndex automatically.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const isDirty =
     JSON.stringify(toComparablePayload(proposedImages)) !== JSON.stringify(toComparablePayload(savedImages));
@@ -329,33 +370,62 @@ export default function MediaGalleryEditor({
     clearStatuses();
   }
 
-  function handleMove(index, direction) {
+  // Gallery UX Polish sprint — dnd-kit's <DndContext> fires this once a
+  // drag ends with a valid drop target. `active`/`over` carry the dragged/
+  // target item's sortable `id`, which is each image's `_key` (see
+  // <SortableContext>'s `items` in the render below) — arrayMove produces
+  // the new order, exactly equivalent to the old index-swap handleMove,
+  // since toComparablePayload still derives `order` from array position
+  // either way.
+  function handleDragEnd(event) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
     setProposedImages((previous) => {
-      const target = index + direction;
-      if (target < 0 || target >= previous.length) return previous;
-      const next = [...previous];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
+      const oldIndex = previous.findIndex((image) => image._key === active.id);
+      const newIndex = previous.findIndex((image) => image._key === over.id);
+      if (oldIndex === -1 || newIndex === -1) return previous;
+      return arrayMove(previous, oldIndex, newIndex);
     });
     clearStatuses();
   }
 
-  // Gallery Upload Sprint 2 — uploads one file via the existing
-  // /api/admin/assets/upload route, then appends the result straight into
-  // the in-memory proposed grid (no id yet, just imageAssetId — see
+  // Gallery UX Polish sprint — uploads every selected/dropped file
+  // sequentially via the existing /api/admin/assets/upload route (one POST
+  // per file, same FormData shape Gallery Upload Sprint 2 introduced), so
+  // no backend change is needed to support multiple files. Sequential
+  // (rather than parallel) keeps each new row's `order`/`mobileOrder`
+  // default (current proposed-list length) race-free, and means a failure
+  // partway through never aborts the files still queued behind it.
+  async function handleSelectFiles(files) {
+    if (!hasPersistence || !files || files.length === 0) return;
+
+    const queueItems = files.map((file) => ({
+      clientId: `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      fileName: file.name,
+      file,
+      status: "uploading",
+      error: null,
+    }));
+
+    setUploadQueue((previous) => [...previous, ...queueItems]);
+    clearStatuses();
+
+    for (const item of queueItems) {
+      await uploadQueueItem(item);
+    }
+  }
+
+  // One file's upload. On success, appends the result straight into the
+  // in-memory proposed grid (no id yet, just imageAssetId — see
   // toComparablePayload's header comment for how Save Draft turns this
-  // into a real row). Mirrors handleSaveDraft's fetch/error-handling shape
-  // below, but never touches saveDraftStatus/submitStatus — this is a
-  // separate network call with its own idle/uploading/error state.
-  async function handleUploadImage(file) {
-    if (!hasPersistence || uploading) return;
-
-    setUploadStatus("uploading");
-    setUploadError(null);
-
+  // into a real row) and removes this file from the queue. On failure,
+  // flips just this file's queue entry to "error" — every other file in
+  // the same batch keeps uploading/succeeding independently.
+  async function uploadQueueItem(item) {
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", item.file);
       formData.append("purpose", "gallery");
 
       const response = await fetch("/api/admin/assets/upload", {
@@ -389,12 +459,23 @@ export default function MediaGalleryEditor({
           mobileOrder: previous.length,
         },
       ]);
-      setUploadStatus("idle");
-      clearStatuses();
+      setUploadQueue((previous) => previous.filter((queued) => queued.clientId !== item.clientId));
     } catch (error) {
-      setUploadStatus("error");
-      setUploadError(error?.message || he.gallery.uploadGenericError);
+      setUploadQueue((previous) =>
+        previous.map((queued) =>
+          queued.clientId === item.clientId
+            ? { ...queued, status: "error", error: error?.message || he.gallery.uploadGenericError }
+            : queued
+        )
+      );
     }
+  }
+
+  // Removes one failed upload's placeholder card. Never touches any other
+  // queued file or any already-completed image — see UploadingImageCard's
+  // header comment.
+  function dismissUploadItem(clientId) {
+    setUploadQueue((previous) => previous.filter((item) => item.clientId !== clientId));
   }
 
   async function handleSaveDraft() {
@@ -486,39 +567,45 @@ export default function MediaGalleryEditor({
         </header>
         <p className={styles.proposedSubtitle}>{he.gallery.proposedSubtitle}</p>
 
-        {proposedImages.length === 0 ? (
+        {proposedImages.length === 0 && uploadQueue.length === 0 ? (
           <EmptyState
             title={emptyProposedTitle}
             description={emptyProposedDescription}
             action={
               <AddImageCard
                 className={styles.emptyProposedAction}
-                onUpload={hasPersistence ? handleUploadImage : null}
-                uploading={uploading}
-                error={uploadStatus === "error" ? uploadError : null}
+                onSelectFiles={hasPersistence ? handleSelectFiles : null}
               />
             }
           />
         ) : (
-          <div className={styles.proposedGrid}>
-            {proposedImages.map((image, index) => (
-              <GalleryImageCard
-                key={image._key}
-                image={image}
-                isFirst={index === 0}
-                isLast={index === proposedImages.length - 1}
-                onChange={(field, value) => handleFieldChange(image._key, field, value)}
-                onRemove={() => handleRemove(index)}
-                onMoveUp={() => handleMove(index, -1)}
-                onMoveDown={() => handleMove(index, 1)}
-              />
-            ))}
-            <AddImageCard
-              onUpload={hasPersistence ? handleUploadImage : null}
-              uploading={uploading}
-              error={uploadStatus === "error" ? uploadError : null}
-            />
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={proposedImages.map((image) => image._key)}
+              strategy={rectSortingStrategy}
+            >
+              <div className={styles.proposedGrid}>
+                {proposedImages.map((image, index) => (
+                  <GalleryImageCard
+                    key={image._key}
+                    image={image}
+                    onChange={(field, value) => handleFieldChange(image._key, field, value)}
+                    onRemove={() => handleRemove(index)}
+                  />
+                ))}
+                {uploadQueue.map((item) => (
+                  <UploadingImageCard
+                    key={item.clientId}
+                    fileName={item.fileName}
+                    status={item.status}
+                    error={item.error}
+                    onDismiss={() => dismissUploadItem(item.clientId)}
+                  />
+                ))}
+                <AddImageCard onSelectFiles={hasPersistence ? handleSelectFiles : null} />
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </section>
 
