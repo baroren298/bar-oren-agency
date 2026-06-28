@@ -1,0 +1,148 @@
+/*
+ * NewTalentPage / NewTalentForm styles — "Add New Talent" sprint. Reuses
+ * the shared admin design tokens (components/admin/admin-tokens.module.css)
+ * via `composes`, same pattern as AddSocialAccountForm.module.css, so this
+ * new page matches the rest of the admin panel (RTL, warm-light surface,
+ * one accent color) without inventing a parallel palette.
+ */
+
+.tokens {
+  composes: tokens from "../../../../components/admin/admin-tokens.module.css";
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.backLink {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.5rem;
+  border-radius: var(--admin-radius-lg);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+}
+
+.formError {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--admin-radius);
+  background: var(--admin-status-danger-bg);
+  color: var(--admin-status-danger-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fieldLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.fieldHelper {
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+}
+
+.fieldError {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--admin-status-danger-text);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.55rem 0.7rem;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.categoryGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.1rem;
+  margin-top: 0.3rem;
+}
+
+.categoryOption {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  color: var(--admin-text-primary);
+}
+
+.unsupportedNote {
+  border-radius: var(--admin-radius);
+  background: var(--admin-accent-subtle);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.unsupportedTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--admin-accent-strong);
+}
+
+.unsupportedDescription {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--admin-text-secondary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+@media (max-width: 640px) {
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+}

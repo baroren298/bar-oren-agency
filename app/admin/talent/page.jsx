@@ -28,6 +28,7 @@ import { isDatabaseConfigured } from '@/lib/admin/db';
 import AdminShell from '../AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
+import PrimaryButton from '@/components/admin/PrimaryButton';
 import TalentListClient from './TalentListClient';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent.module.css';
@@ -55,7 +56,10 @@ export default async function AdminTalentListPage() {
 
   return (
     <AdminShell>
-      <PageHeader title={he.talent.list.title} />
+      <PageHeader
+        title={he.talent.list.title}
+        action={<PrimaryButton href="/admin/talent/new">{he.talent.list.addNew}</PrimaryButton>}
+      />
 
       {talents.length === 0 ? (
         <EmptyState title={he.talent.list.emptyTitle} description={he.talent.list.emptyDescription} />
