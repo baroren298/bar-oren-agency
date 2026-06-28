@@ -295,6 +295,28 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
   const saveDraftLabel = isProposed ? he.editor.actions.updateProposal : he.editor.actions.saveDraft;
   const savedStatusMessage = isProposed ? he.editor.saveDraft.savedProposal : undefined;
 
+  // Admin Talent Editor UX polish sprint — accurate, situation-specific
+  // tooltips for *why* Save Draft / Submit are disabled, replacing the old
+  // blanket "this will connect in a future sprint" tooltip that used to
+  // show here even though both buttons are real and working on this
+  // component (Details/Podcast tabs). `onSaveDraft`/`onSubmit` being absent
+  // means the caller (TalentDetailsEditor) found no editable DRAFT/PROPOSED
+  // version to act on at all — that's the one case genuinely worth telling
+  // the employee "go start editing first" rather than "saving failed" or
+  // nothing at all.
+  const saveDraftDisabledReason = !onSaveDraft
+    ? he.editor.saveDraft.disabledNoVersion
+    : !isDirty
+      ? he.editor.saveDraft.disabledNoChanges
+      : undefined;
+  const submitDisabledReason = isProposed
+    ? he.editor.submit.disabledProposedLocked
+    : !onSubmit
+      ? he.editor.submit.disabledNoVersion
+      : isDirty
+        ? he.editor.submit.unsavedHint
+        : undefined;
+
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
     // Any further edit after a "saved"/"error" status is shown should clear
@@ -470,11 +492,13 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
         onCancel={handleCancel}
         onSaveDraft={handleSaveDraft}
         saveDraftDisabled={saveDraftDisabled}
+        saveDraftDisabledReason={saveDraftDisabledReason}
         saveDraftLabel={saveDraftLabel}
         saveDraftStatus={saveStatus}
         saveDraftStatusMessage={saveStatus === "error" ? saveError : saveStatus === "saved" ? savedStatusMessage : undefined}
         onSubmit={handleSubmit}
         submitDisabled={submitDisabled}
+        submitDisabledReason={submitDisabledReason}
         submitStatus={submitStatus}
         submitStatusMessage={
           submitStatus === "error"

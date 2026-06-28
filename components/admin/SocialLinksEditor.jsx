@@ -184,7 +184,7 @@ export default function SocialLinksEditor({
       </div>
 
       <PreviewModeNotice />
-      <EditorActionBar onCancel={handleCancel} />
+      <EditorActionBar onCancel={handleCancel} showSaveDraft={false} showSubmit={false} />
     </div>
   );
 }

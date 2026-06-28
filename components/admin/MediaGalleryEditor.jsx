@@ -159,7 +159,7 @@ export default function MediaGalleryEditor({
       </section>
 
       <PreviewModeNotice />
-      <EditorActionBar onCancel={handleReset} />
+      <EditorActionBar onCancel={handleReset} showSaveDraft={false} showSubmit={false} />
     </div>
   );
 }

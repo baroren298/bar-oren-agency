@@ -137,3 +137,35 @@
 .tabPanel {
   min-height: 8rem;
 }
+
+/*
+ * Admin Talent Editor UX polish sprint — surfaces the Owner's rejection note
+ * right above the workspace tabs, next to the editor it actually concerns,
+ * instead of leaving it buried in the History tab's timeline. Uses the same
+ * "danger" tone StatusBadge already shows for the "נדרשו תיקונים" status
+ * (see lib/admin/mock-workflow.js's STATUS_TONE), so the banner reads as the
+ * same signal, not a new one.
+ */
+.rejectionNotice {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--admin-radius);
+  background: var(--admin-status-danger-bg);
+}
+
+.rejectionNoticeTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--admin-status-danger-text);
+}
+
+.rejectionNoticeBody {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--admin-status-danger-text);
+}

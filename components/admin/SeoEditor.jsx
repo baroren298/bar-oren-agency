@@ -46,10 +46,24 @@ import { useState } from "react";
 import styles from "./SeoEditor.module.css";
 import SeoFieldRow from "./SeoFieldRow";
 import SearchResultPreview from "./SearchResultPreview";
-import EditorHelperNote from "./EditorHelperNote";
 import EditorActionBar from "./EditorActionBar";
 import { he } from "@/lib/admin/i18n/he";
 import { SEO_FIELD_GROUPS } from "@/lib/admin/seo-fields";
+
+/*
+ * SEO-specific stand-in for the retired shared <EditorHelperNote>, same
+ * pattern as MediaGalleryEditor's/SocialLinksEditor's own PreviewModeNotice:
+ * states plainly that this tab is preview-only and nothing here is saved or
+ * published, instead of the old no-op note that said nothing at all.
+ */
+function PreviewModeNotice() {
+  return (
+    <div className={styles.previewNotice} role="note">
+      <p className={styles.previewNoticeTitle}>{he.seo.previewModeNotice.title}</p>
+      <p className={styles.previewNoticeBody}>{he.seo.previewModeNotice.body}</p>
+    </div>
+  );
+}
 
 function buildInitialValues(groups, publishedSeo) {
   return groups.reduce((acc, group) => {
@@ -139,8 +153,8 @@ export default function SeoEditor({ publishedSeo = {}, groups = SEO_FIELD_GROUPS
         </section>
       </div>
 
-      <EditorHelperNote />
-      <EditorActionBar onCancel={handleCancel} />
+      <PreviewModeNotice />
+      <EditorActionBar onCancel={handleCancel} showSaveDraft={false} showSubmit={false} />
     </div>
   );
 }

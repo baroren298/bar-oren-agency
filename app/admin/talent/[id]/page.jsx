@@ -80,6 +80,7 @@ import {
   workflowStatusTone,
   buildVersionHistoryTimelineItems,
   calculateAge,
+  deriveCurrentRejectionNote,
 } from '@/lib/admin/talent-workspace';
 import { he } from '@/lib/admin/i18n/he';
 import { VERSION_STATUS } from '@/lib/admin/constants/enums';
@@ -543,6 +544,7 @@ export default async function AdminTalentDetailPage({ params }) {
   const status = deriveDetailWorkflowStatus(versions);
   const lastUpdated = deriveLastUpdated(versions, talent);
   const displayName = publishedVersion?.name || talent.slug;
+  const rejectionNote = deriveCurrentRejectionNote(versions);
 
   const sections = TALENT_WORKSPACE_SECTIONS.map((section) => {
     if (section.key === 'details') {
@@ -619,6 +621,13 @@ export default async function AdminTalentDetailPage({ params }) {
           profileImageScale={publishedVersion.profileImageScale}
           displayName={displayName}
         />
+      ) : null}
+
+      {rejectionNote ? (
+        <div className={styles.rejectionNotice} role="note">
+          <p className={styles.rejectionNoticeTitle}>{he.talent.detail.rejectionNote}</p>
+          <p className={styles.rejectionNoticeBody}>{rejectionNote}</p>
+        </div>
       ) : null}
 
       <TalentWorkspaceTabs sections={sections} />

@@ -20,12 +20,40 @@
  *     real draft-saving / approval-submission exists — no layout or prop
  *     changes needed here.
  *
+ * Admin Talent Editor UX polish sprint:
+ *   - `showSaveDraft`/`showSubmit` (default true) let a caller that has no
+ *     save/submit mechanism at all (today: Gallery, Socials, SEO — none of
+ *     them have a real persistence path yet) hide these two buttons
+ *     entirely instead of rendering them disabled-forever. A disabled
+ *     button that's visually identical to a working one (compare to
+ *     Details/Podcast, where these same buttons *do* work) reads as broken,
+ *     not "not built yet" — hiding it is the honest option. Cancel is
+ *     unaffected: it's real (resets local state) on every editor that has
+ *     one.
+ *   - `saveDraftDisabledReason`/`submitDisabledReason` (string, optional)
+ *     replace the old blanket `he.editor.comingSoon` ("this will connect in
+ *     a future sprint") tooltip, which used to show on Details/Podcast too
+ *     even though Save Draft/Submit are real and working there — the
+ *     tooltip was simply wrong most of the time it appeared. The caller
+ *     (ComparisonView) now supplies the actual reason a button is disabled
+ *     (no editable draft yet / nothing changed yet / proposal awaiting
+ *     owner review) via these two props; this component just forwards
+ *     whatever it's given as the `title`, with no opinion of its own about
+ *     why a button might be disabled.
+ *
  * Props:
  *   - onCancel (function, optional)
  *   - onSaveDraft (function, optional) — inert while saveDraftDisabled
  *   - onSubmit (function, optional) — inert while submitDisabled
  *   - saveDraftDisabled (boolean, optional, default true)
  *   - submitDisabled (boolean, optional, default true)
+ *   - showSaveDraft (boolean, optional, default true) — set false to omit
+ *     the button entirely rather than render it permanently disabled
+ *   - showSubmit (boolean, optional, default true) — same, for Submit
+ *   - saveDraftDisabledReason (string, optional) — tooltip shown while the
+ *     Save Draft button is disabled; omitted entirely when not supplied
+ *     (no tooltip), rather than falling back to a generic message
+ *   - submitDisabledReason (string, optional) — same, for Submit
  *   - saveDraftStatus ("idle" | "saving" | "saved" | "error", optional,
  *     default "idle") — Save Draft sprint addition. Purely a label slot
  *     next to the button; this component still makes no decision about
@@ -72,6 +100,10 @@ export default function EditorActionBar({
   onSubmit = () => {},
   saveDraftDisabled = true,
   submitDisabled = true,
+  showSaveDraft = true,
+  showSubmit = true,
+  saveDraftDisabledReason,
+  submitDisabledReason,
   saveDraftStatus = "idle",
   saveDraftStatusMessage,
   saveDraftLabel = he.editor.actions.saveDraft,
@@ -87,32 +119,44 @@ export default function EditorActionBar({
       <SecondaryButton onClick={onCancel}>{he.editor.actions.cancel}</SecondaryButton>
 
       <div className={styles.primaryActions}>
-        {statusText ? (
-          <span
-            className={saveDraftStatus === "error" ? styles.statusError : styles.statusText}
-            role={saveDraftStatus === "error" ? "alert" : "status"}
-          >
-            {statusText}
-          </span>
+        {showSaveDraft ? (
+          <>
+            {statusText ? (
+              <span
+                className={saveDraftStatus === "error" ? styles.statusError : styles.statusText}
+                role={saveDraftStatus === "error" ? "alert" : "status"}
+              >
+                {statusText}
+              </span>
+            ) : null}
+            <SecondaryButton
+              onClick={onSaveDraft}
+              disabled={saveDraftDisabled}
+              title={saveDraftDisabled ? saveDraftDisabledReason : undefined}
+            >
+              {saveDraftLabel}
+            </SecondaryButton>
+          </>
         ) : null}
-        <SecondaryButton
-          onClick={onSaveDraft}
-          disabled={saveDraftDisabled}
-          title={saveDraftDisabled ? he.editor.comingSoon : undefined}
-        >
-          {saveDraftLabel}
-        </SecondaryButton>
-        {submitText ? (
-          <span
-            className={submitStatus === "error" ? styles.statusError : styles.statusText}
-            role={submitStatus === "error" ? "alert" : "status"}
-          >
-            {submitText}
-          </span>
+        {showSubmit ? (
+          <>
+            {submitText ? (
+              <span
+                className={submitStatus === "error" ? styles.statusError : styles.statusText}
+                role={submitStatus === "error" ? "alert" : "status"}
+              >
+                {submitText}
+              </span>
+            ) : null}
+            <PrimaryButton
+              onClick={onSubmit}
+              disabled={submitDisabled}
+              title={submitDisabled ? submitDisabledReason : undefined}
+            >
+              {he.editor.actions.submit}
+            </PrimaryButton>
+          </>
         ) : null}
-        <PrimaryButton onClick={onSubmit} disabled={submitDisabled}>
-          {he.editor.actions.submit}
-        </PrimaryButton>
       </div>
     </div>
   );
