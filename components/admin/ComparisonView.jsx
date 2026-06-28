@@ -153,6 +153,14 @@ function formatReadOnlyValue(field) {
     return value ? formatHebrewDate(value) : "—";
   }
 
+  // Talent Detail Foundation sprint — "number" type (sortOrder/
+  // featuredOrder): a plain nullable integer, displayed as-is or "—" when
+  // unset, same fallback convention every other optional field here
+  // already uses.
+  if (type === "number") {
+    return value === null || value === undefined || value === "" ? "—" : String(value);
+  }
+
   // "computed" fields (currently just age, derived from birthDate) are
   // never stored/editable — the caller passes the already-computed value
   // and this just falls through to the plain display below.
@@ -229,6 +237,23 @@ function ProposedField({ field, value, onChange }) {
         className={styles.input}
         value={isoValue}
         onChange={(event) => onChange(event.target.value || null)}
+        aria-label={label}
+      />
+    );
+  }
+
+  // Talent Detail Foundation sprint — "number" type (sortOrder/
+  // featuredOrder). Plain native number input; empty string maps to `null`
+  // on change, same nullable-clearing convention the "date" field above
+  // already uses, rather than coercing an emptied field to 0.
+  if (type === "number") {
+    return (
+      <input
+        id={`proposed-${key}`}
+        type="number"
+        className={styles.input}
+        value={value === null || value === undefined ? "" : value}
+        onChange={(event) => onChange(event.target.value === "" ? null : Number(event.target.value))}
         aria-label={label}
       />
     );

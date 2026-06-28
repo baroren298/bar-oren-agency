@@ -143,6 +143,30 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           value: Boolean(publishedVersion.featured),
           draftValue: pendingVersion ? Boolean(pending.featured) : undefined,
         },
+        // Talent Detail Foundation sprint — sortOrder/featuredOrder are
+        // real, already-writable TalentVersion columns (both already in
+        // talentRepository.updateTalentVersionFields's WRITABLE_COLUMNS
+        // allowlist) that previously had no edit control anywhere in the
+        // admin. Exposed here as plain "number" fields (ComparisonView's
+        // new type, sibling to "date"/"boolean") right next to `featured`,
+        // since both describe how this talent is ordered/surfaced rather
+        // than its actual profile content — no new group needed for two
+        // fields. Labels are deliberately non-technical (see he.js) — the
+        // column names never appear in the UI.
+        {
+          key: 'sortOrder',
+          label: he.talent.fields.sortOrder,
+          type: 'number',
+          value: publishedVersion.sortOrder,
+          draftValue: pendingVersion ? pending.sortOrder : undefined,
+        },
+        {
+          key: 'featuredOrder',
+          label: he.talent.fields.featuredOrder,
+          type: 'number',
+          value: publishedVersion.featuredOrder,
+          draftValue: pendingVersion ? pending.featuredOrder : undefined,
+        },
       ],
     },
     {
