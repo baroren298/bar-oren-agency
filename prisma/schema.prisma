@@ -32,12 +32,16 @@ datasource db {
 // string values; keep the two in sync if either changes).
 // ─────────────────────────────────────────────────────────────────────────
 
-/// Admin user role. Owner-only at launch (v1.2 decision) — EDITOR exists in
-/// the enum now so adding an editor later is a data change, not a schema
-/// migration. See ADMIN_PANEL_PLAN.md Section 11.
+/// Admin user role — OWNER/EMPLOYEE Permission Model Sprint. OWNER (Bar Oren)
+/// can edit, draft, submit, approve, reject, and publish; EMPLOYEE can edit,
+/// draft, and submit only — never approve/reject/publish, never bypass the
+/// approval flow. EMPLOYEE replaces the former placeholder value EDITOR
+/// (renamed via prisma/migrations/20260629120000_rename_editor_role_to_employee
+/// — additive/safe, no data migration needed since no EDITOR rows existed).
+/// See ADMIN_PANEL_PLAN.md Section 11.
 enum Role {
   OWNER
-  EDITOR
+  EMPLOYEE
 }
 
 /// Approval lifecycle for a single version/snapshot row (TalentVersion,

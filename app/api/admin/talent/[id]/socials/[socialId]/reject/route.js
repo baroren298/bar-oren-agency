@@ -67,6 +67,7 @@ export async function POST(request, { params }) {
       parentId: id,
       socialId,
       actorId: session.userId,
+      actorRole: session.role,
       rejectionNote,
     });
 

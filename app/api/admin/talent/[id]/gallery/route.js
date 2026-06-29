@@ -29,7 +29,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/admin/auth/authorize';
+import { requireOwnerOrEmployee } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { galleryService, GalleryValidationError } from '@/lib/admin/engine/galleryService';
 import { he } from '@/lib/admin/i18n/he';
@@ -37,7 +37,7 @@ import { he } from '@/lib/admin/i18n/he';
 export async function PATCH(request, { params }) {
   let session;
   try {
-    session = await requireUser(request);
+    session = await requireOwnerOrEmployee(request);
   } catch (error) {
     return NextResponse.json(
       { error: he.gallery.errors.notAuthenticated },

@@ -54,6 +54,7 @@ export async function POST(request, { params }) {
       parentId: id,
       socialId,
       actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ account }, { status: 200 });

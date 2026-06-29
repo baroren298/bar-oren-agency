@@ -45,6 +45,7 @@ export async function POST(request, { params }) {
       parentId: id,
       imageId,
       actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ image }, { status: 200 });
