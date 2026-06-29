@@ -82,14 +82,11 @@ import {
   deriveDetailWorkflowStatus,
   deriveLastUpdated,
   formatHebrewDate,
-  workflowStatusLabel,
-  workflowStatusTone,
   buildVersionHistoryTimelineItems,
   calculateAge,
   deriveCurrentRejectionNote,
   deriveCurrentVisibility,
-  talentVisibilityLabel,
-  talentVisibilityTone,
+  selectDetailBadge,
 } from '@/lib/admin/talent-workspace';
 import { he } from '@/lib/admin/i18n/he';
 import { VERSION_STATUS, TALENT_VISIBILITY } from '@/lib/admin/constants/enums';
@@ -802,11 +799,21 @@ export default async function AdminTalentDetailPage({ params }) {
     pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
   const profileImageEditableVersionId = isProfileImageEditablePending ? pendingVersion.id : null;
 
-  // Talent Visibility sprint (admin UI) — single source of truth for both
-  // the header's visibility chip and its Hide/Restore action button (see
-  // deriveCurrentVisibility's own header comment for the "pending wins over
-  // published" rule).
+  // Talent Visibility sprint (admin UI) — single source of truth for the
+  // header's Hide/Restore action button (see deriveCurrentVisibility's own
+  // header comment for the "pending wins over published" rule). Also feeds
+  // the single header badge below.
   const currentVisibility = deriveCurrentVisibility(publishedVersion, pendingVersion);
+
+  // Talent Detail single-badge sprint — one header chip instead of the
+  // previous workflow + visibility pair, via the same shared decision the
+  // Talent List card uses (lib/admin/talent-workspace.js's
+  // selectStatusBadge, through this detail-specific wrapper). Status/
+  // visibility derivation themselves are unchanged; this only picks which
+  // already-computed one wins. The Details tab's Current/Proposed
+  // visibility comparison row is untouched — it renders independently in
+  // ComparisonView, not from this badge.
+  const headerBadge = selectDetailBadge(status, currentVisibility);
 
   return (
     <AdminShell>
@@ -819,20 +826,14 @@ export default async function AdminTalentDetailPage({ params }) {
         description={`${he.talent.meta.lastUpdated}: ${formatHebrewDate(lastUpdated)}`}
         action={
           <div className={styles.headerActions}>
-            <StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />
             {/*
-              Talent Visibility sprint (admin UI) — requirement #1: a second
-              status chip, always visible, beside the lifecycle chip (e.g.
-              "Published · Visible", "Draft · Hidden"). Reflects
-              deriveCurrentVisibility's same "pending draft wins over
-              published" rule the Hide/Restore action button below uses, so
-              the two never disagree about what state this talent is
-              currently in/heading toward.
+              Talent Detail single-badge sprint — replaces the previous two
+              chips here (workflow status, then a separate visibility chip)
+              with one badge, for consistency with the Talent List card.
+              Hidden replaces Published rather than joining it; see
+              selectDetailBadge's header comment.
             */}
-            <StatusBadge
-              label={talentVisibilityLabel(currentVisibility)}
-              tone={talentVisibilityTone(currentVisibility)}
-            />
+            <StatusBadge label={headerBadge.label} tone={headerBadge.tone} />
             {/*
               Start Editing sprint — explicit user action only, never a side
               effect of this (pure-read) page load. `pendingVersion` here is
