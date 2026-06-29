@@ -66,6 +66,7 @@ import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import StartEditingButton from '@/components/admin/StartEditingButton';
 import CancelEditingButton from '@/components/admin/CancelEditingButton';
+import TalentVisibilityAction from '@/components/admin/TalentVisibilityAction';
 import ProfileImagePanel from '@/components/admin/ProfileImagePanel';
 import PodcastTab from '@/components/admin/PodcastTab';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
@@ -86,9 +87,12 @@ import {
   buildVersionHistoryTimelineItems,
   calculateAge,
   deriveCurrentRejectionNote,
+  deriveCurrentVisibility,
+  talentVisibilityLabel,
+  talentVisibilityTone,
 } from '@/lib/admin/talent-workspace';
 import { he } from '@/lib/admin/i18n/he';
-import { VERSION_STATUS } from '@/lib/admin/constants/enums';
+import { VERSION_STATUS, TALENT_VISIBILITY } from '@/lib/admin/constants/enums';
 import styles from './talent-detail.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -169,6 +173,23 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           type: 'number',
           value: publishedVersion.featuredOrder,
           draftValue: pendingVersion ? pending.featuredOrder : undefined,
+        },
+        // Talent Visibility sprint (admin UI) — requirement #4: visibility
+        // appears as another comparison row, using the same
+        // Published-vs-Proposed layout/diff styling every other field here
+        // already has. Read-only in both columns (ComparisonView's new
+        // "visibility" type) — the real mutation path is the header's
+        // Hide/Restore action (TalentVisibilityAction), which PATCHes this
+        // same draft's `visibility` field directly; this row exists purely
+        // so the change is visible here too, not to provide a second way to
+        // make it. Falls back to TALENT_VISIBILITY.VISIBLE for a published
+        // version predating this field (schema default).
+        {
+          key: 'visibility',
+          label: he.talent.fields.visibility,
+          type: 'visibility',
+          value: publishedVersion.visibility || TALENT_VISIBILITY.VISIBLE,
+          draftValue: pendingVersion ? pending.visibility || TALENT_VISIBILITY.VISIBLE : undefined,
         },
       ],
     },
@@ -781,6 +802,12 @@ export default async function AdminTalentDetailPage({ params }) {
     pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
   const profileImageEditableVersionId = isProfileImageEditablePending ? pendingVersion.id : null;
 
+  // Talent Visibility sprint (admin UI) — single source of truth for both
+  // the header's visibility chip and its Hide/Restore action button (see
+  // deriveCurrentVisibility's own header comment for the "pending wins over
+  // published" rule).
+  const currentVisibility = deriveCurrentVisibility(publishedVersion, pendingVersion);
+
   return (
     <AdminShell>
       <a href="/admin/talent" className={styles.backLink}>
@@ -793,6 +820,19 @@ export default async function AdminTalentDetailPage({ params }) {
         action={
           <div className={styles.headerActions}>
             <StatusBadge label={workflowStatusLabel(status)} tone={workflowStatusTone(status)} />
+            {/*
+              Talent Visibility sprint (admin UI) — requirement #1: a second
+              status chip, always visible, beside the lifecycle chip (e.g.
+              "Published · Visible", "Draft · Hidden"). Reflects
+              deriveCurrentVisibility's same "pending draft wins over
+              published" rule the Hide/Restore action button below uses, so
+              the two never disagree about what state this talent is
+              currently in/heading toward.
+            */}
+            <StatusBadge
+              label={talentVisibilityLabel(currentVisibility)}
+              tone={talentVisibilityTone(currentVisibility)}
+            />
             {/*
               Start Editing sprint — explicit user action only, never a side
               effect of this (pure-read) page load. `pendingVersion` here is
@@ -811,6 +851,24 @@ export default async function AdminTalentDetailPage({ params }) {
             */}
             {pendingVersion?.status === VERSION_STATUS.DRAFT ? (
               <CancelEditingButton talentId={talent.id} versionId={pendingVersion.id} />
+            ) : null}
+            {/*
+              Talent Visibility sprint (admin UI) — requirement #2: the real
+              Hide-from-Public-Site / Restore-Visibility action. Only
+              rendered once a Published version exists (same guard
+              <ProfileImagePanel> below already uses) — there is nothing
+              meaningful to hide/restore for a talent that has never been
+              published and has no draft either. Never publishes by itself;
+              see TalentVisibilityAction.jsx for exactly what it does.
+            */}
+            {publishedVersion ? (
+              <TalentVisibilityAction
+                talentId={talent.id}
+                role={role}
+                currentVisibility={currentVisibility}
+                pendingVersionId={pendingVersion?.id ?? null}
+                pendingVersionStatus={pendingVersion?.status ?? null}
+              />
             ) : null}
           </div>
         }

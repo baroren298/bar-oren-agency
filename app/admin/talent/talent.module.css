@@ -222,6 +222,16 @@
   top: 0.6rem;
   inset-inline-start: 0.6rem;
   z-index: 1;
+  /*
+   * Talent Visibility sprint (admin UI) — was a single-child wrapper; now
+   * may hold a second badgeWrap pill (the muted "מוסתר" badge) beside the
+   * existing workflow-status one. flex+gap stacks them in a tidy column
+   * instead of letting two inline-flex spans crowd onto one line.
+   */
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
 }
 
 .rowBody {

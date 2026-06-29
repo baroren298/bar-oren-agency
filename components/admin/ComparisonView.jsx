@@ -165,6 +165,15 @@ function formatReadOnlyValue(field) {
   // never stored/editable — the caller passes the already-computed value
   // and this just falls through to the plain display below.
 
+  // Talent Visibility sprint (admin UI) — "visibility" reads as a plain
+  // VISIBLE/HIDDEN label (he.talent.fields.visibilityVisible/Hidden), same
+  // read-only-in-both-columns treatment as "computed" below. The actual
+  // value change happens via the header's Hide/Restore action, never via
+  // this row, so there is no input for it even in the proposed column.
+  if (type === "visibility") {
+    return value === "HIDDEN" ? he.talent.fields.visibilityHidden : he.talent.fields.visibilityVisible;
+  }
+
   if (Array.isArray(value)) {
     return value.length ? value.join(", ") : "—";
   }
@@ -267,6 +276,21 @@ function ProposedField({ field, value, onChange }) {
   // stays consistent with whatever was seeded.
   if (type === "computed") {
     return <span className={styles.readOnlyValue}>{value === null || value === undefined ? "—" : String(value)}</span>;
+  }
+
+  // Talent Visibility sprint (admin UI) — same "no input control, ever"
+  // treatment as "computed" above, for the same reason: this row exists so
+  // the Proposed column shows what visibility *would* be if this draft is
+  // published, not so the field can be edited by typing here. The real
+  // mutation path is the header's Hide/Restore action (which itself just
+  // PATCHes this same draft's `visibility` field) — keeping this row
+  // read-only avoids a second, competing way to change the same value.
+  if (type === "visibility") {
+    return (
+      <span className={styles.readOnlyValue}>
+        {value === "HIDDEN" ? he.talent.fields.visibilityHidden : he.talent.fields.visibilityVisible}
+      </span>
+    );
   }
 
   return (

@@ -27,6 +27,16 @@
  * only, behind a real schema field — see TalentListClient.jsx's header
  * comment). Back to a single, clean <StatusBadge>; no dot, no extra
  * wrapper markup.
+ *
+ * Talent Visibility sprint (admin UI): that real schema field now exists
+ * and the toggle lives on the detail page (TalentVisibilityAction.jsx), per
+ * the plan above. This adds exactly one more inert, muted <StatusBadge> —
+ * "מוסתר" — next to the existing workflow badge, shown only for a Hidden
+ * talent (isListTalentHidden now reads the real `talent.visibility` field
+ * instead of always returning false). A Visible talent gets no extra badge
+ * at all, matching requirement #6 and this same "no toggle-like markup in
+ * the list" precedent — this sprint adds no filtering/search hookup here,
+ * that's explicitly out of scope.
  */
 
 import Link from 'next/link';
@@ -38,6 +48,7 @@ import {
   deriveListSocialPreview,
   workflowStatusLabel,
   workflowStatusTone,
+  isListTalentHidden,
 } from '@/lib/admin/talent-workspace';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent.module.css';
@@ -48,6 +59,7 @@ export default function TalentQueueRow({ talent }) {
   const displayName = talent.name || talent.nameEn || talent.slug;
   const location = talent.location || talent.locationEn;
   const social = deriveListSocialPreview(talent.socialPreview);
+  const hidden = isListTalentHidden(talent);
 
   return (
     <Link href={`/admin/talent/${talent.id}`} className={styles.rowLink} aria-label={`${he.talent.list.openFolder}: ${displayName}`}>
@@ -58,6 +70,11 @@ export default function TalentQueueRow({ talent }) {
               <span className={styles.badgeWrap}>
                 <StatusBadge label={workflowStatusLabel(status)} tone={tone} />
               </span>
+              {hidden ? (
+                <span className={styles.badgeWrap}>
+                  <StatusBadge label={he.talent.list.hiddenBadge} tone="neutral" />
+                </span>
+              ) : null}
             </div>
             <TalentImage src={talent.profileImageUrl} alt="" />
           </div>
