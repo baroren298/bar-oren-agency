@@ -67,6 +67,34 @@
   border: 1px solid var(--admin-border);
 }
 
+/*
+ * Profile Image Replace sprint — the frame doubles as a click-or-drop
+ * upload target whenever there is an editable Draft/Proposed version
+ * (versionId is non-null). Mirrors AddImageCard.module.css's
+ * .dropzone/.dropzoneActive treatment so the interaction reads the same
+ * way Gallery's upload zone does.
+ */
+.frameInteractive {
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.frameInteractive:hover,
+.frameInteractive:focus-visible {
+  border-color: var(--admin-accent-strong);
+}
+
+.frameInteractive:focus-visible {
+  outline: 2px solid var(--admin-accent-strong);
+  outline-offset: 2px;
+}
+
+.frameDragOver {
+  border-style: solid;
+  border-color: var(--admin-accent-strong);
+  box-shadow: 0 0 0 2px var(--admin-accent-subtle);
+}
+
 .image {
   width: 100%;
   height: 100%;
@@ -83,6 +111,69 @@
   padding: 0.75rem;
   font-size: 0.78rem;
   color: var(--admin-text-muted);
+}
+
+/*
+ * Hover/uploading/drag-active label shown over the photo itself — only
+ * rendered at all when the frame is interactive (versionId is set). Stays
+ * hidden until hovered/focused so the published photo isn't permanently
+ * obscured by overlay text; uploading/drag-active states force it visible
+ * since those are active states the employee needs to see regardless of
+ * mouse position.
+ */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+}
+
+.frameInteractive:hover .overlay,
+.frameInteractive:focus-visible .overlay,
+.frameDragOver .overlay {
+  opacity: 1;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * Shown instead of the upload affordance whenever there's no editable
+ * DRAFT/PROPOSED version yet — mirrors PodcastTab.module.css's
+ * .noEditableVersionHint exactly (same copy convention, see
+ * he.talent.detail.podcastTab.noEditableVersionHint).
+ */
+.noEditableVersionHint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--admin-text-secondary);
+  max-width: 14rem;
+}
+
+.uploadErrorHint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--admin-danger, #c0392b);
+  max-width: 14rem;
 }
 
 .controlsColumn {

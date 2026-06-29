@@ -751,6 +751,14 @@ export default async function AdminTalentDetailPage({ params }) {
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
 
+  // Profile Image Replace sprint — same isEditablePending/editableVersionId
+  // pattern DetailsSectionContent/PodcastSectionContent already use above,
+  // computed here instead since <ProfileImagePanel> renders directly in
+  // this function's JSX rather than inside its own SectionContent wrapper.
+  const isProfileImageEditablePending =
+    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
+  const profileImageEditableVersionId = isProfileImageEditablePending ? pendingVersion.id : null;
+
   return (
     <AdminShell>
       <a href="/admin/talent" className={styles.backLink}>
@@ -777,9 +785,15 @@ export default async function AdminTalentDetailPage({ params }) {
 
       {publishedVersion ? (
         <ProfileImagePanel
+          talentId={talent.id}
+          versionId={profileImageEditableVersionId}
+          versionStatus={profileImageEditableVersionId ? pendingVersion.status : null}
           imageUrl={publishedVersion.profileImageAsset?.blobUrl ?? null}
           profileImagePosition={publishedVersion.profileImagePosition}
           profileImageScale={publishedVersion.profileImageScale}
+          pendingImageUrl={pendingVersion?.profileImageAsset?.blobUrl ?? null}
+          pendingImagePosition={pendingVersion?.profileImagePosition ?? null}
+          pendingImageScale={pendingVersion?.profileImageScale ?? null}
           displayName={displayName}
         />
       ) : null}
