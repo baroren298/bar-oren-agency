@@ -47,6 +47,7 @@ import styles from "./SeoEditor.module.css";
 import SeoFieldRow from "./SeoFieldRow";
 import SearchResultPreview from "./SearchResultPreview";
 import EditorActionBar from "./EditorActionBar";
+import PrimaryButton from "./PrimaryButton";
 import { he } from "@/lib/admin/i18n/he";
 import { SEO_FIELD_GROUPS } from "@/lib/admin/seo-fields";
 
@@ -77,72 +78,79 @@ function buildInitialValues(groups, publishedSeo) {
 export default function SeoEditor({ publishedSeo = {}, groups = SEO_FIELD_GROUPS, previewUrl }) {
   const [proposedValues, setProposedValues] = useState(() => buildInitialValues(groups, publishedSeo));
 
+  // Single-Section Editing UX sprint — SEO has no Draft/Proposed entity of
+  // its own at all (it never persists anything yet — see the file header),
+  // so unlike Social/Gallery there is no "resume an in-progress session"
+  // case to default into. Always starts in the read-only view.
+  const [isEditing, setIsEditing] = useState(false);
+
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
   }
 
   // Local-only reset — never talks to a server, just discards whatever the
   // employee typed and snaps the proposed fields back to published, in
-  // memory.
+  // memory. Single-Section Editing UX sprint — also exits edit mode, same
+  // "end the editing session" semantics as Social/Gallery's handleCancel.
   function handleCancel() {
     setProposedValues(buildInitialValues(groups, publishedSeo));
+    setIsEditing(false);
+  }
+
+  function handleStartEditing() {
+    setIsEditing(true);
   }
 
   return (
     <div className={styles.tokens}>
       <p className={styles.intro}>{he.seo.intro}</p>
 
-      <div className={styles.comparison}>
-        <section className={styles.publishedSection} aria-label={he.seo.publishedEyebrowTitle}>
-          <header className={styles.eyebrow}>
-            <span className={styles.eyebrowIcon} aria-hidden="true">
-              {he.seo.publishedEyebrowIcon}
-            </span>
-            <span className={styles.eyebrowTitle}>{he.seo.publishedEyebrowTitle}</span>
-          </header>
-          <p className={styles.publishedSubtitle}>{he.seo.publishedSubtitle}</p>
+      {/*
+       * Single-Section Editing UX sprint — one section, toggling between the
+       * read-only published fields and the exact same editable fields,
+       * mirroring ComparisonView/SocialLinksEditor's pattern.
+       */}
+      <section
+        className={isEditing ? styles.proposedSection : styles.publishedSection}
+        aria-label={isEditing ? he.seo.proposedEyebrowTitle : he.seo.publishedEyebrowTitle}
+      >
+        <header className={styles.eyebrow}>
+          <span className={styles.eyebrowIcon} aria-hidden="true">
+            {isEditing ? he.seo.proposedEyebrowIcon : he.seo.publishedEyebrowIcon}
+          </span>
+          <span className={isEditing ? styles.eyebrowTitleProposed : styles.eyebrowTitle}>
+            {isEditing ? he.seo.proposedEyebrowTitle : he.seo.publishedEyebrowTitle}
+          </span>
+        </header>
+        <p className={isEditing ? styles.proposedSubtitle : styles.publishedSubtitle}>
+          {isEditing ? he.seo.proposedSubtitle : he.seo.publishedSubtitle}
+        </p>
 
-          <div className={styles.groupedFieldList}>
-            {groups.map((group) => (
-              <div key={group.key} className={styles.fieldGroup}>
-                {group.label ? <h3 className={styles.groupLabel}>{group.label}</h3> : null}
-                <div className={styles.fieldList}>
-                  {group.fields.map((field) => (
-                    <SeoFieldRow key={field.key} field={field} value={publishedSeo[field.key] ?? null} readOnly />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.proposedSection} aria-label={he.seo.proposedEyebrowTitle}>
-          <header className={styles.eyebrow}>
-            <span className={styles.eyebrowIcon} aria-hidden="true">
-              {he.seo.proposedEyebrowIcon}
-            </span>
-            <span className={styles.eyebrowTitleProposed}>{he.seo.proposedEyebrowTitle}</span>
-          </header>
-          <p className={styles.proposedSubtitle}>{he.seo.proposedSubtitle}</p>
-
-          <div className={styles.groupedFieldList}>
-            {groups.map((group) => (
-              <div key={group.key} className={styles.fieldGroup}>
-                {group.label ? <h3 className={styles.groupLabelProposed}>{group.label}</h3> : null}
-                <div className={styles.fieldList}>
-                  {group.fields.map((field) => (
+        <div className={styles.groupedFieldList}>
+          {groups.map((group) => (
+            <div key={group.key} className={styles.fieldGroup}>
+              {group.label ? (
+                <h3 className={isEditing ? styles.groupLabelProposed : styles.groupLabel}>{group.label}</h3>
+              ) : null}
+              <div className={styles.fieldList}>
+                {group.fields.map((field) =>
+                  isEditing ? (
                     <SeoFieldRow
                       key={field.key}
                       field={field}
                       value={proposedValues[field.key]}
                       onChange={(value) => handleChange(field.key, value)}
                     />
-                  ))}
-                </div>
+                  ) : (
+                    <SeoFieldRow key={field.key} field={field} value={publishedSeo[field.key] ?? null} readOnly />
+                  ),
+                )}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
 
+        {isEditing ? (
           <div className={styles.previewWrapper}>
             <SearchResultPreview
               title={proposedValues.title}
@@ -150,11 +158,21 @@ export default function SeoEditor({ publishedSeo = {}, groups = SEO_FIELD_GROUPS
               url={previewUrl}
             />
           </div>
-        </section>
-      </div>
+        ) : null}
+      </section>
 
-      <PreviewModeNotice />
-      <EditorActionBar onCancel={handleCancel} showSaveDraft={false} showSubmit={false} />
+      {isEditing ? (
+        <>
+          <PreviewModeNotice />
+          <EditorActionBar onCancel={handleCancel} showSaveDraft={false} showSubmit={false} />
+        </>
+      ) : (
+        <div className={styles.startEditingRow}>
+          <PrimaryButton type="button" onClick={handleStartEditing}>
+            {he.editor.actions.startEditing}
+          </PrimaryButton>
+        </div>
+      )}
     </div>
   );
 }

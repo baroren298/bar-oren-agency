@@ -124,6 +124,29 @@
  *     `onSubmit` as undefined once the version is no longer DRAFT,
  *     disabling both buttons the same way they're disabled today when no
  *     editable Draft exists at all.
+ *
+ * Talent Detail UX Refactor, Phase 1 — collapsed from the old simultaneous
+ * "Current Published" + "Proposed Update" two-column layout into a single
+ * section that switches between a read-only view and an editable view.
+ * Purely a rendering change: every piece of state/logic above this comment
+ * (proposedValues/savedValues, isDirty, save/submit/publish handlers, the
+ * beforeunload guard, the post-refresh resync effect) is unchanged.
+ *
+ * `isEditing` is derived from `Boolean(onSaveDraft)` rather than a new prop:
+ * TalentDetailsEditor already only passes `onSaveDraft` when the caller
+ * resolved an editable DRAFT/PROPOSED version (`versionId` truthy), so this
+ * is the same signal the old proposed column's "disabled inputs" state used
+ * — just read as a real mode switch instead. When `isEditing` is false, the
+ * section renders every field as plain read-only text (the exact same
+ * `formatReadOnlyValue` this file already used for the old published
+ * column). When `isEditing` is true, it renders the exact same `ProposedField`
+ * inputs the old proposed column used, seeded from `proposedValues` exactly
+ * as before — including falling back to a real `draftValue` when one was
+ * already saved, so resuming an existing Draft/Proposed shows its values,
+ * not the published ones. There is no separate "Current Published" or
+ * "Proposed Update" copy anywhere in this mode; that comparison framing is
+ * intentionally left to GalleryOwnerReview/SocialLinksOwnerReview-style
+ * review surfaces, which this component still does not render.
  */
 
 import { useEffect, useState } from "react";
@@ -540,54 +563,40 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValuesKey]);
 
+  // Talent Detail UX Refactor, Phase 1 — one section, one mode at a time.
+  // See this component's header comment for why `Boolean(onSaveDraft)` is
+  // the right signal: it's exactly the same "is there an editable
+  // DRAFT/PROPOSED version" state TalentDetailsEditor already derives.
+  const isEditing = Boolean(onSaveDraft);
+  const sectionLabel = isEditing ? he.editor.sectionEditingLabel : he.editor.sectionViewLabel;
+
   return (
     <div className={styles.tokens}>
-      <div className={styles.comparison}>
-        <section className={styles.publishedSection} aria-label="גרסה מפורסמת">
-          <header className={styles.eyebrow}>
-            <span className={styles.eyebrowIcon} aria-hidden="true">
-              🌍
-            </span>
-            <span className={styles.eyebrowTitle}>גרסה מפורסמת</span>
-          </header>
-          <p className={styles.publishedSubtitle}>כך הביקורים רואים את זה באתר כרגע.</p>
+      <section
+        className={isEditing ? styles.proposedSection : styles.publishedSection}
+        aria-label={sectionLabel}
+      >
+        <header className={styles.eyebrow}>
+          <span className={styles.eyebrowIcon} aria-hidden="true">
+            {isEditing ? "✏️" : "🌍"}
+          </span>
+          <span className={isEditing ? styles.eyebrowTitleProposed : styles.eyebrowTitle}>
+            {sectionLabel}
+          </span>
+        </header>
+        <p className={isEditing ? styles.proposedSubtitle : styles.publishedSubtitle}>
+          {isEditing ? he.editor.sectionEditingSubtitle : he.editor.sectionViewSubtitle}
+        </p>
 
-          <div className={styles.groupedFieldList}>
-            {fieldGroups.map((group) => (
-              <div key={group.key} className={styles.fieldGroup}>
-                {group.label ? <h3 className={styles.groupLabel}>{group.label}</h3> : null}
-                <div className={styles.fieldList}>
-                  {group.fields.map((field) => (
-                    <div key={field.key} className={styles.fieldRow}>
-                      <span className={styles.fieldLabel}>{field.label}</span>
-                      <span className={styles.readOnlyValue}>{formatReadOnlyValue(field)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.proposedSection} aria-label="עדכון מוצע">
-          <header className={styles.eyebrow}>
-            <span className={styles.eyebrowIcon} aria-hidden="true">
-              ✏️
-            </span>
-            <span className={styles.eyebrowTitleProposed}>עדכון מוצע</span>
-          </header>
-          <p className={styles.proposedSubtitle}>
-            זו הגרסה שאתה מציע. שום דבר לא יתפרסם באתר לפני אישור.
-          </p>
-
-          <div className={styles.groupedFieldList}>
-            {fieldGroups.map((group) => (
-              <div key={group.key} className={styles.fieldGroup}>
-                {group.label ? (
-                  <h3 className={styles.groupLabelProposed}>{group.label}</h3>
-                ) : null}
-                <div className={styles.fieldList}>
-                  {group.fields.map((field) => (
+        <div className={styles.groupedFieldList}>
+          {fieldGroups.map((group) => (
+            <div key={group.key} className={styles.fieldGroup}>
+              {group.label ? (
+                <h3 className={isEditing ? styles.groupLabelProposed : styles.groupLabel}>{group.label}</h3>
+              ) : null}
+              <div className={styles.fieldList}>
+                {group.fields.map((field) =>
+                  isEditing ? (
                     <div key={field.key} className={styles.fieldRowEditable}>
                       <label htmlFor={`proposed-${field.key}`} className={styles.proposedFieldLabel}>
                         {/*
@@ -605,13 +614,18 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
                         onChange={(value) => handleChange(field.key, value)}
                       />
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <div key={field.key} className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>{field.label}</span>
+                      <span className={styles.readOnlyValue}>{formatReadOnlyValue(field)}</span>
+                    </div>
+                  )
+                )}
               </div>
-            ))}
-          </div>
-        </section>
-      </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <EditorHelperNote />
       {conflictNotice ? (

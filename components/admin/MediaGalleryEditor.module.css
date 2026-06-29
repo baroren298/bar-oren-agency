@@ -99,6 +99,15 @@
   max-width: 100%;
 }
 
+/*
+ * Single-Section Editing UX sprint — the row holding the local "Start
+ * Editing" trigger shown in place of <EditorActionBar> while !isEditing.
+ */
+.startEditingRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 900px) {
   .proposedGrid {
     grid-template-columns: repeat(3, 1fr);

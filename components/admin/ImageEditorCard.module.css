@@ -1,0 +1,20 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.card {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.preview {
+  max-width: 14rem;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--admin-status-danger-text);
+}

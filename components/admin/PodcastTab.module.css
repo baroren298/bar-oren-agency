@@ -15,19 +15,30 @@
   gap: 1.25rem;
 }
 
+/*
+ * Talent Detail UX Refactor, Phase 2 — stacked, not side-by-side. The image/
+ * video preview used to sit in its own full-height column next to the
+ * editor, reading as a second section competing with it. It is now a single
+ * light accessory row above the one editing section (mirrors what
+ * ComparisonView.jsx did for the Details tab: one section, not two).
+ */
 .body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.previewRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.previewRowContent {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 1.5rem;
-}
-
-.previewColumn {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  min-width: 11.5rem;
+  gap: 1rem;
 }
 
 .previewLabel {
@@ -36,14 +47,23 @@
   color: var(--admin-text-muted);
 }
 
+.previewActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 11rem;
+  max-width: 16rem;
+}
+
 .frame {
   position: relative;
-  width: 11.5rem;
+  width: 6rem;
   aspect-ratio: 3 / 4;
   border-radius: var(--admin-radius);
   overflow: hidden;
   background: var(--admin-accent-subtle);
   border: 1px solid var(--admin-border);
+  flex-shrink: 0;
 }
 
 .image {
@@ -109,7 +129,6 @@
  * layout of its own anymore.
  */
 .editorColumn {
-  min-width: 18rem;
   flex: 1;
 }
 

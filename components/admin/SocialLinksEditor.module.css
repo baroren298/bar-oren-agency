@@ -131,6 +131,17 @@
   color: var(--admin-text-muted);
 }
 
+/*
+ * Single-Section Editing UX sprint — the row holding the local "Start
+ * Editing" trigger shown in place of <EditorActionBar> while !isEditing.
+ * Right-aligned like EditorActionBar's own action row, but with no Cancel
+ * button since there's nothing to cancel yet (no edits have started).
+ */
+.startEditingRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
 @media (max-width: 640px) {
   .proposedSection {
     padding: 1.5rem 1.25rem;

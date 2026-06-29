@@ -260,6 +260,19 @@ export default function SocialLinksEditor({
   // never sent anywhere, just needs to be unique within this render tree.
   const [nextLocalId, setNextLocalId] = useState(1);
 
+  // Single-Section Editing UX sprint — collapses the old simultaneous
+  // "Published" + "Proposed" two-section layout into one section that
+  // toggles between a read-only view and the exact same editable surface,
+  // mirroring ComparisonView/ImageAssetEditor's Phase 1/2 pattern. Unlike
+  // those two (whose `isEditing` is derived from whether an editable
+  // TalentVersion Draft/Proposed exists), Social Links has no such
+  // entity — its Draft/Proposed rows are only ever created by Save Draft
+  // itself — so entering "edit mode" here is purely local UI state, never
+  // an API call. Starts true whenever a real Draft/Proposed set already
+  // exists (resuming a session in progress reads as "still editing," not
+  // back to a fresh view), false otherwise.
+  const [isEditing, setIsEditing] = useState(() => draftSocials.length > 0);
+
   const [saveDraftStatus, setSaveDraftStatus] = useState("idle"); // idle | saving | saved | error
   const [saveDraftError, setSaveDraftError] = useState(null);
   const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
@@ -362,11 +375,24 @@ export default function SocialLinksEditor({
 
   // Resets back to whatever was last actually saved (or, if nothing has
   // been saved yet this session, the original published/draft seed) —
-  // never talks to a server.
+  // never talks to a server. Single-Section Editing UX sprint — also exits
+  // edit mode, since Cancel is meant to end the editing session entirely
+  // (same "בטל עריכה" semantics he.editor.actions.cancel already documents
+  // for the Details tab's top-level Cancel button), returning to the
+  // read-only published view.
   function handleCancel() {
     setProposedAccounts(savedAccounts);
     setSaveDraftStatus("idle");
     setSaveDraftError(null);
+    setIsEditing(false);
+  }
+
+  // Single-Section Editing UX sprint — the only place this component
+  // enters edit mode on its own. Purely local UI state, never an API call:
+  // no TalentSocial row is created or touched until Save Draft actually
+  // fires.
+  function handleStartEditing() {
+    setIsEditing(true);
   }
 
   // Appends, never replaces — this is what guarantees a second Instagram
@@ -476,40 +502,34 @@ export default function SocialLinksEditor({
   return (
     <div className={styles.tokens}>
       <RejectedSocialsNotice talentId={talentId} rejectedSocials={unresolvedRejectedSocials} />
-      <div className={styles.comparison}>
-        <section className={styles.publishedSection} aria-label={he.social.publishedEyebrowTitle}>
-          <header className={styles.eyebrow}>
-            <span className={styles.eyebrowIcon} aria-hidden="true">
-              {he.social.publishedEyebrowIcon}
-            </span>
-            <span className={styles.eyebrowTitle}>{he.social.publishedEyebrowTitle}</span>
-          </header>
-          <p className={styles.publishedSubtitle}>{he.social.publishedSubtitle}</p>
 
-          {publishedSocials.length === 0 ? (
-            <EmptyState
-              title={he.social.noPublishedAccountsTitle}
-              description={he.social.noPublishedAccountsDescription}
-            />
-          ) : (
-            <div className={styles.accountList}>
-              {publishedSocials.map((account) => (
-                <SocialAccountCard key={account.id} account={account} readOnly />
-              ))}
-            </div>
-          )}
-        </section>
+      {/*
+       * Single-Section Editing UX sprint — one section, one mode at a time,
+       * mirroring ComparisonView's Phase 1 pattern exactly (see that file's
+       * header comment). `isEditing` here is local state (see above) rather
+       * than `Boolean(onSaveDraft)`, since Social Links has no separate
+       * Draft entity gating whether editing is possible at all — anyone can
+       * open the section and start typing; Save Draft is what actually
+       * persists it.
+       */}
+      <section
+        className={isEditing ? styles.proposedSection : styles.publishedSection}
+        aria-label={isEditing ? he.editor.sectionEditingLabel : he.editor.sectionViewLabel}
+      >
+        <header className={styles.eyebrow}>
+          <span className={styles.eyebrowIcon} aria-hidden="true">
+            {isEditing ? "✏️" : "🌍"}
+          </span>
+          <span className={isEditing ? styles.eyebrowTitleProposed : styles.eyebrowTitle}>
+            {isEditing ? he.editor.sectionEditingLabel : he.editor.sectionViewLabel}
+          </span>
+        </header>
+        <p className={isEditing ? styles.proposedSubtitle : styles.publishedSubtitle}>
+          {isEditing ? he.editor.sectionEditingSubtitle : he.editor.sectionViewSubtitle}
+        </p>
 
-        <section className={styles.proposedSection} aria-label={he.social.proposedEyebrowTitle}>
-          <header className={styles.eyebrow}>
-            <span className={styles.eyebrowIcon} aria-hidden="true">
-              {he.social.proposedEyebrowIcon}
-            </span>
-            <span className={styles.eyebrowTitleProposed}>{he.social.proposedEyebrowTitle}</span>
-          </header>
-          <p className={styles.proposedSubtitle}>{he.social.proposedSubtitle}</p>
-
-          {proposedAccounts.length === 0 ? (
+        {isEditing ? (
+          proposedAccounts.length === 0 ? (
             <EmptyState
               title={he.social.noProposedAccountsTitle}
               description={he.social.noProposedAccountsDescription}
@@ -527,37 +547,58 @@ export default function SocialLinksEditor({
               ))}
               <AddSocialAccountForm platforms={platforms} labels={labels} onAdd={handleAdd} />
             </div>
-          )}
-        </section>
-      </div>
+          )
+        ) : publishedSocials.length === 0 ? (
+          <EmptyState
+            title={he.social.noPublishedAccountsTitle}
+            description={he.social.noPublishedAccountsDescription}
+          />
+        ) : (
+          <div className={styles.accountList}>
+            {publishedSocials.map((account) => (
+              <SocialAccountCard key={account.id} account={account} readOnly />
+            ))}
+          </div>
+        )}
+      </section>
 
-      {hasPersistence ? <PersistenceModeNote /> : <PreviewModeNotice />}
-      {saveDraftStatus === "error" && saveDraftError ? (
-        <p className={styles.previewNoticeBody} role="alert">
-          {saveDraftError}
-        </p>
-      ) : null}
-      <EditorActionBar
-        onCancel={handleCancel}
-        onSaveDraft={handleSaveDraft}
-        onSubmit={handleSubmit}
-        onPublish={handlePublishNow}
-        showSaveDraft={hasPersistence}
-        showSubmit={hasPersistence && !isOwner}
-        showPublish={hasPersistence && isOwner}
-        saveDraftDisabled={saveDraftDisabled}
-        saveDraftDisabledReason={saveDraftDisabledReason}
-        saveDraftStatus={saveDraftStatus}
-        saveDraftStatusMessage={saveDraftStatus === "error" ? saveDraftError : undefined}
-        submitDisabled={submitDisabled}
-        submitDisabledReason={submitDisabledReason}
-        submitStatus={submitStatus}
-        submitStatusMessage={submitStatus === "error" ? submitError : undefined}
-        publishDisabled={publishDisabled}
-        publishDisabledReason={publishDisabledReason}
-        publishStatus={publishStatus}
-        publishStatusMessage={publishStatus === "error" ? publishError : undefined}
-      />
+      {isEditing ? (
+        <>
+          {hasPersistence ? <PersistenceModeNote /> : <PreviewModeNotice />}
+          {saveDraftStatus === "error" && saveDraftError ? (
+            <p className={styles.previewNoticeBody} role="alert">
+              {saveDraftError}
+            </p>
+          ) : null}
+          <EditorActionBar
+            onCancel={handleCancel}
+            onSaveDraft={handleSaveDraft}
+            onSubmit={handleSubmit}
+            onPublish={handlePublishNow}
+            showSaveDraft={hasPersistence}
+            showSubmit={hasPersistence && !isOwner}
+            showPublish={hasPersistence && isOwner}
+            saveDraftDisabled={saveDraftDisabled}
+            saveDraftDisabledReason={saveDraftDisabledReason}
+            saveDraftStatus={saveDraftStatus}
+            saveDraftStatusMessage={saveDraftStatus === "error" ? saveDraftError : undefined}
+            submitDisabled={submitDisabled}
+            submitDisabledReason={submitDisabledReason}
+            submitStatus={submitStatus}
+            submitStatusMessage={submitStatus === "error" ? submitError : undefined}
+            publishDisabled={publishDisabled}
+            publishDisabledReason={publishDisabledReason}
+            publishStatus={publishStatus}
+            publishStatusMessage={publishStatus === "error" ? publishError : undefined}
+          />
+        </>
+      ) : (
+        <div className={styles.startEditingRow}>
+          <PrimaryButton type="button" onClick={handleStartEditing}>
+            {he.editor.actions.startEditing}
+          </PrimaryButton>
+        </div>
+      )}
     </div>
   );
 }

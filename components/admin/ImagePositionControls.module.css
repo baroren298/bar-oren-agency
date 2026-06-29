@@ -1,0 +1,41 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.controls {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.controlLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--admin-accent-strong);
+}
+
+.sliderValue {
+  align-self: flex-end;
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+}
+
+/*
+ * Single-Section Editing UX sprint — the 3×3 position grid (.positionGrid/
+ * .positionDot/.positionDotInner/.positionDotActive) and its .cropHint
+ * caption are removed. Positioning is now done by dragging the live preview
+ * directly — see ImagePreview.module.css's .frameEditable/.dragHint, which
+ * replace these.
+ */

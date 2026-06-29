@@ -42,6 +42,17 @@
  * the same disabled-when-no-draft behavior as before, so editing is
  * unchanged from prior sprints.
  *
+ * Talent Detail UX Refactor, Phase 2 — the image/video preview used to be
+ * its own full-height column standing beside the editor (two visual blocks
+ * side by side, the same "heavy" pattern Phase 1 removed from ComparisonView
+ * itself). It is now a single compact row (small thumbnail + actions) above
+ * the editor, so the tab reads as one section: a light read-only accessory
+ * followed directly by the one editing surface, instead of two competing
+ * columns. Purely a layout change — `hasPodcastData`/`podcastImageUrl`/
+ * `podcastVideoEmbedUrl` still drive exactly the same conditions as before,
+ * and the editor itself (<TalentDetailsEditor>/<ComparisonView>) is
+ * untouched.
+ *
  * Props:
  *   talentId              — string
  *   versionId             — string | null, the editable DRAFT/PROPOSED
@@ -105,39 +116,43 @@ export default function PodcastTab({
       {!versionId ? <p className={styles.noEditableVersionHint}>{copy.noEditableVersionHint}</p> : null}
 
       <div className={styles.body}>
-        <div className={styles.previewColumn}>
+        <div className={styles.previewRow}>
           <span className={styles.previewLabel}>{copy.imageLabel}</span>
-          <div className={styles.frame}>
-            {podcastImageUrl ? (
-              <img
-                src={podcastImageUrl}
-                alt={copy.imageAlt(displayName)}
-                className={styles.image}
-              />
-            ) : (
-              <div className={styles.placeholder} aria-hidden="true">
-                {copy.noImage}
-              </div>
-            )}
+          <div className={styles.previewRowContent}>
+            <div className={styles.frame}>
+              {podcastImageUrl ? (
+                <img
+                  src={podcastImageUrl}
+                  alt={copy.imageAlt(displayName)}
+                  className={styles.image}
+                />
+              ) : (
+                <div className={styles.placeholder} aria-hidden="true">
+                  {copy.noImage}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.previewActions}>
+              <button type="button" className={styles.imageButton} disabled>
+                {copy.replaceImage}
+              </button>
+              <p className={styles.comingSoonHint}>{copy.comingSoonHint}</p>
+
+              {podcastVideoEmbedUrl ? (
+                <PrimaryButton
+                  href={podcastVideoEmbedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.youtubeButton}
+                >
+                  {copy.viewOnYoutube}
+                </PrimaryButton>
+              ) : (
+                <span className={styles.noVideoLink}>{copy.noVideoLink}</span>
+              )}
+            </div>
           </div>
-
-          <button type="button" className={styles.imageButton} disabled>
-            {copy.replaceImage}
-          </button>
-          <p className={styles.comingSoonHint}>{copy.comingSoonHint}</p>
-
-          {podcastVideoEmbedUrl ? (
-            <PrimaryButton
-              href={podcastVideoEmbedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.youtubeButton}
-            >
-              {copy.viewOnYoutube}
-            </PrimaryButton>
-          ) : (
-            <span className={styles.noVideoLink}>{copy.noVideoLink}</span>
-          )}
         </div>
 
         {editorColumn}

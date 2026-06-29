@@ -291,6 +291,16 @@ export default function MediaGalleryEditor({
   const [proposedImages, setProposedImages] = useState(() => withKeys(initialSeed));
   const [savedImages, setSavedImages] = useState(() => withKeys(initialSeed));
 
+  // Single-Section Editing UX sprint — collapses the old simultaneous
+  // "Published" + "Proposed" two-section layout into one section that
+  // toggles between a read-only view and the exact same editable surface,
+  // mirroring ComparisonView/SocialLinksEditor's Phase 1 pattern. Like
+  // Social Links, Gallery has no entity that gates whether editing is
+  // *possible* — entering edit mode is purely local UI state, never an API
+  // call. Starts true whenever a real Draft/Proposed set already exists
+  // (resuming a session in progress reads as "still editing").
+  const [isEditing, setIsEditing] = useState(() => draftImages.length > 0);
+
   const [saveDraftStatus, setSaveDraftStatus] = useState("idle"); // idle | saving | saved | error
   const [saveDraftError, setSaveDraftError] = useState(null);
   const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
@@ -416,10 +426,20 @@ export default function MediaGalleryEditor({
   // Resets back to whatever was last actually saved (or, if nothing has
   // been saved yet this session, the original published/draft seed) —
   // never talks to a server. Mirrors SocialLinksEditor's handleCancel.
+  // Single-Section Editing UX sprint — also exits edit mode, returning to
+  // the read-only published view, same as Social/SEO's Cancel.
   function handleReset() {
     setProposedImages(savedImages);
     setSaveDraftStatus("idle");
     setSaveDraftError(null);
+    setIsEditing(false);
+  }
+
+  // Single-Section Editing UX sprint — the only place this component enters
+  // edit mode on its own. Purely local UI state, never an API call: no
+  // TalentGalleryImage row is created or touched until Save Draft fires.
+  function handleStartEditing() {
+    setIsEditing(true);
   }
 
   // Still local-only, never persisted — see this file's header comment.
@@ -634,100 +654,117 @@ export default function MediaGalleryEditor({
     <div className={styles.tokens}>
       <RejectedGalleryImagesNotice talentId={talentId} rejectedImages={unresolvedRejectedImages} />
 
-      <section className={styles.publishedSection} aria-label={he.gallery.publishedEyebrowTitle}>
+      {/*
+       * Single-Section Editing UX sprint — one section, one mode at a time,
+       * mirroring ComparisonView/SocialLinksEditor's pattern exactly. The
+       * grid itself (PublishedMediaGrid vs. the DnD-editable grid) is the
+       * part that swaps; per-image zoom/drag positioning inside each cell is
+       * explicitly out of scope this sprint (see GalleryImageCard, unchanged)
+       * — only the section-level view/edit toggle changes here.
+       */}
+      <section
+        className={isEditing ? styles.proposedSection : styles.publishedSection}
+        aria-label={isEditing ? he.gallery.proposedEyebrowTitle : he.gallery.publishedEyebrowTitle}
+      >
         <header className={styles.eyebrow}>
           <span className={styles.eyebrowIcon} aria-hidden="true">
-            {he.gallery.publishedEyebrowIcon}
+            {isEditing ? he.gallery.proposedEyebrowIcon : he.gallery.publishedEyebrowIcon}
           </span>
-          <span className={styles.eyebrowTitle}>{he.gallery.publishedEyebrowTitle}</span>
-        </header>
-        <p className={styles.publishedSubtitle}>{he.gallery.publishedSubtitle}</p>
-
-        <PublishedMediaGrid
-          images={publishedImages}
-          emptyTitle={emptyPublishedTitle}
-          emptyDescription={emptyPublishedDescription}
-        />
-      </section>
-
-      <section className={styles.proposedSection} aria-label={he.gallery.proposedEyebrowTitle}>
-        <header className={styles.eyebrow}>
-          <span className={styles.eyebrowIcon} aria-hidden="true">
-            {he.gallery.proposedEyebrowIcon}
+          <span className={isEditing ? styles.eyebrowTitleProposed : styles.eyebrowTitle}>
+            {isEditing ? he.gallery.proposedEyebrowTitle : he.gallery.publishedEyebrowTitle}
           </span>
-          <span className={styles.eyebrowTitleProposed}>{he.gallery.proposedEyebrowTitle}</span>
         </header>
-        <p className={styles.proposedSubtitle}>{he.gallery.proposedSubtitle}</p>
+        <p className={isEditing ? styles.proposedSubtitle : styles.publishedSubtitle}>
+          {isEditing ? he.gallery.proposedSubtitle : he.gallery.publishedSubtitle}
+        </p>
 
-        {proposedImages.length === 0 && uploadQueue.length === 0 ? (
-          <EmptyState
-            title={emptyProposedTitle}
-            description={emptyProposedDescription}
-            action={
-              <AddImageCard
-                className={styles.emptyProposedAction}
-                onSelectFiles={hasPersistence ? handleSelectFiles : null}
-              />
-            }
-          />
+        {isEditing ? (
+          proposedImages.length === 0 && uploadQueue.length === 0 ? (
+            <EmptyState
+              title={emptyProposedTitle}
+              description={emptyProposedDescription}
+              action={
+                <AddImageCard
+                  className={styles.emptyProposedAction}
+                  onSelectFiles={hasPersistence ? handleSelectFiles : null}
+                />
+              }
+            />
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={proposedImages.map((image) => image._key)}
+                strategy={rectSortingStrategy}
+              >
+                <div className={styles.proposedGrid}>
+                  {proposedImages.map((image, index) => (
+                    <GalleryImageCard
+                      key={image._key}
+                      image={image}
+                      onChange={(field, value) => handleFieldChange(image._key, field, value)}
+                      onRemove={() => handleRemove(index)}
+                    />
+                  ))}
+                  {uploadQueue.map((item) => (
+                    <UploadingImageCard
+                      key={item.clientId}
+                      fileName={item.fileName}
+                      status={item.status}
+                      error={item.error}
+                      onDismiss={() => dismissUploadItem(item.clientId)}
+                    />
+                  ))}
+                  <AddImageCard onSelectFiles={hasPersistence ? handleSelectFiles : null} />
+                </div>
+              </SortableContext>
+            </DndContext>
+          )
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext
-              items={proposedImages.map((image) => image._key)}
-              strategy={rectSortingStrategy}
-            >
-              <div className={styles.proposedGrid}>
-                {proposedImages.map((image, index) => (
-                  <GalleryImageCard
-                    key={image._key}
-                    image={image}
-                    onChange={(field, value) => handleFieldChange(image._key, field, value)}
-                    onRemove={() => handleRemove(index)}
-                  />
-                ))}
-                {uploadQueue.map((item) => (
-                  <UploadingImageCard
-                    key={item.clientId}
-                    fileName={item.fileName}
-                    status={item.status}
-                    error={item.error}
-                    onDismiss={() => dismissUploadItem(item.clientId)}
-                  />
-                ))}
-                <AddImageCard onSelectFiles={hasPersistence ? handleSelectFiles : null} />
-              </div>
-            </SortableContext>
-          </DndContext>
+          <PublishedMediaGrid
+            images={publishedImages}
+            emptyTitle={emptyPublishedTitle}
+            emptyDescription={emptyPublishedDescription}
+          />
         )}
       </section>
 
-      {hasPersistence ? <PersistenceModeNote /> : <PreviewModeNotice />}
-      {saveDraftStatus === "error" && saveDraftError ? (
-        <p className={styles.previewNoticeBody} role="alert">
-          {saveDraftError}
-        </p>
-      ) : null}
-      <EditorActionBar
-        onCancel={handleReset}
-        onSaveDraft={handleSaveDraft}
-        onSubmit={handleSubmit}
-        onPublish={handlePublishNow}
-        showSaveDraft={hasPersistence}
-        showSubmit={hasPersistence && !isOwner}
-        showPublish={hasPersistence && isOwner}
-        saveDraftDisabled={saveDraftDisabled}
-        saveDraftDisabledReason={saveDraftDisabledReason}
-        saveDraftStatus={saveDraftStatus}
-        saveDraftStatusMessage={saveDraftStatus === "error" ? saveDraftError : undefined}
-        submitDisabled={submitDisabled}
-        submitDisabledReason={submitDisabledReason}
-        submitStatus={submitStatus}
-        submitStatusMessage={submitStatus === "error" ? submitError : undefined}
-        publishDisabled={publishDisabled}
-        publishDisabledReason={publishDisabledReason}
-        publishStatus={publishStatus}
-        publishStatusMessage={publishStatus === "error" ? publishError : undefined}
-      />
+      {isEditing ? (
+        <>
+          {hasPersistence ? <PersistenceModeNote /> : <PreviewModeNotice />}
+          {saveDraftStatus === "error" && saveDraftError ? (
+            <p className={styles.previewNoticeBody} role="alert">
+              {saveDraftError}
+            </p>
+          ) : null}
+          <EditorActionBar
+            onCancel={handleReset}
+            onSaveDraft={handleSaveDraft}
+            onSubmit={handleSubmit}
+            onPublish={handlePublishNow}
+            showSaveDraft={hasPersistence}
+            showSubmit={hasPersistence && !isOwner}
+            showPublish={hasPersistence && isOwner}
+            saveDraftDisabled={saveDraftDisabled}
+            saveDraftDisabledReason={saveDraftDisabledReason}
+            saveDraftStatus={saveDraftStatus}
+            saveDraftStatusMessage={saveDraftStatus === "error" ? saveDraftError : undefined}
+            submitDisabled={submitDisabled}
+            submitDisabledReason={submitDisabledReason}
+            submitStatus={submitStatus}
+            submitStatusMessage={submitStatus === "error" ? submitError : undefined}
+            publishDisabled={publishDisabled}
+            publishDisabledReason={publishDisabledReason}
+            publishStatus={publishStatus}
+            publishStatusMessage={publishStatus === "error" ? publishError : undefined}
+          />
+        </>
+      ) : (
+        <div className={styles.startEditingRow}>
+          <PrimaryButton type="button" onClick={handleStartEditing}>
+            {he.editor.actions.startEditing}
+          </PrimaryButton>
+        </div>
+      )}
     </div>
   );
 }
