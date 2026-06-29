@@ -67,11 +67,29 @@ enum VersionStatus {
 /// TalentSocial, TalentGalleryImage, SiteContent row, etc). See
 /// ADMIN_PANEL_PLAN.md Section 5. Nothing is ever hard-deleted by admin
 /// code — DELETED is a soft marker with deletedAt/deletedBy populated.
+///
+/// NOTE: this enum's HIDDEN value is an entity-level soft-delete/lifecycle
+/// concept (e.g. "this Talent row itself is hidden from admin views"). It
+/// is intentionally unrelated to TalentVisibility below (public-website
+/// visibility of a talent's PUBLISHED content) — the two must never be
+/// conflated despite the similarly-named value, per the Talent Publishing
+/// Status product spec.
 enum LifecycleStatus {
   ACTIVE
   HIDDEN
   ARCHIVED
   DELETED
+}
+
+/// Talent Publishing Status sprint (Phase 1) — public-website visibility of
+/// a talent's content, modeled as a normal versioned field on
+/// TalentVersion (see that model's `visibility` column below), not as a
+/// separate engine or as a reuse of LifecycleStatus.HIDDEN above. Default
+/// is VISIBLE so every existing/new version behaves exactly as today's
+/// public site already does unless an Owner explicitly publishes a change.
+enum TalentVisibility {
+  VISIBLE
+  HIDDEN
 }
 
 /// Audit log action types (Section 4.1). LOGIN/LOGIN_FAILED are included
@@ -239,6 +257,14 @@ model TalentVersion {
   birthDate     DateTime?
   bioHe         String?
   bioEn         String?
+
+  // Talent Publishing Status sprint (Phase 1) — public visibility of this
+  // version's content, versioned like every other field above. Default
+  // VISIBLE so existing rows (backfilled by this migration) and any new
+  // version created without an explicit value behave exactly like today's
+  // public site. See TalentVisibility's header comment for why this is
+  // not LifecycleStatus.HIDDEN.
+  visibility TalentVisibility @default(VISIBLE)
 
   profileImageAssetId String?
   profileImageAsset    Asset? @relation("TalentVersionProfileImage", fields: [profileImageAssetId], references: [id])
