@@ -477,6 +477,45 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  // Implementation Sprint A, Phase 1 — state synchronization after Publish
+  // (and, for free, after any other server-refreshing action: Submit,
+  // Approve, Reject, etc.). This component never remounts across a
+  // `router.refresh()` triggered by TalentDetailsEditor's handleSubmit/
+  // handlePublishNow — it's the same component instance, so `useState`'s
+  // lazy initializer (buildInitialValues, used to seed proposedValues/
+  // savedValues above) only ever runs once, on first mount. Without this
+  // effect, a successful Publish leaves proposedValues/savedValues frozen
+  // on whatever was true *before* the publish, even though the parent has
+  // already re-rendered this component with fresh `fields`/`groups` props
+  // reflecting the new Current Published values — the literal "stuck in
+  // Draft" bug this phase exists to fix (spec Section 2.7/8).
+  //
+  // Guarded by `!isDirty`, the same condition ProfileImagePanel's analogous
+  // sync effect already uses: Publish (and Submit) are only ever clickable
+  // when the proposed values are clean (not dirty), so by the time a
+  // publish/submit actually succeeds and the parent's props change,
+  // proposedValues already equals savedValues — resyncing both to the
+  // fresh server data can never clobber an in-progress, unsaved edit.
+  // `initialValuesKey` is a content-based (not reference-based) dependency
+  // so this only actually fires when the underlying field values change,
+  // not on every unrelated re-render.
+  const initialValuesKey = JSON.stringify(buildInitialValues());
+  useEffect(() => {
+    if (!isDirty) {
+      const refreshed = JSON.parse(initialValuesKey);
+      setProposedValues(refreshed);
+      setSavedValues(refreshed);
+      setSaveStatus("idle");
+      setSaveError(null);
+      setSubmitStatus("idle");
+      setSubmitError(null);
+      setPublishStatus("idle");
+      setPublishError(null);
+      setConflictNotice(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValuesKey]);
+
   return (
     <div className={styles.tokens}>
       <div className={styles.comparison}>

@@ -70,7 +70,7 @@
  *   - labels ({ value, label }[], optional, default SOCIAL_ACCOUNT_LABELS)
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./SocialLinksEditor.module.css";
 import SocialAccountCard from "./SocialLinkRow";
@@ -324,6 +324,34 @@ export default function SocialLinksEditor({
       setPublishError(null);
     }
   }
+
+  // Implementation Sprint A, Phase 1 — state synchronization after Publish.
+  // Same bug/fix shape as ComparisonView's analogous effect: handlePublishNow
+  // (and handleSubmit) call `router.refresh()`, which re-renders this
+  // component with fresh `publishedSocials`/`draftSocials` props, but never
+  // remounts it — so `proposedAccounts`/`savedAccounts`, seeded once via
+  // `useState(() => withKeys(initialSeed))`, would otherwise stay frozen on
+  // the pre-publish rows forever, along with whatever save/submit/publish
+  // status was last set. Guarded by `!isDirty` for the same reason
+  // ProfileImagePanel's sync effect is: Publish/Submit are only clickable
+  // while clean, so by the time either succeeds and props change,
+  // proposedAccounts already equals savedAccounts — resyncing both to the
+  // fresh server rows can never clobber an in-progress, unsaved edit.
+  const initialSeedKey = JSON.stringify(toComparablePayload(initialSeed));
+  useEffect(() => {
+    if (!isDirty) {
+      const refreshed = withKeys(initialSeed);
+      setProposedAccounts(refreshed);
+      setSavedAccounts(refreshed);
+      setSaveDraftStatus("idle");
+      setSaveDraftError(null);
+      setSubmitStatus("idle");
+      setSubmitError(null);
+      setPublishStatus("idle");
+      setPublishError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSeedKey]);
 
   function handleFieldChange(key, field, value) {
     setProposedAccounts((previous) =>

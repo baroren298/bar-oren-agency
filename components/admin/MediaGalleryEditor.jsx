@@ -106,7 +106,7 @@
  *   - emptyProposedTitle / emptyProposedDescription (string, optional)
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates, arrayMove } from "@dnd-kit/sortable";
@@ -375,6 +375,36 @@ export default function MediaGalleryEditor({
       setPublishError(null);
     }
   }
+
+  // Implementation Sprint A, Phase 1 — state synchronization after Publish.
+  // Same bug/fix shape as SocialLinksEditor's analogous effect:
+  // handlePublishNow (and handleSubmit) call `router.refresh()`, which
+  // re-renders this component with fresh `publishedImages`/`draftImages`
+  // props but never remounts it — so `proposedImages`/`savedImages`, seeded
+  // once via `useState(() => withKeys(initialSeed))`, would otherwise stay
+  // frozen on the pre-publish rows forever, along with whatever save/
+  // submit/publish status was last set. Guarded by `!isDirty` for the same
+  // reason every other module's sync effect is: Publish/Submit are only
+  // clickable while clean, so by the time either succeeds and props change,
+  // proposedImages already equals savedImages — resyncing both to the fresh
+  // server rows can never clobber an in-progress, unsaved edit (including a
+  // still-in-flight upload, which only ever touches proposedImages once it
+  // resolves, after which the grid is dirty again until the next save).
+  const initialSeedKey = JSON.stringify(toComparablePayload(initialSeed));
+  useEffect(() => {
+    if (!isDirty) {
+      const refreshed = withKeys(initialSeed);
+      setProposedImages(refreshed);
+      setSavedImages(refreshed);
+      setSaveDraftStatus("idle");
+      setSaveDraftError(null);
+      setSubmitStatus("idle");
+      setSubmitError(null);
+      setPublishStatus("idle");
+      setPublishError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSeedKey]);
 
   function handleFieldChange(key, field, value) {
     setProposedImages((previous) =>
