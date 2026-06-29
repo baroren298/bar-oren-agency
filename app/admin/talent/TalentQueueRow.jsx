@@ -89,8 +89,17 @@ export default function TalentQueueRow({ talent }) {
             </div>
 
             {social ? (
+              // Talent Visibility sprint (Issue 2 fix) — `social.text` is a
+              // Latin-script handle/URL inside this dir="rtl" page (see
+              // app/admin/layout.jsx). Without an explicit dir="ltr", the
+              // browser's bidi algorithm can reorder a value like
+              // "@@kimchourilov" so the "@@" renders at the visual end
+              // instead of the start. components/admin/SocialLinkRow.jsx
+              // already wraps every Latin-script value this same way for
+              // the same reason (see that file's header comment) — this
+              // just applies the existing convention here too.
               <p className={styles.rowSocial}>
-                {social.icon} {social.text}
+                {social.icon} <span dir="ltr">{social.text}</span>
               </p>
             ) : null}
 

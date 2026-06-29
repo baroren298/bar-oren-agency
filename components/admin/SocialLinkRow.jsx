@@ -50,28 +50,12 @@
 import styles from "./SocialLinkRow.module.css";
 import { he } from "@/lib/admin/i18n/he";
 import { getPlatformEntry, SOCIAL_ACCOUNT_LABELS } from "@/lib/admin/social-platforms";
-
-/**
- * Strips every leading "@" off a handle, e.g. "@@almavay" -> "almavay",
- * "@almavay" -> "almavay", "almavay" -> "almavay". The one normalization
- * primitive everything below builds on.
- */
-function stripLeadingAt(handle) {
-  if (!handle) return handle;
-  return handle.replace(/^@+/, "");
-}
-
-/**
- * Read-only / preview display form — always exactly one leading "@", no
- * matter how the value happens to be stored ("almavay", "@almavay", or a
- * defensively-handled "@@almavay" all become "@almavay"). Used by
- * buildPreview below and by the Handle field's read-only (Published) text.
- * Display-only: the stored handle itself is never modified.
- */
-function normalizeHandleDisplay(handle) {
-  if (!handle) return handle;
-  return `@${stripLeadingAt(handle)}`;
-}
+// Talent Visibility sprint (Issue 2 fix) — stripLeadingAt/normalizeHandleDisplay
+// used to be defined locally here. Extracted to lib/admin/social-handle.js so
+// the Admin Talent List's social preview (lib/admin/talent-workspace.js) can
+// reuse the exact same normalization instead of duplicating it. No behavior
+// change to this component.
+import { stripLeadingAt, normalizeHandleDisplay } from "@/lib/admin/social-handle";
 
 function buildPreview(handle, url) {
   if (handle) return normalizeHandleDisplay(handle);
