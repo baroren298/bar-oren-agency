@@ -65,6 +65,8 @@ const nextConfig = {
       { source: '/en/:path*', destination: '/en/:path*' },
       { source: '/admin', destination: '/admin' },
       { source: '/admin/:path*', destination: '/admin/:path*' },
+      { source: '/api/admin', destination: '/api/admin' },
+      { source: '/api/admin/:path*', destination: '/api/admin/:path*' },
       { source: '/:path*', destination: '/he/:path*' },
     ];
   },

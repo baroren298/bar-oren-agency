@@ -281,7 +281,7 @@ function ProposedField({ field, value, onChange }) {
   );
 }
 
-export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, onPublish, isProposed = false }) {
+export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, onPublish, isProposed = false, showSubmit = true }) {
   const fieldGroups = normalizeGroups({ groups, fields });
   const allFields = fieldGroups.flatMap((group) => group.fields);
 
@@ -565,6 +565,7 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
         saveDraftStatus={saveStatus}
         saveDraftStatusMessage={saveStatus === "error" ? saveError : saveStatus === "saved" ? savedStatusMessage : undefined}
         onSubmit={handleSubmit}
+        showSubmit={showSubmit}
         submitDisabled={submitDisabled}
         submitDisabledReason={submitDisabledReason}
         submitStatus={submitStatus}

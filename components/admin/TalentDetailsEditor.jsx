@@ -150,6 +150,7 @@ export default function TalentDetailsEditor({ talentId, versionId, versionStatus
       groups={groups}
       onSaveDraft={versionId ? handleSaveDraft : undefined}
       onSubmit={versionId && isDraft ? handleSubmit : undefined}
+      showSubmit={!isOwner}
       onPublish={versionId && isOwner ? handlePublishNow : undefined}
       isProposed={isProposed}
     />

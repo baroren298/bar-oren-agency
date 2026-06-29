@@ -515,7 +515,7 @@ export default function SocialLinksEditor({
         onSubmit={handleSubmit}
         onPublish={handlePublishNow}
         showSaveDraft={hasPersistence}
-        showSubmit={hasPersistence}
+        showSubmit={hasPersistence && !isOwner}
         showPublish={hasPersistence && isOwner}
         saveDraftDisabled={saveDraftDisabled}
         saveDraftDisabledReason={saveDraftDisabledReason}

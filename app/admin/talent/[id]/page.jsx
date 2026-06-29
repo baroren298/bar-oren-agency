@@ -65,6 +65,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import StatusBadge from '@/components/admin/StatusBadge';
 import EmptyState from '@/components/admin/EmptyState';
 import StartEditingButton from '@/components/admin/StartEditingButton';
+import CancelEditingButton from '@/components/admin/CancelEditingButton';
 import ProfileImagePanel from '@/components/admin/ProfileImagePanel';
 import PodcastTab from '@/components/admin/PodcastTab';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
@@ -800,6 +801,17 @@ export default async function AdminTalentDetailPage({ params }) {
               calls of its own, it just reflects that existing read.
             */}
             <StartEditingButton talentId={talent.id} pendingStatus={pendingVersion?.status ?? null} />
+            {/*
+              Cancel Editing / Discard Draft sprint — a clear top-level
+              action to abandon the whole editing session, not just unsaved
+              field edits (that's the separate, unaffected bottom form
+              Cancel). Only rendered when there's a DRAFT to discard — a
+              PROPOSED version has no top-level cancel here at all; Owner
+              Reject is the only way to withdraw that.
+            */}
+            {pendingVersion?.status === VERSION_STATUS.DRAFT ? (
+              <CancelEditingButton talentId={talent.id} versionId={pendingVersion.id} />
+            ) : null}
           </div>
         }
       />

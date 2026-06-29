@@ -683,7 +683,7 @@ export default function MediaGalleryEditor({
         onSubmit={handleSubmit}
         onPublish={handlePublishNow}
         showSaveDraft={hasPersistence}
-        showSubmit={hasPersistence}
+        showSubmit={hasPersistence && !isOwner}
         showPublish={hasPersistence && isOwner}
         saveDraftDisabled={saveDraftDisabled}
         saveDraftDisabledReason={saveDraftDisabledReason}
