@@ -30,38 +30,34 @@
  *
  * Talent Visibility sprint (admin UI): that real schema field now exists
  * and the toggle lives on the detail page (TalentVisibilityAction.jsx), per
- * the plan above. This adds exactly one more inert, muted <StatusBadge> —
+ * the plan above. This used to add a second, inert, muted <StatusBadge> —
  * "מוסתר" — next to the existing workflow badge, shown only for a Hidden
- * talent (isListTalentHidden now reads the real `talent.visibility` field
- * instead of always returning false). A Visible talent gets no extra badge
- * at all, matching requirement #6 and this same "no toggle-like markup in
- * the list" precedent — this sprint adds no filtering/search hookup here,
- * that's explicitly out of scope.
+ * talent.
+ *
+ * Admin Talent List single-badge sprint: that pairing (e.g. "Published" +
+ * "Hidden" stacked on the same card) read as visually noisy for something
+ * that's really one status. The card now renders exactly one badge, chosen
+ * by lib/admin/talent-workspace.js's `selectListBadge` (Hidden replaces
+ * Published rather than joining it; Draft/Pending Review are unaffected).
+ * No workflow/visibility logic changed here or in that helper — this is
+ * purely "which already-computed label/tone does this one badge show."
+ * The detail page (app/admin/talent/[id]/page.jsx) is untouched and still
+ * renders both the workflow and visibility chips independently.
  */
 
 import Link from 'next/link';
 import Card from '@/components/admin/Card';
 import StatusBadge from '@/components/admin/StatusBadge';
 import TalentImage from '@/components/ui/TalentImage';
-import {
-  deriveListWorkflowStatus,
-  deriveListSocialPreview,
-  workflowStatusLabel,
-  workflowStatusTone,
-  isListTalentHidden,
-  talentVisibilityTone,
-} from '@/lib/admin/talent-workspace';
-import { TALENT_VISIBILITY } from '@/lib/admin/constants/enums';
+import { deriveListSocialPreview, selectListBadge } from '@/lib/admin/talent-workspace';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent.module.css';
 
 export default function TalentQueueRow({ talent }) {
-  const status = deriveListWorkflowStatus(talent);
-  const tone = workflowStatusTone(status);
+  const badge = selectListBadge(talent);
   const displayName = talent.name || talent.nameEn || talent.slug;
   const location = talent.location || talent.locationEn;
   const social = deriveListSocialPreview(talent.socialPreview);
-  const hidden = isListTalentHidden(talent);
 
   return (
     <Link href={`/admin/talent/${talent.id}`} className={styles.rowLink} aria-label={`${he.talent.list.openFolder}: ${displayName}`}>
@@ -70,24 +66,8 @@ export default function TalentQueueRow({ talent }) {
           <div className={styles.rowThumb}>
             <div className={styles.rowThumbBadge}>
               <span className={styles.badgeWrap}>
-                <StatusBadge label={workflowStatusLabel(status)} tone={tone} />
+                <StatusBadge label={badge.label} tone={badge.tone} />
               </span>
-              {hidden ? (
-                // Talent Visibility UI Polish sprint — was hardcoded
-                // tone="neutral" here, which made this badge the same gray
-                // as a "Draft" workflow badge even though the talent detail
-                // page's own visibility chip (app/admin/talent/[id]/page.jsx)
-                // already renders the identical "מוסתר" label with
-                // tone="warning" (talentVisibilityTone). Same concept, same
-                // label, now the same color in both places — purely a tone
-                // swap, the badge's meaning/text is unchanged.
-                <span className={`${styles.badgeWrap} ${styles.badgeWrapSecondary}`}>
-                  <StatusBadge
-                    label={he.talent.list.hiddenBadge}
-                    tone={talentVisibilityTone(TALENT_VISIBILITY.HIDDEN)}
-                  />
-                </span>
-              ) : null}
             </div>
             <TalentImage src={talent.profileImageUrl} alt="" />
           </div>
