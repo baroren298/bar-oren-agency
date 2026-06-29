@@ -49,7 +49,9 @@ import {
   workflowStatusLabel,
   workflowStatusTone,
   isListTalentHidden,
+  talentVisibilityTone,
 } from '@/lib/admin/talent-workspace';
+import { TALENT_VISIBILITY } from '@/lib/admin/constants/enums';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent.module.css';
 
@@ -71,8 +73,19 @@ export default function TalentQueueRow({ talent }) {
                 <StatusBadge label={workflowStatusLabel(status)} tone={tone} />
               </span>
               {hidden ? (
-                <span className={styles.badgeWrap}>
-                  <StatusBadge label={he.talent.list.hiddenBadge} tone="neutral" />
+                // Talent Visibility UI Polish sprint — was hardcoded
+                // tone="neutral" here, which made this badge the same gray
+                // as a "Draft" workflow badge even though the talent detail
+                // page's own visibility chip (app/admin/talent/[id]/page.jsx)
+                // already renders the identical "מוסתר" label with
+                // tone="warning" (talentVisibilityTone). Same concept, same
+                // label, now the same color in both places — purely a tone
+                // swap, the badge's meaning/text is unchanged.
+                <span className={`${styles.badgeWrap} ${styles.badgeWrapSecondary}`}>
+                  <StatusBadge
+                    label={he.talent.list.hiddenBadge}
+                    tone={talentVisibilityTone(TALENT_VISIBILITY.HIDDEN)}
+                  />
                 </span>
               ) : null}
             </div>

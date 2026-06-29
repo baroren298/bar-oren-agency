@@ -219,18 +219,29 @@
 
 .rowThumbBadge {
   position: absolute;
-  top: 0.6rem;
-  inset-inline-start: 0.6rem;
+  /*
+   * Talent Visibility UI Polish sprint: nudged out from 0.6rem to 0.7rem —
+   * a touch more breathing room from the card's rounded corner now that
+   * this corner regularly holds two stacked pills instead of one.
+   */
+  top: 0.7rem;
+  inset-inline-start: 0.7rem;
   z-index: 1;
   /*
    * Talent Visibility sprint (admin UI) — was a single-child wrapper; now
    * may hold a second badgeWrap pill (the muted "מוסתר" badge) beside the
    * existing workflow-status one. flex+gap stacks them in a tidy column
    * instead of letting two inline-flex spans crowd onto one line.
+   *
+   * Talent Visibility UI Polish sprint: gap widened from 0.3rem to 0.45rem
+   * — at 0.3rem the two pills read as visually fused into one block; the
+   * wider gap makes it clear these are two independent, stacked labels
+   * (primary workflow status, secondary visibility note), not one
+   * two-line badge.
    */
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.45rem;
   align-items: flex-start;
 }
 
@@ -350,9 +361,29 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.12rem 0.45rem;
+  /* Talent Visibility UI Polish sprint: slightly roomier pill padding
+     (was 0.12rem 0.45rem) — the previous padding read tight/cramped once a
+     second pill regularly sits right below this one. */
+  padding: 0.18rem 0.55rem;
   border-radius: 999px;
   background: var(--admin-surface);
   box-shadow: 0 1px 3px 0 rgba(31, 28, 23, 0.14);
   pointer-events: none;
+}
+
+/*
+ * Talent Visibility UI Polish sprint — visual hierarchy between the two
+ * stacked pills: the workflow badge (Published/Draft/…) is the card's
+ * primary status and should read first; "מוסתר" is a secondary, qualifying
+ * note about that same talent. A slight scale-down (no separate
+ * font-size override needed — StatusBadge's own text size stays untouched
+ * by this page) is enough to make that primary/secondary order obvious at
+ * a glance without changing either badge's color meaning or text.
+ */
+.badgeWrapSecondary {
+  /* This page (app/admin/layout.jsx) is always dir="rtl", so the inline-start
+     edge .rowThumbBadge anchors to is physically the right edge — origin
+     matches that, same corner the badge is already pinned to. */
+  transform: scale(0.92);
+  transform-origin: top right;
 }
