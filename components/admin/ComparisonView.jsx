@@ -281,7 +281,7 @@ function ProposedField({ field, value, onChange }) {
   );
 }
 
-export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, isProposed = false }) {
+export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, onPublish, isProposed = false }) {
   const fieldGroups = normalizeGroups({ groups, fields });
   const allFields = fieldGroups.flatMap((group) => group.fields);
 
@@ -302,6 +302,11 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
   // independent actions that can each succeed/fail on their own.
   const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
   const [submitError, setSubmitError] = useState(null);
+  // Owner Direct Publish UX sprint — own status, independent of saveStatus/
+  // submitStatus: Publish Now is a third, separate action (not a relabeled
+  // Submit), so it gets its own in-flight/result tracking.
+  const [publishStatus, setPublishStatus] = useState("idle"); // idle | publishing | published | error
+  const [publishError, setPublishError] = useState(null);
 
   const isDirty = JSON.stringify(proposedValues) !== JSON.stringify(savedValues);
   const saving = saveStatus === "saving";
@@ -316,6 +321,14 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
   // is a defensive UI-side belt-and-suspenders on top of the caller
   // already being expected not to pass `onSubmit` for a PROPOSED version.
   const submitDisabled = !onSubmit || isDirty || saving || submitting || isProposed;
+  // Owner Direct Publish UX sprint — unlike Submit, Publish Now is NOT
+  // forced off by `isProposed`: an Owner publishing a version that's
+  // already PROPOSED (e.g. one an Employee submitted) is exactly the normal
+  // case this button exists for. Still requires `!isDirty` for the same
+  // reason Submit does (see that prop's header comment) — Publish Now acts
+  // on the already-persisted row, not on unsaved local edits.
+  const publishing = publishStatus === "publishing";
+  const publishDisabled = !onPublish || isDirty || saving || submitting || publishing;
 
   const saveDraftLabel = isProposed ? he.editor.actions.updateProposal : he.editor.actions.saveDraft;
   const savedStatusMessage = isProposed ? he.editor.saveDraft.savedProposal : undefined;
@@ -341,6 +354,11 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
       : isDirty
         ? he.editor.submit.unsavedHint
         : undefined;
+  const publishDisabledReason = !onPublish
+    ? he.editor.publish.disabledNoVersion
+    : isDirty
+      ? he.editor.publish.unsavedHint
+      : undefined;
 
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
@@ -357,6 +375,10 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
     if (submitStatus !== "idle" && submitStatus !== "submitting") {
       setSubmitStatus("idle");
       setSubmitError(null);
+    }
+    if (publishStatus !== "idle" && publishStatus !== "publishing") {
+      setPublishStatus("idle");
+      setPublishError(null);
     }
   }
 
@@ -417,6 +439,27 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
     } catch (error) {
       setSubmitStatus("error");
       setSubmitError(error?.message || he.editor.submit.error);
+    }
+  }
+
+  // Owner Direct Publish UX sprint — the only place this component talks to
+  // its caller about publishing. Same "no fetch/URL/talent-specific logic
+  // here" rule as handleSaveDraft/handleSubmit above: the caller's
+  // `onPublish` callback owns the actual API call (and any approve/submit
+  // composition it needs server-side); this function just calls it and
+  // reacts to the outcome.
+  async function handlePublishNow() {
+    if (!onPublish || publishDisabled) return;
+
+    setPublishStatus("publishing");
+    setPublishError(null);
+
+    try {
+      await onPublish();
+      setPublishStatus("published");
+    } catch (error) {
+      setPublishStatus("error");
+      setPublishError(error?.message || he.editor.publish.error);
     }
   }
 
@@ -530,6 +573,18 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
             ? submitError
             : onSubmit && isDirty && submitStatus === "idle"
               ? he.editor.submit.unsavedHint
+              : undefined
+        }
+        onPublish={handlePublishNow}
+        showPublish={!!onPublish}
+        publishDisabled={publishDisabled}
+        publishDisabledReason={publishDisabledReason}
+        publishStatus={publishStatus}
+        publishStatusMessage={
+          publishStatus === "error"
+            ? publishError
+            : onPublish && isDirty && publishStatus === "idle"
+              ? he.editor.publish.unsavedHint
               : undefined
         }
       />

@@ -55,15 +55,27 @@
  *   - versionStatus (string|null, optional) — "DRAFT", "PROPOSED", or null;
  *     mirrors `versionId`'s presence/absence
  *   - groups (ComparisonView's `groups` prop, passed straight through)
+ *   - role (string|null, optional) — Owner Direct Publish UX sprint. The
+ *     current actor's role (lib/admin/constants/enums ROLE), threaded down
+ *     from app/admin/talent/[id]/page.jsx (the one place per request that
+ *     reads the session). `onPublish` is only ever wired up when
+ *     `role === ROLE.OWNER` *and* an editable version exists — an EMPLOYEE
+ *     session never receives the handler at all (no client-side flag to
+ *     bypass, the same "absent prop, not a disabled one" pattern
+ *     EditorActionBar's `showPublish` already documents). The actual
+ *     enforcement remains server-side (requireOwner + the engine's
+ *     assertActorIsOwner) — this is just the UI reflecting that without an
+ *     extra round trip, same convention `versionId`/`isDraft` already use.
  */
 
 import { useRouter } from "next/navigation";
 import ComparisonView from "./ComparisonView";
-import { VERSION_STATUS } from "@/lib/admin/constants/enums";
+import { VERSION_STATUS, ROLE } from "@/lib/admin/constants/enums";
 
-export default function TalentDetailsEditor({ talentId, versionId, versionStatus = null, groups }) {
+export default function TalentDetailsEditor({ talentId, versionId, versionStatus = null, groups, role = null }) {
   const isProposed = versionStatus === VERSION_STATUS.PROPOSED;
   const isDraft = versionStatus === VERSION_STATUS.DRAFT;
+  const isOwner = role === ROLE.OWNER;
   const router = useRouter();
 
   async function handleSaveDraft(values) {
@@ -103,11 +115,42 @@ export default function TalentDetailsEditor({ talentId, versionId, versionStatus
     return body; // { version }
   }
 
+  // Owner Direct Publish UX sprint — the Owner-only shortcut: POSTs to the
+  // new app/api/admin/talent/[id]/proposals/[versionId]/publish/route.js,
+  // which composes the *existing* proposalService.submit() (only if the
+  // version is still DRAFT) and approvalService.approve() (which itself
+  // already composes publishService.publish()) — no new business logic, an
+  // OWNER-only route doing exactly what an OWNER clicking Submit-then-
+  // Approve would already do today, in one request. Works for either a
+  // DRAFT or an already-PROPOSED version (unlike handleSubmit above, which
+  // is DRAFT-only) — see that route's header comment.
+  async function handlePublishNow() {
+    const response = await fetch(`/api/admin/talent/${talentId}/proposals/${versionId}/publish`, {
+      method: "POST",
+    });
+
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(body.error || `Publish failed (${response.status}).`);
+    }
+
+    // Same reasoning as handleSubmit's router.refresh() above: a successful
+    // publish changes the version's status to PUBLISHED, which the page's
+    // own pendingVersion read needs to re-derive (versionId flips back to
+    // null afterward, disabling every action — there is nothing left to
+    // edit until a new Draft is started).
+    router.refresh();
+
+    return body; // { version, parent }
+  }
+
   return (
     <ComparisonView
       groups={groups}
       onSaveDraft={versionId ? handleSaveDraft : undefined}
       onSubmit={versionId && isDraft ? handleSubmit : undefined}
+      onPublish={versionId && isOwner ? handlePublishNow : undefined}
       isProposed={isProposed}
     />
   );

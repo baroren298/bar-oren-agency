@@ -119,7 +119,7 @@ import EmptyState from "./EmptyState";
 import EditorActionBar from "./EditorActionBar";
 import PrimaryButton from "./PrimaryButton";
 import { he } from "@/lib/admin/i18n/he";
-import { VERSION_STATUS } from "@/lib/admin/constants/enums";
+import { VERSION_STATUS, ROLE } from "@/lib/admin/constants/enums";
 import { filterUnresolvedRejectedGalleryImages } from "@/lib/admin/gallery-review";
 
 /*
@@ -272,9 +272,11 @@ export default function MediaGalleryEditor({
   emptyPublishedDescription = he.gallery.noPublishedImagesDescription,
   emptyProposedTitle = he.gallery.noProposedImagesTitle,
   emptyProposedDescription = he.gallery.noProposedImagesDescription,
+  role = null,
 }) {
   const router = useRouter();
   const hasPersistence = Boolean(talentId);
+  const isOwner = role === ROLE.OWNER;
   const initialSeed = draftImages.length > 0 ? draftImages : publishedImages;
 
   // Hide any REJECTED notice already superseded by a newer row in the same
@@ -293,6 +295,11 @@ export default function MediaGalleryEditor({
   const [saveDraftError, setSaveDraftError] = useState(null);
   const [submitStatus, setSubmitStatus] = useState("idle"); // idle | submitting | submitted | error
   const [submitError, setSubmitError] = useState(null);
+  // Owner Direct Publish UX sprint — same idle/in-flight/error shape as
+  // saveDraftStatus/submitStatus above, for the Owner-only Publish Now
+  // action.
+  const [publishStatus, setPublishStatus] = useState("idle"); // idle | publishing | published | error
+  const [publishError, setPublishError] = useState(null);
 
   // Gallery UX Polish sprint — one entry per in-flight upload, replacing
   // Gallery Upload Sprint 2's single uploadStatus/uploadError pair now that
@@ -319,10 +326,20 @@ export default function MediaGalleryEditor({
     JSON.stringify(toComparablePayload(proposedImages)) !== JSON.stringify(toComparablePayload(savedImages));
   const saving = saveDraftStatus === "saving";
   const submitting = submitStatus === "submitting";
+  const publishing = publishStatus === "publishing";
   const hasDraftRows = savedImages.some((image) => image.versionStatus === VERSION_STATUS.DRAFT);
+  // Owner Direct Publish UX sprint — unlike hasDraftRows (Submit is
+  // DRAFT-only), Publish Now is meant to work on a row that's already
+  // PROPOSED too (e.g. one an Employee already submitted) — see
+  // TalentDetailsEditor's analogous comment for the same distinction.
+  const hasPublishableRows = savedImages.some(
+    (image) => image.versionStatus === VERSION_STATUS.DRAFT || image.versionStatus === VERSION_STATUS.PROPOSED
+  );
 
   const saveDraftDisabled = !hasPersistence || !isDirty || saving || submitting;
   const submitDisabled = !hasPersistence || isDirty || saving || submitting || !hasDraftRows;
+  const publishDisabled =
+    !hasPersistence || !isOwner || isDirty || saving || submitting || publishing || !hasPublishableRows;
 
   const saveDraftDisabledReason = !hasPersistence
     ? undefined
@@ -336,6 +353,13 @@ export default function MediaGalleryEditor({
       : !hasDraftRows
         ? he.gallery.errors.nothingToSubmit
         : undefined;
+  const publishDisabledReason = !hasPersistence
+    ? undefined
+    : isDirty
+      ? he.editor.publish.unsavedHint
+      : !hasPublishableRows
+        ? he.editor.publish.disabledNothingToPublish
+        : undefined;
 
   function clearStatuses() {
     if (saveDraftStatus !== "idle" && saveDraftStatus !== "saving") {
@@ -345,6 +369,10 @@ export default function MediaGalleryEditor({
     if (submitStatus !== "idle" && submitStatus !== "submitting") {
       setSubmitStatus("idle");
       setSubmitError(null);
+    }
+    if (publishStatus !== "idle" && publishStatus !== "publishing") {
+      setPublishStatus("idle");
+      setPublishError(null);
     }
   }
 
@@ -538,6 +566,40 @@ export default function MediaGalleryEditor({
     }
   }
 
+  // Owner Direct Publish UX sprint — POSTs to the new
+  // app/api/admin/talent/[id]/gallery/publish/route.js, which composes the
+  // *existing* galleryService.submit() (only for rows still DRAFT) and
+  // galleryService.approve() (looped over every now-PROPOSED row) — no new
+  // business logic, an OWNER-only route doing in one request what an Owner
+  // clicking Submit then Approve on every row would already do today.
+  async function handlePublishNow() {
+    if (!hasPersistence || publishDisabled) return;
+
+    setPublishStatus("publishing");
+    setPublishError(null);
+
+    try {
+      const response = await fetch(`/api/admin/talent/${talentId}/gallery/publish`, {
+        method: "POST",
+      });
+
+      const body = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(body.error || he.editor.publish.error);
+      }
+
+      setPublishStatus("published");
+      // Same reasoning as handleSubmit's router.refresh() above: a
+      // successful publish changes the rows' status to PUBLISHED, which the
+      // page's own pending-rows reads need to re-derive.
+      router.refresh();
+    } catch (error) {
+      setPublishStatus("error");
+      setPublishError(error?.message || he.editor.publish.error);
+    }
+  }
+
   return (
     <div className={styles.tokens}>
       <RejectedGalleryImagesNotice talentId={talentId} rejectedImages={unresolvedRejectedImages} />
@@ -619,8 +681,10 @@ export default function MediaGalleryEditor({
         onCancel={handleReset}
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmit}
+        onPublish={handlePublishNow}
         showSaveDraft={hasPersistence}
         showSubmit={hasPersistence}
+        showPublish={hasPersistence && isOwner}
         saveDraftDisabled={saveDraftDisabled}
         saveDraftDisabledReason={saveDraftDisabledReason}
         saveDraftStatus={saveDraftStatus}
@@ -629,6 +693,10 @@ export default function MediaGalleryEditor({
         submitDisabledReason={submitDisabledReason}
         submitStatus={submitStatus}
         submitStatusMessage={submitStatus === "error" ? submitError : undefined}
+        publishDisabled={publishDisabled}
+        publishDisabledReason={publishDisabledReason}
+        publishStatus={publishStatus}
+        publishStatusMessage={publishStatus === "error" ? publishError : undefined}
       />
     </div>
   );

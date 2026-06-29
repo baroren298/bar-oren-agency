@@ -72,6 +72,7 @@ export default function PodcastTab({
   podcastVideoEmbedUrl,
   hasPodcastData,
   displayName,
+  role = null,
 }) {
   const copy = he.talent.detail.podcastTab;
 
@@ -82,6 +83,7 @@ export default function PodcastTab({
         versionId={versionId}
         versionStatus={versionStatus}
         groups={groups}
+        role={role}
       />
     </div>
   );

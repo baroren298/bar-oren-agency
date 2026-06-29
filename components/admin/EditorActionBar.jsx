@@ -75,6 +75,26 @@
  *     for the current submitStatus; also used (while submitStatus is
  *     "idle") to show the "save your draft first" hint when Submit is
  *     disabled because of unsaved local edits.
+ *
+ * Owner Direct Publish UX sprint:
+ *   - onPublish (function, optional) — inert while publishDisabled.
+ *   - showPublish (boolean, optional, default false) — opt-in (unlike
+ *     showSaveDraft/showSubmit, which default to true): the Publish Now
+ *     button only ever exists for an OWNER actor on a screen that has
+ *     somewhere to publish to, so it's hidden by default and the caller
+ *     (TalentDetailsEditor / MediaGalleryEditor / SocialLinksEditor) opts in
+ *     only once it has confirmed both `role === ROLE.OWNER` and an editable
+ *     pending version/row actually exists. EMPLOYEE callers simply never
+ *     pass `onPublish`/`showPublish` at all — there is no client-side flag
+ *     to bypass, only an absent prop, mirroring the same "hide, don't
+ *     disable-forever" rule showSaveDraft/showSubmit already use for an
+ *     action with nothing to act on.
+ *   - publishDisabled (boolean, optional, default true)
+ *   - publishDisabledReason (string, optional) — tooltip while disabled.
+ *   - publishStatus ("idle" | "publishing" | "published" | "error",
+ *     optional, default "idle") — same role as submitStatus above.
+ *   - publishStatusMessage (string, optional) — same role as
+ *     submitStatusMessage above.
  */
 
 import styles from "./EditorActionBar.module.css";
@@ -94,25 +114,39 @@ const SUBMIT_STATUS_COPY = {
   error: he.editor.submit.error,
 };
 
+const PUBLISH_STATUS_COPY = {
+  publishing: he.editor.publish.publishing,
+  published: he.editor.publish.published,
+  error: he.editor.publish.error,
+};
+
 export default function EditorActionBar({
   onCancel = () => {},
   onSaveDraft = () => {},
   onSubmit = () => {},
+  onPublish = () => {},
   saveDraftDisabled = true,
   submitDisabled = true,
+  publishDisabled = true,
   showSaveDraft = true,
   showSubmit = true,
+  showPublish = false,
   saveDraftDisabledReason,
   submitDisabledReason,
+  publishDisabledReason,
   saveDraftStatus = "idle",
   saveDraftStatusMessage,
   saveDraftLabel = he.editor.actions.saveDraft,
   submitStatus = "idle",
   submitStatusMessage,
+  publishStatus = "idle",
+  publishStatusMessage,
 }) {
   const statusText = saveDraftStatus !== "idle" ? saveDraftStatusMessage || STATUS_COPY[saveDraftStatus] : null;
   const submitText =
     submitStatus !== "idle" ? submitStatusMessage || SUBMIT_STATUS_COPY[submitStatus] : submitStatusMessage;
+  const publishText =
+    publishStatus !== "idle" ? publishStatusMessage || PUBLISH_STATUS_COPY[publishStatus] : publishStatusMessage;
 
   return (
     <div className={`${styles.tokens} ${styles.bar}`}>
@@ -154,6 +188,25 @@ export default function EditorActionBar({
               title={submitDisabled ? submitDisabledReason : undefined}
             >
               {he.editor.actions.submit}
+            </PrimaryButton>
+          </>
+        ) : null}
+        {showPublish ? (
+          <>
+            {publishText ? (
+              <span
+                className={publishStatus === "error" ? styles.statusError : styles.statusText}
+                role={publishStatus === "error" ? "alert" : "status"}
+              >
+                {publishText}
+              </span>
+            ) : null}
+            <PrimaryButton
+              onClick={onPublish}
+              disabled={publishDisabled}
+              title={publishDisabled ? publishDisabledReason : undefined}
+            >
+              {he.editor.actions.publishNow}
             </PrimaryButton>
           </>
         ) : null}

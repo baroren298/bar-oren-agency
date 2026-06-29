@@ -55,9 +55,11 @@
  */
 
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { isDatabaseConfigured } from '@/lib/admin/db';
+import { getSessionUser } from '@/lib/admin/auth/authorize';
 import AdminShell from '../../AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
 import StatusBadge from '@/components/admin/StatusBadge';
@@ -272,7 +274,7 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
  * `versionStatus` is what lets it pick the right button label and decide
  * whether Submit may be offered at all (Submit stays DRAFT-only).
  */
-function DetailsSectionContent({ talentId, publishedVersion, pendingVersion }) {
+function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, role }) {
   if (!publishedVersion) {
     return (
       <EmptyState
@@ -292,6 +294,7 @@ function DetailsSectionContent({ talentId, publishedVersion, pendingVersion }) {
       versionId={editableVersionId}
       versionStatus={isEditablePending ? pendingVersion.status : null}
       groups={buildDetailsGroups(publishedVersion, pendingVersion)}
+      role={role}
     />
   );
 }
@@ -386,6 +389,7 @@ function GallerySectionContent({
   proposedGalleryImages,
   rejectedGalleryImages,
   displayName,
+  role,
 }) {
   const publishedImages = buildGalleryImages(galleryImages, displayName);
   const draftImages = buildGalleryImages(draftGalleryImages, displayName);
@@ -400,6 +404,7 @@ function GallerySectionContent({
         publishedImages={publishedImages}
         draftImages={draftImages}
         rejectedImages={rejectedImages}
+        role={role}
       />
     </>
   );
@@ -448,7 +453,7 @@ function GallerySectionContent({
  * so a rejected account's Owner note renders right above the editor instead
  * of only being visible in the History tab.
  */
-function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials, rejectedSocials }) {
+function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials, rejectedSocials, role }) {
   return (
     <>
       <SocialLinksOwnerReview
@@ -461,6 +466,7 @@ function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocial
         publishedSocials={socials || []}
         draftSocials={draftSocials || []}
         rejectedSocials={rejectedSocials || []}
+        role={role}
       />
     </>
   );
@@ -531,7 +537,7 @@ function buildPodcastGroups(publishedVersion, pendingVersion) {
  * version yet — <PodcastTab> itself renders a clear empty state when every
  * field is empty.
  */
-function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, displayName }) {
+function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role }) {
   const isEditablePending =
     pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
   const editableVersionId = isEditablePending ? pendingVersion.id : null;
@@ -552,6 +558,7 @@ function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, dis
           publishedVersion?.podcastVideoEmbedUrl
       )}
       displayName={displayName}
+      role={role}
     />
   );
 }
@@ -642,6 +649,16 @@ export default async function AdminTalentDetailPage({ params }) {
     notFound();
   }
 
+  // Owner Direct Publish UX sprint — the one place this page reads the
+  // session, mirroring every other read here ("pure read, nothing written").
+  // Middleware already guarantees a logged-in user reached this far; this
+  // just reads which role they have so it can be prop-drilled down to the
+  // editor components exactly like talentId/versionId already are. This is
+  // UI-only convenience — every actual publish/approve call is still
+  // independently re-checked server-side (requireOwner / assertActorIsOwner).
+  const session = await getSessionUser({ cookies: await cookies() });
+  const role = session?.role ?? null;
+
   // Pure reads only — no version is ever created as a side effect of
   // loading this page (see loadPendingVersion's header comment above).
   // socials/galleryImages added by the Talent Detail DB Read Integration
@@ -696,6 +713,7 @@ export default async function AdminTalentDetailPage({ params }) {
             talentId={talent.id}
             publishedVersion={publishedVersion}
             pendingVersion={pendingVersion}
+            role={role}
           />
         ),
       };
@@ -711,6 +729,7 @@ export default async function AdminTalentDetailPage({ params }) {
             proposedGalleryImages={proposedGalleryImages}
             rejectedGalleryImages={rejectedGalleryImages}
             displayName={displayName}
+            role={role}
           />
         ),
       };
@@ -725,6 +744,7 @@ export default async function AdminTalentDetailPage({ params }) {
             draftSocials={draftSocials}
             proposedSocials={proposedSocials}
             rejectedSocials={rejectedSocials}
+            role={role}
           />
         ),
       };
@@ -741,6 +761,7 @@ export default async function AdminTalentDetailPage({ params }) {
             publishedVersion={publishedVersion}
             pendingVersion={pendingVersion}
             displayName={displayName}
+            role={role}
           />
         ),
       };
