@@ -1,6 +1,6 @@
 import { siteConfig } from '@/data/site';
-import { talentList } from '@/data/talent';
 import { localizeHref } from '@/lib/i18n';
+import { getPublicTalentList } from '@/lib/public/talent';
 
 /*
  * Builds one sitemap entry for a given Hebrew-style path (e.g. '/talent',
@@ -41,7 +41,18 @@ function buildEntry(base, path, { changeFrequency, priority, lastModified }) {
   ];
 }
 
-export default function sitemap() {
+/*
+ * Talent Visibility Phase 2: talent entries are sourced through
+ * lib/public/talent.js's getPublicTalentList() — the same DB-or-static,
+ * visibility-filtered resolution the roster and profile pages use — rather
+ * than importing data/talent's static list directly. This keeps the
+ * sitemap permanently in sync with public visibility by construction: a
+ * HIDDEN talent (DB-sourced) is excluded here for the same reason it's
+ * excluded from the roster and 404s on its profile URL, with no separate
+ * visibility check to keep in sync. sitemap() must be async to await it —
+ * Next.js supports an async default export from app/sitemap.js.
+ */
+export default async function sitemap() {
   const base = siteConfig.meta.url;
   const now  = new Date();
 
@@ -58,7 +69,8 @@ export default function sitemap() {
     buildEntry(base, path, { changeFrequency, priority, lastModified: now })
   );
 
-  const talentEntries = talentList.flatMap((t) =>
+  const talents = await getPublicTalentList();
+  const talentEntries = talents.flatMap((t) =>
     buildEntry(base, `/talent/${t.slug}`, {
       changeFrequency: 'monthly',
       priority: 0.8,
