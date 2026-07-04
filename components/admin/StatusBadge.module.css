@@ -1,0 +1,39 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.toneNeutral {
+  background: var(--admin-status-neutral-bg);
+  color: var(--admin-status-neutral-text);
+}
+
+.toneSuccess {
+  background: var(--admin-status-success-bg);
+  color: var(--admin-status-success-text);
+}
+
+.toneWarning {
+  background: var(--admin-status-warning-bg);
+  color: var(--admin-status-warning-text);
+}
+
+.toneInfo {
+  background: var(--admin-status-info-bg);
+  color: var(--admin-status-info-text);
+}
+
+.toneDanger {
+  background: var(--admin-status-danger-bg);
+  color: var(--admin-status-danger-text);
+}

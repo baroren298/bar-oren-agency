@@ -1,0 +1,189 @@
+/*
+ * SocialLinkRow styles — Social Links Editor Foundation sprint, redesigned
+ * by the Socials Tab Multi-Account UI sprint (boxed card) and restyled by
+ * the Socials Tab Visual Polish sprint to drop the box entirely.
+ *
+ * Deliberately mirrors ComparisonView.module.css's `.fieldRow` /
+ * `.fieldRowEditable` grid (160px label column + value column,
+ * border-bottom divider for read-only rows, no border for editable rows)
+ * so a list of accounts reads like every other field group in the admin —
+ * no per-account border, no shadow, no floated controls.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.accountGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.accountHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 0.3rem;
+}
+
+.platformIcon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.platformName {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--admin-text-secondary);
+}
+
+/*
+ * "לא נשמר" indicator — was an absolutely-positioned colored pill stacked
+ * on top of the card; now an inline, muted note next to the platform name,
+ * the same weight as a parenthetical aside rather than a status badge.
+ */
+.notSavedHint {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  opacity: 0.85;
+}
+
+.fieldList {
+  display: flex;
+  flex-direction: column;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding-block: 0.6rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.fieldRow:last-child {
+  border-bottom: none;
+}
+
+.fieldRowEditable {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: start;
+  gap: 1.25rem;
+  padding-block: 0.45rem;
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.readOnlyValue {
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+  word-break: break-word;
+}
+
+/*
+ * Latin-script values (handle/url) rendered inside the RTL page — isolated
+ * with dir="ltr" at the JSX level so "@almavay" never visually reorders to
+ * "almavay@"; this class only adds the matching text alignment.
+ */
+.readOnlyValueLtr {
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+  word-break: break-all;
+  text-align: end;
+  display: block;
+}
+
+.emptyValue {
+  font-size: 0.92rem;
+  color: var(--admin-text-muted);
+}
+
+.select {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.45rem 0.65rem;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.45rem 0.65rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.input::placeholder {
+  color: var(--admin-text-muted);
+}
+
+.inputLtr {
+  text-align: end;
+}
+
+/*
+ * Preview row — last in the field-row hierarchy, kept structurally
+ * identical to .fieldRow/.fieldRowEditable so the eye reads it as part of
+ * the same Platform → Account type → Handle → URL → Preview sequence
+ * rather than a separate callout. Value is muted, not bold/colored, so it
+ * doesn't compete with the actual data above it.
+ */
+.previewRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding-block: 0.6rem 0.2rem;
+}
+
+.previewValue {
+  font-size: 0.88rem;
+  color: var(--admin-text-muted);
+  word-break: break-all;
+  text-align: end;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .fieldRow,
+  .fieldRowEditable,
+  .previewRow {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .readOnlyValueLtr,
+  .previewValue,
+  .inputLtr {
+    text-align: start;
+  }
+}

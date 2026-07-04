@@ -33,3 +33,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# migration day importer bookkeeping/output (scripts/migrate-day-import.mjs)
+scripts/.migration-day-import.manifest.json
+scripts/migrate-day-import.report.json
+
+# local dev uploads (lib/storage/providers/localProvider.js writes here;
+# dev-only — production must use a cloud StorageProvider)
+/public/uploads/

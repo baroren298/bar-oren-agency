@@ -1,0 +1,62 @@
+/*
+ * /admin dashboard page styles — Admin Hebrew + Friendly Home sprint.
+ *
+ * Composes the shared components/admin/admin-tokens.module.css palette,
+ * same as every other admin page, so this can't drift from the existing
+ * look. Only new layout here is the greeting block and the summary grid —
+ * everything else (card surface, badge colors) comes from Card/StatusBadge
+ * directly.
+ */
+
+.tokens {
+  composes: tokens from "../../components/admin/admin-tokens.module.css";
+}
+
+.greeting {
+  composes: tokens;
+  margin: 0 0 0.4rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.subline {
+  composes: tokens;
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--admin-text-secondary);
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin: 1.25rem 0;
+}
+
+.summaryTile {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.summaryCount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  line-height: 1;
+}
+
+.talentCardText {
+  composes: tokens;
+  margin: 0 0 1.25rem;
+  color: var(--admin-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}

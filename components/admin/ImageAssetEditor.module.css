@@ -1,0 +1,85 @@
+/*
+ * ImageAssetEditor styles — mirrors ComparisonView.module.css's eyebrow /
+ * calm-published / tinted-elevated-proposed visual language exactly
+ * (colors, spacing, typography) so image editing reads as the same product
+ * as text-field editing, without importing ComparisonView's CSS module
+ * (a generic field-row grid that doesn't apply here).
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.editor {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.eyebrowIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.eyebrowTitle,
+.eyebrowTitleProposed {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eyebrowTitle {
+  color: var(--admin-text-muted);
+}
+
+.eyebrowTitleProposed {
+  color: var(--admin-accent-strong);
+}
+
+.publishedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-inline-start: 0.1rem;
+}
+
+.publishedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+}
+
+.publishedPreview {
+  max-width: 14rem;
+}
+
+.proposedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 2rem 2.25rem;
+  background: var(--admin-accent-subtle);
+  border-radius: var(--admin-radius-lg);
+  box-shadow: 0 12px 28px -22px rgba(31, 28, 23, 0.35);
+}
+
+.proposedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-accent-strong);
+}
+
+@media (max-width: 640px) {
+  .proposedSection {
+    padding: 1.5rem 1.25rem;
+  }
+}

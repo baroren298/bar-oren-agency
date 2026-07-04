@@ -1,0 +1,36 @@
+/*
+ * StartEditingButton — "Start Editing" sprint. Minimal, additive styles
+ * composing the same shared admin-tokens palette every other
+ * components/admin/** module uses.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.wrapper {
+  composes: tokens;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.error {
+  font-size: 0.78rem;
+  color: var(--admin-status-danger-text);
+}
+
+.blocked {
+  composes: tokens;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1.05rem;
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-status-warning-bg);
+  color: var(--admin-status-warning-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: default;
+}

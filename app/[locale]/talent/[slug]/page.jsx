@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { talentList, getTalentBySlug } from '@/data/talent';
 import { siteConfig } from '@/data/site';
 import { localizeHref } from '@/lib/i18n';
 import ProfileHero from '@/components/talent/ProfileHero';
@@ -11,10 +10,36 @@ import PodcastSection from '@/components/talent/PodcastSection';
 import ProfileCTA from '@/components/talent/ProfileCTA';
 import ProfileNav from '@/components/talent/ProfileNav';
 import JsonLd from '@/components/ui/JsonLd';
+import {
+  getPublicTalentList,
+  getPublicTalentBySlug,
+  getPublicTalentSlugs,
+} from '@/lib/public/talent';
 
-/* Pre-render every talent profile at build time */
+/*
+ * Phase 1 of the CMS connection (read-only): this page now reads talent
+ * data through lib/public/talent.js, which prefers Postgres's current
+ * PUBLISHED talents and falls back to the static data/talent/index.js
+ * list whenever the database isn't configured, has no published talent
+ * yet, or a read fails. See that file's header comment for the fallback
+ * contract. ISR keeps the page from hitting the database on every request
+ * while still picking up new Publishes within TALENT_REVALIDATE_SECONDS;
+ * `dynamicParams` stays at its default (true) so a slug published after
+ * the last build/regeneration still renders on demand instead of 404ing.
+ *
+ * NOTE: Next.js's route segment config exports (revalidate, dynamic, etc.)
+ * must be statically analyzable literals — it rejects an exported
+ * reference to an imported variable ("Invalid segment configuration
+ * export detected") even though the value is a plain number at runtime.
+ * So this is hardcoded to match TALENT_REVALIDATE_SECONDS rather than
+ * importing it directly; keep the two in sync if that constant changes.
+ */
+export const revalidate = 60; // keep in sync with TALENT_REVALIDATE_SECONDS in lib/public/talent.js
+
+/* Pre-render every known talent profile at build time */
 export async function generateStaticParams() {
-  return talentList.map((t) => ({ slug: t.slug }));
+  const slugs = await getPublicTalentSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 /*
@@ -34,7 +59,7 @@ export async function generateStaticParams() {
 /* Per-profile SEO metadata */
 export async function generateMetadata({ params }) {
   const { slug, locale } = await params;
-  const talent = getTalentBySlug(slug);
+  const talent = await getPublicTalentBySlug(slug);
   if (!talent) return {};
 
   const isEnglish = locale === 'en';
@@ -137,12 +162,15 @@ function buildProfileSchemas(talent, locale = 'he') {
 
 export default async function TalentProfilePage({ params }) {
   const { locale, slug } = await params;
-  const talent = getTalentBySlug(slug);
+  const talent = await getPublicTalentBySlug(slug);
 
   if (!talent) notFound();
 
-  /* Adjacent talent for prev/next navigation */
-  const sorted = [...talentList].sort((a, b) => a.sortOrder - b.sortOrder);
+  /* Adjacent talent for prev/next navigation — getPublicTalentList() is
+     already sorted by sortOrder and resolved from the same DB-or-static
+     source as the lookup above (see lib/public/talent.js), so this never
+     mixes a DB-sourced talent's neighbors with static-file entries. */
+  const sorted = await getPublicTalentList();
   const idx    = sorted.findIndex((t) => t.slug === slug);
   const prev   = idx > 0 ? sorted[idx - 1] : null;
   const next   = idx < sorted.length - 1 ? sorted[idx + 1] : null;

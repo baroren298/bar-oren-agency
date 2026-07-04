@@ -1,0 +1,149 @@
+/*
+ * SocialLinksEditor styles — Social Links Editor Foundation sprint.
+ *
+ * Deliberately mirrors ComparisonView.module.css / MediaGalleryEditor.
+ * module.css's hierarchy language: published sits unboxed on the page
+ * background with quiet typography (must never look editable); proposed
+ * sits on its own soft tinted, elevated surface (the one place editing
+ * happens). A generous gap between the two does the separating job instead
+ * of a divider — same visual language, new content.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* ---------- Shared eyebrow header (icon + label) ---------- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.eyebrowIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.eyebrowTitle,
+.eyebrowTitleProposed {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eyebrowTitle {
+  color: var(--admin-text-muted);
+}
+
+.eyebrowTitleProposed {
+  color: var(--admin-accent-strong);
+}
+
+/* ---------- Published — calm, unboxed, read-only ---------- */
+
+.publishedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-inline-start: 0.1rem;
+}
+
+.publishedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+}
+
+/* ---------- Proposed — the one editable, "active" surface ---------- */
+
+.proposedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 2rem 2.25rem;
+  background: var(--admin-accent-subtle);
+  border-radius: var(--admin-radius-lg);
+  box-shadow: 0 12px 28px -22px rgba(31, 28, 23, 0.35);
+}
+
+.proposedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-accent-strong);
+}
+
+/*
+ * Account list — Socials Tab Visual Polish sprint. Each <SocialAccountCard>
+ * is no longer a bordered box (see SocialLinkRow.module.css), just a field
+ * group, so accounts need a divider between them instead of card-to-card
+ * gap; a top border on every account after the first does that job, the
+ * same way ComparisonView relies on borders rather than boxes.
+ */
+.accountList,
+.accountListEditable {
+  display: flex;
+  flex-direction: column;
+}
+
+.accountList > :global(div) + :global(div),
+.accountListEditable > :global(div) + :global(div) {
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+/*
+ * Honesty notice — same role as MediaGalleryEditor's <PreviewModeNotice>,
+ * restyled to match ComparisonView's `.conflictNotice`: a calm, borderless,
+ * tinted line rather than a bordered callout box, so it reads as a quiet
+ * footnote instead of competing with the account list above it.
+ */
+.previewNotice {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--admin-radius);
+  background: var(--admin-accent-subtle);
+}
+
+.previewNoticeTitle {
+  margin: 0 0 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--admin-text-secondary);
+}
+
+.previewNoticeBody {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--admin-text-muted);
+}
+
+/*
+ * Single-Section Editing UX sprint — the row holding the local "Start
+ * Editing" trigger shown in place of <EditorActionBar> while !isEditing.
+ * Right-aligned like EditorActionBar's own action row, but with no Cancel
+ * button since there's nothing to cancel yet (no edits have started).
+ */
+.startEditingRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .proposedSection {
+    padding: 1.5rem 1.25rem;
+  }
+}

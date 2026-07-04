@@ -1,4 +1,4 @@
-import { getFeaturedTalent } from '@/data/talent';
+import { getPublicFeaturedTalent } from '@/lib/public/talent';
 import { siteConfig } from '@/data/site';
 import { localizeHref } from '@/lib/i18n';
 import HeroSection from '@/components/home/HeroSection';
@@ -38,7 +38,13 @@ export async function generateMetadata({ params }) {
 
 export default async function HomePage({ params }) {
   const { locale } = await params;
-  const featuredTalent = getFeaturedTalent(3);
+  // Talent Visibility — Issue 1 fix: was `getFeaturedTalent(3)` from the
+  // static data/talent/index.js (no visibility awareness — see
+  // lib/public/talent.js's getPublicFeaturedTalent header comment). Now
+  // resolved from the same DB-or-static, visibility-filtered source as the
+  // public /talent roster, so a Hidden talent disappears from the homepage
+  // too, not just the roster.
+  const featuredTalent = await getPublicFeaturedTalent(3);
 
   return (
     <>

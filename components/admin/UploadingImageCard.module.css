@@ -1,0 +1,99 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  padding: 0.6rem;
+}
+
+.imageWrapper {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--admin-radius);
+  overflow: hidden;
+  background: var(--admin-accent-subtle);
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.imageWrapperError {
+  background: var(--admin-status-danger-bg);
+}
+
+.spinner {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 2px solid var(--admin-border);
+  border-top-color: var(--admin-accent-strong);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.fileName {
+  max-width: 100%;
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uploadingLabel {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  text-align: center;
+}
+
+.errorRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.errorText {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--admin-status-danger-text);
+}
+
+.dismissButton {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+}
+
+.dismissButton:hover {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-text-primary);
+}

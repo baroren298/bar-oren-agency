@@ -1,0 +1,181 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  padding: 0.6rem;
+}
+
+.imageWrapper {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--admin-radius);
+  overflow: hidden;
+  background: var(--admin-accent-subtle);
+}
+
+.image {
+  object-fit: cover;
+}
+
+/*
+ * Gallery UX Polish sprint — drag handle for @dnd-kit/sortable's
+ * useSortable (see GalleryImageCard.jsx). `attributes`/`listeners` are
+ * spread only onto this button, never the card root, so dragging never
+ * fights with clicking Remove, the details toggle, or a metadata input.
+ * Replaces the old "הזז למעלה"/"הזז למטה" buttons (.reorderActions/
+ * .iconButton, removed below).
+ */
+.dragHandle {
+  position: absolute;
+  top: 0.4rem;
+  inset-inline-end: 0.4rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--admin-text-secondary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/*
+ * Applied to the card currently being dragged (useSortable's isDragging) —
+ * a quiet visual cue (reduced opacity, raised above siblings) distinct from
+ * dnd-kit's own transform/transition (handled inline in GalleryImageCard.jsx
+ * via CSS.Transform), which animates the *other* cards shifting out of the
+ * way.
+ */
+.dragging {
+  opacity: 0.6;
+  z-index: 10;
+}
+
+/*
+ * Gallery UX Polish sprint — small "לא נשמר" tag on every proposed card.
+ * Reorder/remove genuinely mutate this card's position/presence in the
+ * in-memory grid, so it needs its own reminder that none of that is
+ * persisted, distinct from the section-level PreviewModeNotice.
+ */
+.previewBadge {
+  position: absolute;
+  top: 0.4rem;
+  inset-inline-start: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.actionButton {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  background: transparent;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.3rem 0.55rem;
+  cursor: default;
+  opacity: 0.7;
+}
+
+.removeButton {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+}
+
+/*
+ * Gallery Upload Sprint 2 fix-up — disclosure trigger for .metaFields
+ * below, closed by default so the card stays a compact thumbnail + action
+ * row until an editor actually wants to touch alt text/crop/scale/mobile
+ * order. Plain text-button styling, deliberately quieter than
+ * .actionButton (this isn't a third peer action alongside Replace/Remove,
+ * it's a "show more" toggle for the row underneath it).
+ */
+.detailsToggle {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.detailsToggle:hover {
+  color: var(--admin-text-primary);
+}
+
+/*
+ * Gallery Sprint 1 — metadata editing fields (alt text, crop position,
+ * scale, mobile order). Deliberately plain stacked label+input rows,
+ * matching SocialLinkRow's field density rather than introducing a new
+ * input style — this card was never meant to look more elaborate than a
+ * social account card, just for a different entity.
+ */
+.metaFields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+.fieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fieldLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+.fieldInput {
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.3rem 0.5rem;
+}
+
+.fieldInput:focus {
+  outline: 2px solid var(--admin-accent-strong);
+  outline-offset: 1px;
+}

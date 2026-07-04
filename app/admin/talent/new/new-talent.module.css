@@ -1,0 +1,317 @@
+/*
+ * NewTalentPage / NewTalentForm styles — "Add New Talent" sprint, restyled
+ * by the "Add New Talent layout fix" pass. Reuses the shared admin design
+ * tokens (components/admin/admin-tokens.module.css) via `composes`, same
+ * pattern as AddSocialAccountForm.module.css, so this new page matches the
+ * rest of the admin panel (RTL, warm-light surface, one accent color)
+ * without inventing a parallel palette.
+ *
+ * Layout fix sprint — visual/layout only, no field/validation/submit
+ * change: the page wrapper now caps at a comfortable reading width
+ * (max-width: 640px) and centers itself inside AdminShell's wider
+ * `.content` column (960px), instead of stretching the form edge-to-edge.
+ * The two-column `.fieldGrid` is gone — every field now stacks in a single
+ * column (simpler, robust, never cramped), per this sprint's "prefer a
+ * simple one-column layout" decision. Labels were already above inputs;
+ * that's unchanged.
+ */
+
+.tokens {
+  composes: tokens from "../../../../components/admin/admin-tokens.module.css";
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.backLink {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 2rem;
+  border-radius: var(--admin-radius-lg);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+}
+
+.formError {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--admin-radius);
+  background: var(--admin-status-danger-bg);
+  color: var(--admin-status-danger-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/*
+ * Single column now (was a 2-column grid) — every field stacks full-width,
+ * top to bottom, regardless of viewport. Kept as its own class (rather than
+ * folding into .form) so NewTalentForm.jsx's markup didn't need to change.
+ */
+.fieldGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fieldLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.fieldHelper {
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+}
+
+.fieldError {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--admin-status-danger-text);
+}
+
+/*
+ * Add New Talent flow revision — small live "/talent/<slug>" preview
+ * under the slug field's helper text, per the product decision's
+ * "optional preview" requirement.
+ */
+.slugPreview {
+  font-size: 0.78rem;
+  color: var(--admin-text-secondary);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.55rem 0.7rem;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+/*
+ * Create Talent Screen Polish sprint — Profile Image upload control,
+ * rebuilt as a single click-or-drop zone (empty state) / large preview +
+ * two text actions (filled state), replacing the old small-frame-plus-
+ * button layout. Visual language borrowed from AddImageCard.module.css's
+ * dropzone (dashed border, icon, "or" divider) and UploadingImageCard's
+ * spinner treatment, both already in the codebase — not imported directly
+ * since neither component supports this field's single-image
+ * replace/remove behavior, but the look is intentionally the same so the
+ * admin panel doesn't grow a second upload-zone style.
+ */
+.imageDropzone {
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: var(--admin-radius-lg);
+  border: 2px dashed var(--admin-border);
+  background: var(--admin-bg);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.imageDropzone:hover,
+.imageDropzone:focus-visible {
+  border-color: var(--admin-accent);
+  outline: none;
+}
+
+.imageDropzoneActive {
+  border-color: var(--admin-accent);
+  background: var(--admin-accent-subtle);
+}
+
+.imageDropzoneUploading {
+  cursor: default;
+}
+
+.imageDropzoneIcon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.imageDropzoneLabel {
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  text-align: center;
+}
+
+.imageDropzoneOr {
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+}
+
+/* Filled state — large preview + two text actions underneath, no leftover empty placeholder. */
+.imagePreviewBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.imagePreviewFrame {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+  overflow: hidden;
+}
+
+.imagePreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.imagePreviewOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.imagePreviewActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.imageActionLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-accent);
+  cursor: pointer;
+}
+
+.imageActionLink:hover {
+  text-decoration: underline;
+}
+
+.imageActionLink:disabled {
+  color: var(--admin-text-muted);
+  cursor: default;
+  text-decoration: none;
+}
+
+.imageActionLink:last-child {
+  color: var(--admin-status-danger-text);
+}
+
+.imageActionDivider {
+  color: var(--admin-border);
+  font-size: 0.82rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--admin-border);
+  border-top-color: var(--admin-accent);
+  animation: spin 0.7s linear infinite;
+}
+
+.imagePreviewOverlay .spinner {
+  border-color: rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * Mobile — the page wrapper and form padding relax to single-column/
+ * full-width so nothing overflows a narrow viewport; buttons stack
+ * full-width with the primary action (submit) on top, same visual
+ * priority order the desktop's flex-end already implies.
+ */
+@media (max-width: 640px) {
+  .tokens {
+    max-width: 100%;
+  }
+
+  .form {
+    padding: 1.25rem;
+    gap: 1.1rem;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+}

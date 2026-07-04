@@ -1,0 +1,30 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.05rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: transparent;
+  color: var(--admin-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.button:hover {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-text-primary);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

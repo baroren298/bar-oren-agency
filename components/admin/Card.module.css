@@ -1,0 +1,22 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  padding: 1.5rem;
+}
+
+.title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.body {
+  color: var(--admin-text-secondary);
+  font-size: 0.95rem;
+}

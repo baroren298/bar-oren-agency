@@ -1,0 +1,751 @@
+// ─────────────────────────────────────────────────────────────────────────
+// Admin Panel — Prisma schema foundation
+// Admin Panel Architecture v1.2, Section 3 (data model) + Section 4
+// (approval model) + Section 5 (soft delete) + Section 6 (optimistic
+// locking) + Section 4.1 (audit log).
+//
+// PHASE 1 SCOPE: this schema defines the data model only. Nothing in this
+// repo yet connects to a real database, runs a migration, or is wired into
+// any route. The public site (`data/*.js`, app/[locale]/**) is completely
+// unaffected by this file's existence — see ADMIN_PANEL_PLAN.md Section 1.
+//
+// To actually use this schema later (not part of Phase 1):
+//   1. `npm install` (adds prisma + @prisma/client — already declared in
+//      package.json, not yet installed in this environment).
+//   2. Set a real DATABASE_URL in .env.local (see .env.local.example).
+//   3. `npm run prisma:migrate:dev` to create the first migration.
+// ─────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Enums — shared status/versioning conventions (mirrored as plain JS
+// constants in lib/admin/constants/enums.js so application code that
+// doesn't import the generated Prisma client can still reference the same
+// string values; keep the two in sync if either changes).
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Admin user role — OWNER/EMPLOYEE Permission Model Sprint. OWNER (Bar Oren)
+/// can edit, draft, submit, approve, reject, and publish; EMPLOYEE can edit,
+/// draft, and submit only — never approve/reject/publish, never bypass the
+/// approval flow. EMPLOYEE replaces the former placeholder value EDITOR
+/// (renamed via prisma/migrations/20260629120000_rename_editor_role_to_employee
+/// — additive/safe, no data migration needed since no EDITOR rows existed).
+/// See ADMIN_PANEL_PLAN.md Section 11.
+enum Role {
+  OWNER
+  EMPLOYEE
+}
+
+/// Approval lifecycle for a single version/snapshot row (TalentVersion,
+/// EntityVersion, SiteContent, SEO, LegalPage, etc). Distinct from
+/// LifecycleStatus below — a row can be the PUBLISHED version of an entity
+/// that is itself HIDDEN.
+///
+/// DRAFT added in Phase 3B.1 (ADMIN_PANEL_PLAN.md Section 13.3, sub-phase 1
+/// of Section 13.14): a proposal the author is still working on and hasn't
+/// submitted for review yet. `proposalService.submit()` (not yet built)
+/// will flip DRAFT → PROPOSED, which is the point a proposal becomes
+/// visible to the approval queue. Purely additive — no existing row uses
+/// DRAFT yet, so no data migration of existing rows is implied.
+enum VersionStatus {
+  DRAFT
+  PUBLISHED
+  PROPOSED
+  REJECTED
+  SUPERSEDED
+}
+
+/// Visibility/lifecycle of an entity itself (Talent, ImageAsset,
+/// TalentSocial, TalentGalleryImage, SiteContent row, etc). See
+/// ADMIN_PANEL_PLAN.md Section 5. Nothing is ever hard-deleted by admin
+/// code — DELETED is a soft marker with deletedAt/deletedBy populated.
+///
+/// NOTE: this enum's HIDDEN value is an entity-level soft-delete/lifecycle
+/// concept (e.g. "this Talent row itself is hidden from admin views"). It
+/// is intentionally unrelated to TalentVisibility below (public-website
+/// visibility of a talent's PUBLISHED content) — the two must never be
+/// conflated despite the similarly-named value, per the Talent Publishing
+/// Status product spec.
+enum LifecycleStatus {
+  ACTIVE
+  HIDDEN
+  ARCHIVED
+  DELETED
+}
+
+/// Talent Publishing Status sprint (Phase 1) — public-website visibility of
+/// a talent's content, modeled as a normal versioned field on
+/// TalentVersion (see that model's `visibility` column below), not as a
+/// separate engine or as a reuse of LifecycleStatus.HIDDEN above. Default
+/// is VISIBLE so every existing/new version behaves exactly as today's
+/// public site already does unless an Owner explicitly publishes a change.
+enum TalentVisibility {
+  VISIBLE
+  HIDDEN
+}
+
+/// Audit log action types (Section 4.1). LOGIN/LOGIN_FAILED are included
+/// now even though auth itself ships in Phase 2, so the AuditLog shape
+/// doesn't need to change when auth lands.
+enum ActionType {
+  CREATED
+  UPDATED
+  PROPOSED
+  APPROVED
+  REJECTED
+  DELETED
+  RESTORED
+  ARCHIVED
+  LOGIN
+  LOGIN_FAILED
+}
+
+/// Polymorphic discriminator used by AuditLog, SEO, and the generic
+/// Entity/EntityVersion pair to identify what kind of content a row is
+/// about without a hard foreign key (some of these — e.g. static pages —
+/// have no dedicated table of their own).
+enum EntityType {
+  TALENT
+  SITE_CONTENT
+  SEO
+  LEGAL_PAGE
+  COLLABORATIONS
+  AGENCY_SOCIAL
+  IMAGE_ASSET
+}
+
+/// Talent social platforms. Originally matched only the fixed set used in
+/// data/talent/index.js (instagram / tiktok / youtube); extended for the
+/// Migration Day schema review to cover platforms already offered by the
+/// admin UI's social platform registry (lib/admin/social-platforms.js —
+/// facebook, website) plus Threads, anticipated as a near-term addition.
+/// `followers`/`followerCount` is explicitly internal-only, never rendered
+/// publicly. Adding a new platform later is a normal additive enum
+/// migration (`ALTER TYPE ... ADD VALUE`) — safe, doesn't touch existing
+/// rows — kept as a controlled enum rather than a free string specifically
+/// so platform values can never drift (decision: Migration Day schema
+/// review, multiple-social-accounts sprint).
+enum SocialPlatform {
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  FACEBOOK
+  WEBSITE
+  THREADS
+}
+
+/// Classification label for a single social account row, distinguishing
+/// multiple accounts on the same platform for the same talent (e.g. a
+/// "Main" vs. "Spam" Instagram — the data/talent/index.js `extraSocials`
+/// case this enum replaces). Deliberately a controlled enum, not free
+/// text, to avoid label drift ("Main" / "main" / "MAIN" / "Primary").
+/// OTHER is the one escape hatch — paired with TalentSocial.customLabel
+/// for the rare account that doesn't fit a bucket; customLabel is never
+/// used for sorting/filtering, only display, so it can't reintroduce the
+/// drift this enum exists to prevent.
+enum SocialAccountLabel {
+  MAIN
+  SECONDARY
+  SPAM
+  BRAND
+  PERSONAL
+  OTHER
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Users — Owner-only at launch, schema Editor-ready (Section 11).
+// ─────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(OWNER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Back-relations for every "who did this" pointer elsewhere in the
+  // schema. Verbose, but each one corresponds to a real field used by the
+  // approval flow (Section 4) or audit log (Section 4.1).
+  uploadedImages        Asset[]      @relation("ImageAssetUploadedBy")
+  createdTalentVersions TalentVersion[]   @relation("TalentVersionCreatedBy")
+  approvedTalentVersions TalentVersion[]  @relation("TalentVersionApprovedBy")
+  createdEntityVersions EntityVersion[]   @relation("EntityVersionCreatedBy")
+  approvedEntityVersions EntityVersion[]  @relation("EntityVersionApprovedBy")
+  createdSiteContent    SiteContent[]     @relation("SiteContentCreatedBy")
+  approvedSiteContent   SiteContent[]     @relation("SiteContentApprovedBy")
+  createdSeo            Seo[]             @relation("SeoCreatedBy")
+  approvedSeo           Seo[]             @relation("SeoApprovedBy")
+  createdLegalPages     LegalPage[]       @relation("LegalPageCreatedBy")
+  approvedLegalPages    LegalPage[]       @relation("LegalPageApprovedBy")
+  createdTalentSocials  TalentSocial[]    @relation("TalentSocialCreatedBy")
+  approvedTalentSocials TalentSocial[]    @relation("TalentSocialApprovedBy")
+  createdGalleryImages  TalentGalleryImage[] @relation("TalentGalleryImageCreatedBy")
+  approvedGalleryImages TalentGalleryImage[] @relation("TalentGalleryImageApprovedBy")
+
+  auditLogsCreated  AuditLog[] @relation("AuditCreatedBy")
+  auditLogsUpdated  AuditLog[] @relation("AuditUpdatedBy")
+  auditLogsApproved AuditLog[] @relation("AuditApprovedBy")
+  auditLogsRejected AuditLog[] @relation("AuditRejectedBy")
+  auditLogsDeleted  AuditLog[] @relation("AuditDeletedBy")
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Talent cluster — dedicated normalized models (Section 3.2).
+// ─────────────────────────────────────────────────────────────────────────
+
+/// The stable talent record. Slug/id never change when content changes —
+/// only TalentVersion rows do. `revisionNumber` is the optimistic-locking
+/// counter (Section 6): bumped every time a TalentVersion is published.
+model Talent {
+  id                       String          @id @default(cuid())
+  slug                     String          @unique
+  status                   LifecycleStatus @default(ACTIVE)
+  currentPublishedVersionId String?        @unique
+  currentPublishedVersion  TalentVersion?  @relation("TalentCurrentPublished", fields: [currentPublishedVersionId], references: [id])
+  revisionNumber           Int             @default(1)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  deletedAt                DateTime?
+  deletedBy                String?
+
+  versions      TalentVersion[]      @relation("TalentToVersions")
+  socials       TalentSocial[]
+  galleryImages TalentGalleryImage[]
+
+  @@map("talents")
+}
+
+/// One row per proposed/published snapshot of a talent's field set —
+/// mirrors the field reference already documented in data/talent/index.js
+/// 1:1, so Migration Day's import mapping (ADMIN_PANEL_PLAN.md Section 8)
+/// is close to a direct field copy.
+model TalentVersion {
+  id        String        @id @default(cuid())
+  talentId  String
+  talent    Talent        @relation("TalentToVersions", fields: [talentId], references: [id])
+
+  status         VersionStatus @default(PROPOSED)
+  basedOnVersionId String?
+  basedOnVersion   TalentVersion?  @relation("TalentVersionBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions TalentVersion[] @relation("TalentVersionBasedOn")
+
+  // Optimistic-locking snapshot: the Talent.revisionNumber this proposal
+  // was started against. Compared against the live value at submit time
+  // (Section 6) to detect a stale base before publishing.
+  basedOnRevisionNumber Int?
+
+  name        String
+  nameEn      String?
+  category    String[]
+  tags        String[]
+  featured    Boolean  @default(false)
+  featuredOrder Int?
+  sortOrder     Int?
+  location      String?
+  locationEn    String?
+  birthDate     DateTime?
+  bioHe         String?
+  bioEn         String?
+
+  // Talent Publishing Status sprint (Phase 1) — public visibility of this
+  // version's content, versioned like every other field above. Default
+  // VISIBLE so existing rows (backfilled by this migration) and any new
+  // version created without an explicit value behave exactly like today's
+  // public site. See TalentVisibility's header comment for why this is
+  // not LifecycleStatus.HIDDEN.
+  visibility TalentVisibility @default(VISIBLE)
+
+  profileImageAssetId String?
+  profileImageAsset    Asset? @relation("TalentVersionProfileImage", fields: [profileImageAssetId], references: [id])
+  profileImagePosition String?
+  profileImageScale     Float?
+
+  // Podcast block (Migration Day schema review): mirrors the optional
+  // `podcast` object in data/talent/index.js (currently only Michal Ben
+  // David). Dedicated columns, not JSON or a separate model — a podcast
+  // changes in the same proposal/approval cycle as the rest of the talent
+  // profile (one TalentVersion fetch renders it, no extra join), and the
+  // image follows the same ImageAsset-FK pattern as profileImageAssetId
+  // rather than a bare path string. No podcastTitleEn: the show title is a
+  // proper noun, deliberately identical in both locales in the source data.
+  // Revisit as a dedicated model only if a talent needs multiple shows or
+  // podcast metadata needs to be approved independently of the profile —
+  // neither is true today.
+  podcastTitle         String?
+  podcastDescriptionHe String?
+  podcastDescriptionEn String?
+  podcastImageAssetId  String?
+  podcastImageAsset    Asset? @relation("TalentVersionPodcastImage", fields: [podcastImageAssetId], references: [id])
+  podcastVideoEmbedUrl String?
+
+  createdById String
+  createdBy   User     @relation("TalentVersionCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  approvedById String?
+  approvedBy   User?    @relation("TalentVersionApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  rejectionNote String?
+
+  talentCurrentPublishedOf Talent? @relation("TalentCurrentPublished")
+
+  @@map("talent_versions")
+}
+
+/// One row per social account belonging to a talent. Upgraded (Migration
+/// Day schema review) from the original simple published/proposed-URL pair
+/// to the same dual-axis versioning pattern TalentGalleryImage already
+/// uses, for two reasons: (1) a talent can now have multiple accounts on
+/// the same platform — e.g. Instagram "Main" + Instagram "Spam", the
+/// data/talent/index.js `extraSocials` case — so identity is no longer
+/// "one row per platform"; (2) social account edits must go through the
+/// full Draft → Proposed → Published → approval workflow like every other
+/// entity, with attribution and rejection notes, not bypass it.
+///
+/// lifecycleStatus = visibility (active/hidden/archived/deleted, Section
+/// 5). versionStatus = approval state of this row's metadata
+/// (handle/url/label/sortOrder) — DRAFT/PROPOSED/PUBLISHED/REJECTED/
+/// SUPERSEDED, same enum as TalentVersion. "Which account is current" is
+/// answered by versionStatus + basedOnVersionId, the same way as
+/// elsewhere in this schema — deliberately no @@unique on
+/// (talentId, platform, label): multiple rows legitimately share that
+/// triple across history (each is a different revision of the same
+/// logical account).
+model TalentSocial {
+  id       String @id @default(cuid())
+  talentId String
+  talent   Talent @relation(fields: [talentId], references: [id])
+
+  platform    SocialPlatform
+  label       SocialAccountLabel @default(MAIN)
+  customLabel String? // only meaningful when label = OTHER; display only, never sorted/filtered on
+  handle      String? // e.g. '@almavay' — editable independently of the URL
+  url         String?
+  followerCount Int? // internal-only; never rendered on the public site — now per-account, not per-platform
+
+  sortOrder Int?
+
+  lifecycleStatus LifecycleStatus @default(ACTIVE)
+  versionStatus   VersionStatus   @default(PUBLISHED)
+  basedOnVersionId String?
+  basedOnVersion   TalentSocial?  @relation("TalentSocialBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions TalentSocial[] @relation("TalentSocialBasedOn")
+
+  createdById String
+  createdBy   User     @relation("TalentSocialCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  approvedById String?
+  approvedBy   User?     @relation("TalentSocialApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  rejectionNote String?
+
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([talentId, platform])
+  @@map("talent_socials")
+}
+
+/// One row per gallery image. `order` replaces the implicit array order
+/// used in data/talent/index.js today; position/scale/mobileOrder directly
+/// generalize the per-image crop overrides already present in that file.
+model TalentGalleryImage {
+  id       String @id @default(cuid())
+  talentId String
+  talent   Talent @relation(fields: [talentId], references: [id])
+
+  imageAssetId String
+  imageAsset   Asset @relation(fields: [imageAssetId], references: [id])
+
+  order       Int
+  altHe       String?
+  altEn       String?
+  position    String? // e.g. 'center 36%' — matches existing crop overrides
+  scale       Float?
+  mobileOrder Int?
+
+  // Dual axis per ADMIN_PANEL_PLAN.md Section 5: lifecycleStatus is
+  // visibility (active/hidden/archived/deleted), versionStatus is approval
+  // state (published/proposed/rejected/superseded) for this specific
+  // image's metadata (crop/alt/order) or its presence in the gallery.
+  lifecycleStatus LifecycleStatus @default(ACTIVE)
+  versionStatus   VersionStatus   @default(PUBLISHED)
+  basedOnVersionId String?
+  basedOnVersion   TalentGalleryImage?  @relation("GalleryImageBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions TalentGalleryImage[] @relation("GalleryImageBasedOn")
+
+  // Lifecycle audit trail — mirrors TalentSocial's createdById/approvedById/
+  // approvedAt/rejectionNote so Gallery shares the same Draft -> Proposed ->
+  // Approved/Rejected contract as Social Links (see ADMIN_PANEL_PLAN.md
+  // Section 5).
+  //
+  // Gallery migration backfill-safety fix — unlike TalentSocial (whose
+  // table was created with createdById already NOT NULL, so it was never
+  // populated without one), talent_gallery_images already had rows before
+  // this column existed (historical/imported gallery data with no known
+  // author). Making createdById required would need a real backfill
+  // (assigning every existing row to some User) before the column could be
+  // added NOT NULL, which this sprint has no safe, non-destructive way to
+  // do (there's no "system" or "import" user to attribute old rows to, and
+  // guessing one would be fabricating audit history). createdById is
+  // therefore nullable here, diverging from TalentSocial/TalentVersion on
+  // purpose: every *new* DRAFT/PROPOSED row created from now on through
+  // galleryService.insertDraftGalleryImage still always sets it (that
+  // method still requires `createdById` in its own argument — only the
+  // column itself relaxed), so the audit trail is complete for everything
+  // going forward; only pre-existing historical rows are allowed to have
+  // it unset.
+  createdById String?
+  createdBy   User?    @relation("TalentGalleryImageCreatedBy", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("TalentGalleryImageApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  rejectionNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  @@index([talentId])
+  @@map("talent_gallery_images")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Images — canonical asset record (Section 3.2, Section 10).
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Classifies what kind of file an Asset row holds. Added by the Asset
+/// Model Migration (see ASSET_MODEL_MIGRATION_PLAN.md) alongside the
+/// ImageAsset -> Asset rename, ahead of Documents/Video/Audio modules that
+/// don't exist yet. Every row created so far is an image, hence the
+/// default below backfilling existing rows with no manual migration.
+enum AssetKind {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  AUDIO
+  OTHER
+}
+
+/// Every uploaded file, regardless of where it's used (talent profile
+/// photo, gallery image, About founder photo, brand logo). Never
+/// duplicated per use site — referenced by foreign key from
+/// TalentGalleryImage, TalentVersion.profileImageAssetId, etc.
+///
+/// Renamed from ImageAsset to Asset (Asset Model Migration — see
+/// ASSET_MODEL_MIGRATION_PLAN.md), ahead of confirmed future modules
+/// (Documents, Video, homepage/brand assets) that don't fit an
+/// image-specific name. `@@map("image_assets")` keeps the underlying table
+/// name unchanged — this rename is Prisma-side only, the database itself
+/// is untouched. FK field names that point at this model (imageAssetId,
+/// profileImageAssetId, podcastImageAssetId) deliberately still say
+/// "ImageAsset" — renaming those is a separate, later, purely cosmetic
+/// change (migration plan Section 4), not part of this one.
+model Asset {
+  id        String          @id @default(cuid())
+  blobUrl   String
+  width     Int?
+  height    Int?
+  mimeType  String?
+  sizeBytes Int?
+  kind      AssetKind       @default(IMAGE)
+
+  // Upload Sprint 1 (GALLERY_UPLOAD_SPRINT_1_ARCHITECTURE.md §3) — additive
+  // fields needed for the storage abstraction (lib/storage/) to function
+  // correctly once more than one provider exists. `provider` identifies
+  // which StorageProvider implementation can manage this row (which one to
+  // call for delete/getSignedUrl); `providerKey` is that provider's own
+  // identifier for the file (distinct from `blobUrl`, which is the URL a
+  // browser/<img> loads and may not be usable for management operations,
+  // e.g. a signed URL that expires or a private-bucket key). Defaulted to
+  // 'local' so every pre-existing row (the Migration Day import, which
+  // predates any real upload code) backfills correctly with no manual data
+  // migration, mirroring how `kind AssetKind @default(IMAGE)` was added.
+  // `originalFilename` is display/audit only — the actual stored object key
+  // is always randomly generated (lib/storage/utils/keyGen.js), never
+  // derived from this value.
+  provider         String  @default("local")
+  providerKey      String?
+  originalFilename String?
+
+  uploadedById String
+  uploadedBy   User     @relation("ImageAssetUploadedBy", fields: [uploadedById], references: [id])
+  uploadedAt   DateTime @default(now())
+
+  status    LifecycleStatus @default(ACTIVE)
+  deletedAt DateTime?
+  deletedBy String?
+
+  galleryUses    TalentGalleryImage[]
+  profileUseOf   TalentVersion[]      @relation("TalentVersionProfileImage")
+  podcastUseOf   TalentVersion[]      @relation("TalentVersionPodcastImage")
+
+  @@map("image_assets")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Site copy / SEO / legal — dedicated tables (Section 3.2). Each row here
+// IS a version snapshot (status + basedOnVersionId), identified by its
+// natural key (section+key / entityType+entityId / slug) rather than a
+// separate parent table — matches the architecture doc's literal shape.
+// Exactly one row per natural key should carry status = PUBLISHED at a
+// time; enforcing that as a DB-level partial unique constraint is left to
+// a future migration once a real database exists (Postgres partial unique
+// indexes aren't expressible in Prisma's schema syntax directly).
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Structured, repeatable parts of data/site.js (nav links, categories,
+/// homepage copy blocks, etc). `section` groups related keys (e.g.
+/// 'homepage', 'talentPage', 'contactPage'), `key` identifies the field
+/// within that section (e.g. 'voiceHeadline').
+model SiteContent {
+  id      String @id @default(cuid())
+  section String
+  key     String
+
+  valueHe String?
+  valueEn String?
+
+  status           VersionStatus @default(PROPOSED)
+  basedOnVersionId String?
+  basedOnVersion   SiteContent?  @relation("SiteContentBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions SiteContent[] @relation("SiteContentBasedOn")
+  basedOnRevisionNumber Int?
+
+  createdById String
+  createdBy   User     @relation("SiteContentCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  approvedById String?
+  approvedBy   User?     @relation("SiteContentApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  rejectionNote String?
+
+  @@map("site_content")
+}
+
+/// One row per page/route's SEO fields. entityType + entityId together
+/// identify the page (e.g. entityType=TALENT, entityId=<talent.id> for a
+/// talent profile page; entityType=SITE_CONTENT, entityId='about' for a
+/// static page) — kept separate from SiteContent/TalentVersion so SEO can
+/// be reviewed/reported on independently (Section 3.2).
+model Seo {
+  id String @id @default(cuid())
+
+  entityType EntityType
+  entityId   String?
+
+  metaTitle          String?
+  metaTitleEn        String?
+  metaDescription    String?
+  metaDescriptionEn  String?
+  ogTitle            String?
+  ogTitleEn          String?
+  ogAlt              String?
+  ogAltEn            String?
+  canonicalPath      String?
+
+  status           VersionStatus @default(PROPOSED)
+  basedOnVersionId String?
+  basedOnVersion   Seo?  @relation("SeoBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions Seo[] @relation("SeoBasedOn")
+  basedOnRevisionNumber Int?
+
+  createdById String
+  createdBy   User     @relation("SeoCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  approvedById String?
+  approvedBy   User?     @relation("SeoApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  rejectionNote String?
+
+  @@map("seo")
+}
+
+/// Accessibility statement / privacy policy. `sections` is the one
+/// deliberate JSON-blob field in the normalized model (Section 3) — legal
+/// page structure is genuinely free-form (heading/paragraph/list blocks)
+/// and not queried field-by-field, so a blob is the right tool here.
+model LegalPage {
+  id   String @id @default(cuid())
+  slug String // 'accessibility' | 'privacy-policy'
+
+  sections Json?
+
+  status           VersionStatus @default(PROPOSED)
+  basedOnVersionId String?
+  basedOnVersion   LegalPage?  @relation("LegalPageBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions LegalPage[] @relation("LegalPageBasedOn")
+  basedOnRevisionNumber Int?
+
+  createdById String
+  createdBy   User     @relation("LegalPageCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  approvedById String?
+  approvedBy   User?     @relation("LegalPageApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  rejectionNote String?
+
+  @@map("legal_pages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Generic Entity / EntityVersion — shared versioning primitives (Section
+// 3.1), used only for content that doesn't warrant a dedicated table:
+// collaborations list, agency-level social links. Kept deliberately
+// generic; do not add new entityTypes here for content that would benefit
+// from real columns — add a dedicated table instead (Section 3, rationale).
+// ─────────────────────────────────────────────────────────────────────────
+
+model Entity {
+  id         String          @id @default(cuid())
+  entityType EntityType
+  entityId   String? // null/constant for singletons (e.g. COLLABORATIONS)
+
+  status                    LifecycleStatus @default(ACTIVE)
+  currentPublishedVersionId String?         @unique
+  currentPublishedVersion   EntityVersion?  @relation("EntityCurrentPublished", fields: [currentPublishedVersionId], references: [id])
+  revisionNumber            Int             @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  versions EntityVersion[] @relation("EntityToVersions")
+
+  @@unique([entityType, entityId])
+  @@map("entities")
+}
+
+model EntityVersion {
+  id       String @id @default(cuid())
+  entityId String
+  entity   Entity @relation("EntityToVersions", fields: [entityId], references: [id])
+
+  status           VersionStatus @default(PROPOSED)
+  basedOnVersionId String?
+  basedOnVersion   EntityVersion?  @relation("EntityVersionBasedOn", fields: [basedOnVersionId], references: [id])
+  basedOnRevisions EntityVersion[] @relation("EntityVersionBasedOn")
+  basedOnRevisionNumber Int?
+
+  content Json // free-form snapshot — shape depends on entityType
+
+  createdById String
+  createdBy   User     @relation("EntityVersionCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  approvedById String?
+  approvedBy   User?     @relation("EntityVersionApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  rejectionNote String?
+
+  entityCurrentPublishedOf Entity? @relation("EntityCurrentPublished")
+
+  @@map("entity_versions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Audit log — expanded scope (Section 4.1). Append-only: application code
+// must never UPDATE or DELETE a row here, including when the entity it
+// describes is later archived/soft-deleted.
+// ─────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  actionType      ActionType
+  entityType      EntityType
+  entityId        String?
+  targetVersionId String? // the TalentVersion/EntityVersion/etc. row, if any
+
+  createdById  String?
+  createdBy    User?    @relation("AuditCreatedBy", fields: [createdById], references: [id])
+  updatedById  String?
+  updatedBy    User?    @relation("AuditUpdatedBy", fields: [updatedById], references: [id])
+  approvedById String?
+  approvedBy   User?    @relation("AuditApprovedBy", fields: [approvedById], references: [id])
+  rejectedById String?
+  rejectedBy   User?    @relation("AuditRejectedBy", fields: [rejectedById], references: [id])
+  deletedById  String?
+  deletedBy    User?    @relation("AuditDeletedBy", fields: [deletedById], references: [id])
+
+  createdAt DateTime @default(now()) // the log row's own timestamp, immutable
+
+  ipAddress String?
+  userAgent String? // raw string; parsed into device/browser at display time
+
+  metadataBefore Json?
+  metadataAfter  Json?
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Event — Core Content Engine substrate (ADMIN_PANEL_PLAN.md Section 13,
+// specifically 13.3.1 and 13.6; added in Phase 3B.1 per Section 13.14's
+// sub-phase 1). Every lifecycle action (proposal created/updated, approved,
+// rejected, published) will emit one of these via eventService.emit() —
+// not yet built in this phase — making Event the source AuditLog rows are
+// projected from (Section 13.7), once auditLogListener exists.
+//
+// Two deliberate splits, both required by the architecture doc:
+//   - `correlationId` is its own indexed column, not nested in `metadata`,
+//     so every Event produced by one user action/transaction can be
+//     grouped and queried directly.
+//   - `payload` (business data only) is kept structurally separate from
+//     `metadata` (technical/request context only — IP, user agent,
+//     request id, duration).
+//
+// `type` is validated against a plain-string catalog (eventTypes.js, not
+// yet built) rather than a Postgres enum, since that catalog is expected
+// to grow continuously (Section 13.2).
+//
+// Append-only per Section 13.16 ("Events are append-only") — no
+// application code may UPDATE or DELETE an Event row once written.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Event {
+  id String @id @default(cuid())
+
+  type String // validated against eventTypes.js, not a DB enum
+
+  entityType EntityType
+  entityId   String
+
+  actorId String? // null for system-generated events
+
+  correlationId String // dedicated, indexed column (Section 13.6)
+
+  payload  Json // business data only
+  metadata Json // technical/request context only
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([correlationId])
+  @@map("events")
+}

@@ -1,0 +1,171 @@
+/*
+ * Talent workspace detail styles — Talent Workspace Foundation sprint.
+ * Composes the shared admin-tokens palette, same as every other admin
+ * page module.
+ */
+
+.tokens {
+  composes: tokens from "../../../../components/admin/admin-tokens.module.css";
+}
+
+.backLink {
+  composes: tokens;
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  color: var(--admin-text-secondary);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--admin-accent-strong);
+}
+
+/*
+ * "Start Editing" sprint — lays the StatusBadge and StartEditingButton out
+ * side by side in PageHeader's existing `action` slot, instead of just the
+ * single badge that slot held before.
+ */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/*
+ * Subtle "מידע טכני" disclosure — Talent Workspace Header Polish sprint.
+ *
+ * Replaces the old always-visible metaCard (raw slug + raw lifecycle
+ * status shown next to the human-readable header) per the sprint goal:
+ * the workspace should read like a talent's work folder, not a technical
+ * record page. Collapsed by default (<details>), low-contrast, placed
+ * after the workspace tabs so it never competes with the name/status/
+ * last-updated header above.
+ */
+.technicalInfo {
+  composes: tokens;
+  margin-top: 1.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--admin-border);
+}
+
+.technicalInfoSummary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  list-style: none;
+}
+
+.technicalInfoSummary:hover {
+  color: var(--admin-text-secondary);
+}
+
+.technicalInfoBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.technicalInfoHint {
+  font-size: 0.76rem;
+  color: var(--admin-text-muted);
+}
+
+.technicalInfoRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.technicalInfoLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+.technicalInfoValue {
+  font-size: 0.82rem;
+  color: var(--admin-text-secondary);
+}
+
+/*
+ * "Location & age" cleanup sprint — the standalone .profileFacts block
+ * (birth date / computed age, previously shown between Profile Image and
+ * Podcast) was removed; those facts now render inside the "מיקום וגיל"
+ * Details group via ComparisonView instead. Rules removed: .profileFacts,
+ * .profileFactRow, .profileFactLabel, .profileFactValue.
+ */
+.workspace {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--admin-border);
+  padding-bottom: 0.6rem;
+}
+
+.tab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--admin-radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+}
+
+.tab:hover {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-text-primary);
+}
+
+.tabActive {
+  background: var(--admin-accent-subtle);
+  color: var(--admin-accent-strong);
+}
+
+.tabPanel {
+  min-height: 8rem;
+}
+
+/*
+ * Admin Talent Editor UX polish sprint — surfaces the Owner's rejection note
+ * right above the workspace tabs, next to the editor it actually concerns,
+ * instead of leaving it buried in the History tab's timeline. Uses the same
+ * "danger" tone StatusBadge already shows for the "נדרשו תיקונים" status
+ * (see lib/admin/mock-workflow.js's STATUS_TONE), so the banner reads as the
+ * same signal, not a new one.
+ */
+.rejectionNotice {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--admin-radius);
+  background: var(--admin-status-danger-bg);
+}
+
+.rejectionNoticeTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--admin-status-danger-text);
+}
+
+.rejectionNoticeBody {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--admin-status-danger-text);
+}

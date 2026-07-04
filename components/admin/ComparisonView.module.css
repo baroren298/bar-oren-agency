@@ -1,0 +1,250 @@
+/*
+ * ComparisonView styles — Editing Experience Foundation sprint, restyled by
+ * the "Editing Experience UX Polish" follow-up sprint.
+ *
+ * Hierarchy comes from spacing, typography and background contrast — not
+ * from borders or a directional arrow:
+ *   - "Published" sits directly on the page background, unboxed, with
+ *     quiet typography. It must never look editable.
+ *   - "Proposed" sits on its own soft, slightly elevated surface (tinted
+ *     background + a faint shadow, no heavy border) so it visually reads
+ *     as the one place where editing happens.
+ *   - A generous gap between the two sections does the separating job the
+ *     old arrow divider used to do.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* ---------- Shared eyebrow header (icon + label) ---------- */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.eyebrowIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.eyebrowTitle,
+.eyebrowTitleProposed {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eyebrowTitle {
+  color: var(--admin-text-muted);
+}
+
+.eyebrowTitleProposed {
+  color: var(--admin-accent-strong);
+}
+
+/* ---------- Published — calm, unboxed, read-only ---------- */
+
+.publishedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-inline-start: 0.1rem;
+}
+
+.publishedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+}
+
+/*
+ * Field groups — Profile Editor Foundation sprint. A group is just a
+ * label sitting above its own .fieldList; when a caller passes the legacy
+ * flat `fields` prop there is exactly one group with no label, so the
+ * layout degrades gracefully back to the old "one long list" look.
+ */
+.groupedFieldList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.groupLabel,
+.groupLabelProposed {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.groupLabel {
+  color: var(--admin-text-muted);
+}
+
+.groupLabelProposed {
+  color: var(--admin-accent-strong);
+}
+
+.fieldList {
+  display: flex;
+  flex-direction: column;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding-block: 0.65rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.fieldRow:last-child {
+  border-bottom: none;
+}
+
+.fieldLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.readOnlyValue {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--admin-text-primary);
+  white-space: pre-wrap;
+}
+
+/* ---------- Proposed — the one editable, "active" surface ---------- */
+
+.proposedSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 2rem 2.25rem;
+  background: var(--admin-accent-subtle);
+  border-radius: var(--admin-radius-lg);
+  box-shadow: 0 12px 28px -22px rgba(31, 28, 23, 0.35);
+}
+
+.proposedSubtitle {
+  margin: -0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-accent-strong);
+}
+
+.fieldRowEditable {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: start;
+  gap: 1.25rem;
+  padding-block: 0.5rem;
+}
+
+.proposedFieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+/*
+ * Inert placeholder for a future per-field "changed" indicator — see the
+ * comment in ComparisonView.jsx. Deliberately low-contrast today so it
+ * reads as "reserved space," not as an active signal; a later sprint can
+ * swap its background/opacity once there is a real value to compare
+ * against.
+ */
+.changeDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--admin-text-muted);
+  opacity: 0.3;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.55rem 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+}
+
+.checkbox {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--admin-accent);
+}
+
+/*
+ * Save Draft sprint — non-blocking conflict notice (required safeguard #6).
+ * Calm, informational tone (not an error color) since the save itself
+ * already succeeded by the time this can show.
+ */
+.conflictNotice {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  background: var(--admin-accent-subtle);
+  border-radius: var(--admin-radius);
+}
+
+@media (max-width: 640px) {
+  .fieldRow,
+  .fieldRowEditable {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .proposedSection {
+    padding: 1.5rem 1.25rem;
+  }
+}

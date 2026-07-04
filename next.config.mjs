@@ -17,6 +17,34 @@ const nextConfig = {
   },
 
   /*
+   * Baseline security headers — pre-merge hardening (audit finding S3).
+   * Applied to every response, public and admin:
+   *   - X-Frame-Options: DENY — no page (especially /admin/login) may be
+   *     framed by any origin; blocks clickjacking. Nothing on this site is
+   *     legitimately embedded in an iframe elsewhere.
+   *   - X-Content-Type-Options: nosniff — browsers must honor the declared
+   *     Content-Type instead of sniffing bytes.
+   *   - Referrer-Policy: strict-origin-when-cross-origin — cross-origin
+   *     requests only ever see the origin, never full URLs (which include
+   *     admin paths).
+   * Deliberately NOT a full Content-Security-Policy — that needs a
+   * dedicated pass (inline styles/scripts, YouTube frame-src, Next image
+   * domains) and is out of scope for this sprint.
+   */
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
+
+  /*
    * Locale routing — Hebrew stays unprefixed at "/", English lives at "/en".
    *
    * Internally every route is implemented once under app/[locale]/, so these
@@ -41,6 +69,16 @@ const nextConfig = {
    * never redirected into the Hebrew tree. The catch-all then sends any
    * other unmatched path into "/he/...", where locale="he" validly matches
    * and the nested not-found.jsx renders the localized Hebrew 404 instead.
+   *
+   * "/admin" and "/admin/:path*" passthrough — added for the admin panel
+   * (Admin Panel Architecture v1.2, Section 1). The admin lives outside the
+   * app/[locale]/ tree entirely (app/admin/, app/api/admin/), so — exactly
+   * like the "/en" rules above — it must be excluded from the Hebrew
+   * catch-all or an unprefixed "/admin" path would get rewritten to
+   * "/he/admin" and 404 via the locale router instead of reaching the
+   * admin route. No admin pages exist under app/admin/ yet (Phase 1 only
+   * adds non-route infrastructure), so this rule is currently a no-op in
+   * practice, but it must be in place before any admin route is added.
    */
   async rewrites() {
     return [
@@ -53,6 +91,10 @@ const nextConfig = {
       { source: '/privacy-policy', destination: '/he/privacy-policy' },
       { source: '/en', destination: '/en' },
       { source: '/en/:path*', destination: '/en/:path*' },
+      { source: '/admin', destination: '/admin' },
+      { source: '/admin/:path*', destination: '/admin/:path*' },
+      { source: '/api/admin', destination: '/api/admin' },
+      { source: '/api/admin/:path*', destination: '/api/admin/:path*' },
       { source: '/:path*', destination: '/he/:path*' },
     ];
   },

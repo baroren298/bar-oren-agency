@@ -1,0 +1,40 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.text {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.description {
+  margin: 0.4rem 0 0;
+  font-size: 0.95rem;
+  color: var(--admin-text-secondary);
+}
+
+.action {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

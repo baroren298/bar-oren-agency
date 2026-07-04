@@ -1,0 +1,68 @@
+/*
+ * SearchResultPreview styles — SEO Editor Foundation sprint.
+ *
+ * Renders a tiny mock of a Google search result inside the existing admin
+ * surface language (white card, soft border, admin-radius) — deliberately
+ * understated so it reads as "a helpful illustration," not as an embedded
+ * real browser/search widget.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--admin-text-secondary);
+}
+
+.subtitle {
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+.resultCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1rem 1.1rem;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  /* Left-to-right, regardless of the surrounding RTL admin UI — this is a
+     mock of a Google result, and Google search results render LTR even
+     for Hebrew-language pages (URL line, then title, then snippet). */
+  direction: ltr;
+  text-align: left;
+}
+
+.resultUrl {
+  font-size: 0.78rem;
+  color: var(--admin-text-secondary);
+}
+
+.resultTitle {
+  font-size: 1.05rem;
+  line-height: 1.3;
+  color: #1a0dab;
+  font-weight: 500;
+}
+
+.resultDescription {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--admin-text-secondary);
+}

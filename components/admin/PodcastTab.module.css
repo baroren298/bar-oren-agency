@@ -1,0 +1,149 @@
+/*
+ * PodcastTab — Podcast tab sprint. Composes the shared admin-tokens
+ * palette and reuses ProfileImagePanel's frame/placeholder visual
+ * language so this tab's image preview matches the rest of the admin UI.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.tab {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/*
+ * Talent Detail UX Refactor, Phase 2 — stacked, not side-by-side. The image/
+ * video preview used to sit in its own full-height column next to the
+ * editor, reading as a second section competing with it. It is now a single
+ * light accessory row above the one editing section (mirrors what
+ * ComparisonView.jsx did for the Details tab: one section, not two).
+ */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.previewRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.previewRowContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.previewLabel {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+}
+
+.previewActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 11rem;
+  max-width: 16rem;
+}
+
+.frame {
+  position: relative;
+  width: 6rem;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--admin-radius);
+  overflow: hidden;
+  background: var(--admin-accent-subtle);
+  border: 1px solid var(--admin-border);
+  flex-shrink: 0;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+/*
+ * Disabled placeholder — same "reserved space, not wired up yet" pattern
+ * as ProfileImagePanel.module.css's .controlButton. No existing podcast
+ * image upload flow exists to hook this into; building one is out of
+ * scope for this sprint.
+ */
+.imageButton {
+  composes: tokens;
+  width: 100%;
+  padding: 0.5rem 0.9rem;
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-bg);
+  color: var(--admin-text-muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: not-allowed;
+}
+
+.comingSoonHint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--admin-text-muted);
+  max-width: 16rem;
+}
+
+.youtubeButton {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.noVideoLink {
+  font-size: 0.82rem;
+  color: var(--admin-text-muted);
+}
+
+/*
+ * Enable Podcast Save sprint — the four text fields are no longer this
+ * component's own inputs; <TalentDetailsEditor>/<ComparisonView> render and
+ * style themselves (ComparisonView.module.css), so this column is just a
+ * flexible container for whichever element that renders into, not a form
+ * layout of its own anymore.
+ */
+.editorColumn {
+  flex: 1;
+}
+
+/*
+ * Shown instead of (well, above) the editor whenever there's no editable
+ * DRAFT/PROPOSED version yet — <TalentDetailsEditor> still renders in that
+ * case (read-only Published column, Save Draft/Submit both disabled,
+ * exactly like the פרטים tab in the same state), this just explains why.
+ */
+.noEditableVersionHint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--admin-text-secondary);
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-accent-subtle);
+}

@@ -16,6 +16,34 @@ import styles from './PodcastSection.module.css';
  *     videoEmbedUrl:  string | null,  // manually configured YouTube embed URL
  *   }
  */
+
+/*
+ * Security (pre-merge hardening, audit finding S2): `videoEmbedUrl` can
+ * originate from admin-entered DB content (TalentVersion.podcastVideoEmbedUrl,
+ * which the proposal flow deliberately never validates on save) and is
+ * rendered straight into an <iframe src>. Guard at render time — so legacy
+ * static data is covered too — and only render the iframe for URLs that:
+ *   - parse successfully,
+ *   - use https:, and
+ *   - point at a known YouTube embed host.
+ * Anything else renders no iframe at all (fail closed, page otherwise
+ * unaffected).
+ */
+const ALLOWED_EMBED_HOSTS = new Set(['www.youtube.com', 'www.youtube-nocookie.com']);
+
+function getSafeEmbedUrl(rawUrl) {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:') return null;
+  if (!ALLOWED_EMBED_HOSTS.has(parsed.hostname)) return null;
+  return parsed.href;
+}
+
 export default function PodcastSection({ talent, locale = 'he' }) {
   const { podcast } = talent;
   if (!podcast) return null;
@@ -27,6 +55,7 @@ export default function PodcastSection({ talent, locale = 'he' }) {
      talent — fall back to the Hebrew copy rather than hiding the section. */
   const title       = podcast.title;
   const description = isEnglish ? (podcast.descriptionEn || podcast.description) : podcast.description;
+  const safeEmbedUrl = getSafeEmbedUrl(podcast.videoEmbedUrl);
 
   return (
     <section className={`${styles.section} section`} aria-label={fallbackLabel}>
@@ -63,11 +92,11 @@ export default function PodcastSection({ talent, locale = 'he' }) {
         </div>
 
         {/* ── Embedded video ─────────────────────────────────────────────── */}
-        {podcast.videoEmbedUrl && (
+        {safeEmbedUrl && (
           <ScrollReveal delay={0.1} className={styles.videoCell}>
             <div className={styles.videoWrapper}>
               <iframe
-                src={podcast.videoEmbedUrl}
+                src={safeEmbedUrl}
                 title={title || fallbackLabel}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen

@@ -1,0 +1,91 @@
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  border: 1.5px dashed var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  background: var(--admin-surface);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.zoneDragOver {
+  border-style: solid;
+  border-color: var(--admin-accent-strong);
+  background: var(--admin-accent-subtle);
+}
+
+.zoneDisabled {
+  background: var(--admin-bg);
+  cursor: not-allowed;
+}
+
+.icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}
+
+.or {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+}
+
+.chooseButton {
+  composes: tokens;
+  margin-top: 0.15rem;
+  padding: 0.45rem 1rem;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.chooseButton:hover,
+.chooseButton:focus-visible {
+  border-color: var(--admin-accent-strong);
+  background: var(--admin-accent-subtle);
+}
+
+.chooseButton:focus-visible {
+  outline: 2px solid var(--admin-accent-strong);
+  outline-offset: 2px;
+}
+
+.disabledHint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+  max-width: 18rem;
+}
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
