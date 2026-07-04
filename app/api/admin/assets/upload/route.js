@@ -28,6 +28,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/admin/auth/authorize';
 import { assetService } from '@/lib/admin/engine/assetService';
+import { isUploadAvailable } from '@/lib/storage/availability';
 import { he } from '@/lib/admin/i18n/he';
 
 export async function POST(request) {
@@ -38,6 +39,25 @@ export async function POST(request) {
     return NextResponse.json(
       { error: he.gallery.errors.notAuthenticated },
       { status: error.statusCode || 401 }
+    );
+  }
+
+  // Pre-merge blocker fix sprint (QA finding #1): with only the `local`
+  // storage provider available, uploads cannot work in a production build
+  // (localProvider refuses to write — no durable filesystem on Vercel, and
+  // public/uploads/ is gitignored so a written file would 404 anyway).
+  // Refuse here, before reading the body, with a clear Hebrew message and
+  // 503 (service unavailable in this environment) instead of letting
+  // localProvider's own throw surface as a generic 500. This is also what
+  // guarantees no new `/uploads/...` blobUrl can ever be created in
+  // production/preview — this route is the only code path that creates
+  // Asset rows. The UI is gated too (uploadsEnabled prop), but this check
+  // is the authority; local development (NODE_ENV !== 'production') is
+  // unaffected.
+  if (!isUploadAvailable()) {
+    return NextResponse.json(
+      { error: he.gallery.errors.uploadsDisabled, code: 'UPLOADS_DISABLED' },
+      { status: 503 }
     );
   }
 

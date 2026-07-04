@@ -69,6 +69,12 @@ export default function ImageEditorCard({
   onChange,
   purpose,
   disabled = false,
+  // Pre-merge blocker fix sprint (QA finding #1) — uploads unavailable in
+  // this environment (local storage provider in production). Unlike
+  // `disabled`, positioning/zoom of the existing image stays fully
+  // editable; only the file-upload surface is inert, showing
+  // `copy.uploadsDisabledHint`.
+  uploadDisabled = false,
   aspectRatio = "3 / 4",
   defaultPosition = "center center",
   defaultScale = 1,
@@ -123,6 +129,9 @@ export default function ImageEditorCard({
   }, [disabled]);
 
   async function handleSelectFiles(files) {
+    // Courtesy guard only — the upload route independently refuses with
+    // 503 when uploads are unavailable (see app/api/admin/assets/upload).
+    if (uploadDisabled) return;
     const file = files[0];
     if (!file) return;
 
@@ -186,14 +195,18 @@ export default function ImageEditorCard({
 
       <ImageUploadArea
         onSelectFiles={handleSelectFiles}
-        disabled={disabled}
+        disabled={disabled || uploadDisabled}
         busy={isUploading}
         dropLabel={copy.uploadArea?.dropHint}
         orLabel={copy.uploadArea?.or}
         chooseLabel={copy.uploadArea?.chooseImage}
         busyLabel={copy.uploadArea?.uploading}
         dragActiveLabel={copy.uploadArea?.dragActiveHint}
-        disabledHint={copy.disabledHint}
+        disabledHint={
+          // `disabled` (no editable draft) keeps its original hint;
+          // otherwise an upload-only block shows the environment message.
+          disabled ? copy.disabledHint : uploadDisabled ? copy.uploadsDisabledHint : copy.disabledHint
+        }
       />
 
       {error ? (

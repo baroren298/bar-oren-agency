@@ -78,6 +78,10 @@ export default function ImageAssetEditor({
   onProposedChange,
   purpose,
   disabled = false,
+  // Pre-merge blocker fix sprint (QA finding #1) — forwarded straight to
+  // ImageEditorCard: blocks only the file-upload surface (environment has
+  // no working storage provider), never position/zoom editing.
+  uploadDisabled = false,
   aspectRatio = "3 / 4",
   defaultPosition = "center center",
   defaultScale = 1,
@@ -108,6 +112,7 @@ export default function ImageAssetEditor({
             onChange={onProposedChange}
             purpose={purpose}
             disabled={disabled}
+            uploadDisabled={uploadDisabled}
             aspectRatio={aspectRatio}
             defaultPosition={defaultPosition}
             defaultScale={defaultScale}

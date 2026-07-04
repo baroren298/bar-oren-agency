@@ -70,7 +70,14 @@ const EMPTY_FORM = {
   bioHe: "",
 };
 
-export default function NewTalentForm() {
+// Pre-merge blocker fix sprint (QA finding #1) — `uploadsEnabled` is
+// computed server-side (lib/storage/availability.js, via page.jsx) and
+// passed in: false when the active storage provider is `local` in a
+// production build. Only the profile-image upload zone is gated (replaced
+// by a Hebrew notice); every other field and the create action itself keep
+// working — a talent can be created without a photo and get one later,
+// once cloud storage exists. The upload route re-checks server-side (503).
+export default function NewTalentForm({ uploadsEnabled = true }) {
   const router = useRouter();
   const [form, setForm] = useState(EMPTY_FORM);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -104,6 +111,9 @@ export default function NewTalentForm() {
   }
 
   async function uploadProfileImage(file) {
+    // Courtesy guard only — the upload route independently refuses with
+    // 503 when uploads are unavailable in this environment.
+    if (!uploadsEnabled) return;
     if (!file) return;
 
     setImageUploadError(null);
@@ -294,7 +304,15 @@ export default function NewTalentForm() {
         <div className={styles.field}>
           <span className={styles.fieldLabel}>{COPY.fields.profileImage}</span>
 
-          {profileImagePreviewUrl ? (
+          {!uploadsEnabled ? (
+            // Pre-merge blocker fix sprint (QA finding #1) — uploads are
+            // unavailable in this environment; show the notice instead of
+            // a dropzone that could only fail. The rest of the form is
+            // untouched.
+            <span className={styles.fieldHelper} role="note">
+              {UPLOAD_ERRORS.uploadsDisabled}
+            </span>
+          ) : profileImagePreviewUrl ? (
             // Filled state: the dropzone is gone entirely, replaced by a
             // large preview and exactly two text actions — no leftover
             // empty placeholder alongside it.

@@ -10,10 +10,15 @@
  * TalentGalleryImage rows are per-row, not per-version (a talent can have
  * several DRAFT/PROPOSED rows at once), so "publish" here means:
  *
- *   1. galleryService.submit()   — every row still DRAFT -> PROPOSED.
- *      Tolerates "nothing to submit" (e.g. every row is already PROPOSED
- *      because an Employee already submitted) rather than failing the
- *      whole request.
+ *   1. galleryService.submit()   — the acting Owner's OWN rows still
+ *      DRAFT -> PROPOSED (Pre-merge blocker fix sprint, QA finding #4:
+ *      scoped via `createdById: session.userId`, so another author's
+ *      half-finished DRAFT rows stay DRAFT and are never swept into a
+ *      publish — they only reach step 3 once that author explicitly
+ *      Submits them). Tolerates "nothing to submit" (e.g. every row is
+ *      already PROPOSED because an Employee already submitted, or the only
+ *      drafts belong to someone else) rather than failing the whole
+ *      request.
  *   2. talentAdapter.getProposedGalleryImages() — re-read whichever rows are
  *      now PROPOSED (the ones just submitted, plus any that already were).
  *   3. galleryService.approve() — looped once per PROPOSED row. Each call is
@@ -62,13 +67,16 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: 'Talent not found.' }, { status: 404 });
   }
 
-  // Step 1 — submit every still-DRAFT row. "Nothing to submit" is expected
-  // and harmless whenever every pending row is already PROPOSED, so it's
-  // swallowed here rather than failing the whole request.
+  // Step 1 — submit the acting Owner's own still-DRAFT rows only (QA
+  // finding #4 — never sweep another author's unfinished drafts into a
+  // publish). "Nothing to submit" is expected and harmless whenever every
+  // pending row is already PROPOSED (or the only drafts belong to someone
+  // else), so it's swallowed here rather than failing the whole request.
   try {
     await galleryService.submit(talentAdapter, {
       parentId: id,
       actorId: session.userId,
+      createdById: session.userId,
     });
   } catch (error) {
     if (error.code !== 'NOTHING_TO_SUBMIT') {

@@ -4,10 +4,20 @@
  *
  * Socials' Owner-only shortcut, the exact sibling of
  * app/api/admin/talent/[id]/gallery/publish/route.js — same three-step
- * orchestration (submit every DRAFT row, re-read whichever rows are now
+ * orchestration (submit DRAFT rows, re-read whichever rows are now
  * PROPOSED, approve each in turn), no new business logic, against
  * socialsService instead of galleryService since TalentSocial rows are also
  * per-row rather than per-version.
+ *
+ * Pre-merge blocker fix sprint (QA finding #4) — step 1 no longer
+ * bulk-flips *every* DRAFT row: `createdById: session.userId` scopes the
+ * auto-submit to drafts the acting Owner authored themselves. Another
+ * author's (e.g. an Employee's) half-finished DRAFT rows stay DRAFT,
+ * untouched and unpublished — they only ever reach step 3 after that
+ * author explicitly Submits them (flipping them PROPOSED), which is the
+ * intended review handoff. Step 3 still approves every PROPOSED row —
+ * PROPOSED means "explicitly submitted for the Owner's decision," so
+ * approving it here is precisely the Owner acting on that request.
  *
  * Behavior:
  *   - no session / not Owner  -> 401 / 403
@@ -47,13 +57,16 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: 'Talent not found.' }, { status: 404 });
   }
 
-  // Step 1 — submit every still-DRAFT row. "Nothing to submit" is expected
-  // and harmless whenever every pending row is already PROPOSED, so it's
-  // swallowed here rather than failing the whole request.
+  // Step 1 — submit the acting Owner's own still-DRAFT rows only (QA
+  // finding #4 — never sweep another author's unfinished drafts into a
+  // publish). "Nothing to submit" is expected and harmless whenever every
+  // pending row is already PROPOSED (or the only drafts belong to someone
+  // else), so it's swallowed here rather than failing the whole request.
   try {
     await socialsService.submit(talentAdapter, {
       parentId: id,
       actorId: session.userId,
+      createdById: session.userId,
     });
   } catch (error) {
     if (error.code !== 'NOTHING_TO_SUBMIT') {

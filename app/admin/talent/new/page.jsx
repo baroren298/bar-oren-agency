@@ -16,6 +16,7 @@
  */
 
 import { isDatabaseConfigured } from '@/lib/admin/db';
+import { isUploadAvailable } from '@/lib/storage/availability';
 import AdminShell from '../../AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
@@ -51,7 +52,10 @@ export default function NewTalentPage() {
 
         <PageHeader title={he.talent.create.pageTitle} description={he.talent.create.pageDescription} />
 
-        <NewTalentForm />
+        {/* Pre-merge blocker fix sprint (QA finding #1) — see
+            lib/storage/availability.js; gates only the form's profile-image
+            upload zone, never talent creation itself. */}
+        <NewTalentForm uploadsEnabled={isUploadAvailable()} />
       </div>
     </AdminShell>
   );

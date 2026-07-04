@@ -59,6 +59,7 @@ import { cookies } from 'next/headers';
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { isDatabaseConfigured } from '@/lib/admin/db';
+import { isUploadAvailable } from '@/lib/storage/availability';
 import { getSessionUser } from '@/lib/admin/auth/authorize';
 import AdminShell from '../../AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
@@ -293,7 +294,7 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
  * `versionStatus` is what lets it pick the right button label and decide
  * whether Submit may be offered at all (Submit stays DRAFT-only).
  */
-function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role }) {
+function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role, uploadsEnabled }) {
   if (!publishedVersion) {
     return (
       <EmptyState
@@ -330,6 +331,7 @@ function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, dis
         pendingImagePosition={pendingVersion?.profileImagePosition ?? null}
         pendingImageScale={pendingVersion?.profileImageScale ?? null}
         displayName={displayName}
+        uploadsEnabled={uploadsEnabled}
       />
       <TalentDetailsEditor
         talentId={talentId}
@@ -433,6 +435,7 @@ function GallerySectionContent({
   rejectedGalleryImages,
   displayName,
   role,
+  uploadsEnabled,
 }) {
   const publishedImages = buildGalleryImages(galleryImages, displayName);
   const draftImages = buildGalleryImages(draftGalleryImages, displayName);
@@ -448,6 +451,7 @@ function GallerySectionContent({
         draftImages={draftImages}
         rejectedImages={rejectedImages}
         role={role}
+        uploadsEnabled={uploadsEnabled}
       />
     </>
   );
@@ -704,6 +708,14 @@ export default async function AdminTalentDetailPage({ params }) {
   const session = await getSessionUser({ cookies: await cookies() });
   const role = session?.role ?? null;
 
+  // Pre-merge blocker fix sprint (QA finding #1) — computed once here on
+  // the server (reads STORAGE_PROVIDER/NODE_ENV, which client components
+  // can't) and prop-drilled to the Profile Image and Gallery upload
+  // surfaces below. False only when the active storage provider is `local`
+  // in a production build; local development is unaffected. UI-only
+  // convenience — the upload route re-checks this independently (503).
+  const uploadsEnabled = isUploadAvailable();
+
   // Pure reads only — no version is ever created as a side effect of
   // loading this page (see loadPendingVersion's header comment above).
   // socials/galleryImages added by the Talent Detail DB Read Integration
@@ -760,6 +772,7 @@ export default async function AdminTalentDetailPage({ params }) {
             pendingVersion={pendingVersion}
             displayName={displayName}
             role={role}
+            uploadsEnabled={uploadsEnabled}
           />
         ),
       };
@@ -776,6 +789,7 @@ export default async function AdminTalentDetailPage({ params }) {
             rejectedGalleryImages={rejectedGalleryImages}
             displayName={displayName}
             role={role}
+            uploadsEnabled={uploadsEnabled}
           />
         ),
       };

@@ -12,9 +12,14 @@
  * normal Draft -> Proposed -> Approve -> Publish flow apply, unchanged.
  *
  * Pattern matches the existing proposals route (app/api/admin/talent/[id]/
- * proposals/route.js): an API Route, not a Server Action; requireUser()
- * re-derives the session independently as defense in depth even though
- * middleware.js already gates /api/admin/* with the same check; calls the
+ * proposals/route.js): an API Route, not a Server Action;
+ * requireOwnerOrEmployee() re-derives the session independently as defense
+ * in depth even though middleware.js already gates /api/admin/* with the
+ * same check (Pre-merge blocker fix sprint, QA finding #3: was
+ * requireUser — functionally identical today, but every sibling write
+ * route is written against the explicit role list so a future third role,
+ * e.g. a read-only reviewer, never silently gains create rights just by
+ * having a valid session); calls the
  * adapter directly (talentAdapter.createParentWithInitialVersion /
  * getParentBySlug) rather than a generic engine service, the same way the
  * proposals route calls talentAdapter.getParent directly — talent creation
@@ -55,7 +60,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/admin/auth/authorize';
+import { requireOwnerOrEmployee } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { eventService } from '@/lib/admin/engine/eventService';
 import { EVENT_TYPE } from '@/lib/admin/engine/eventTypes';
@@ -68,7 +73,7 @@ const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export async function POST(request) {
   let session;
   try {
-    session = await requireUser(request);
+    session = await requireOwnerOrEmployee(request);
   } catch (error) {
     return NextResponse.json(
       { error: he.talent.create.errors.notAuthenticated },

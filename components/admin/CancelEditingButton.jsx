@@ -35,6 +35,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SecondaryButton from "./SecondaryButton";
+import ConfirmDialog from "./ConfirmDialog";
 import { he } from "@/lib/admin/i18n/he";
 import styles from "./StartEditingButton.module.css";
 
@@ -42,10 +43,27 @@ const COPY = he.talent.detail.cancelEditing;
 
 export default function CancelEditingButton({ talentId, versionId }) {
   const router = useRouter();
+  // Pre-merge blocker fix sprint (QA finding #2): the button no longer
+  // discards on click — it opens the shared <ConfirmDialog> (the same
+  // component TalentVisibilityAction already uses), and only a confirmed
+  // dialog runs the exact same POST .../discard as before. The dialog copy
+  // is explicit that the whole Draft (saved edits included) is deleted.
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function handleClick() {
+  function handleOpenConfirm() {
+    setError(null);
+    setConfirmOpen(true);
+  }
+
+  function handleCancelConfirm() {
+    if (loading) return;
+    setConfirmOpen(false);
+    setError(null);
+  }
+
+  async function handleConfirmDiscard() {
     setLoading(true);
     setError(null);
 
@@ -57,10 +75,13 @@ export default function CancelEditingButton({ talentId, versionId }) {
       const body = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        // Keep the dialog open so the error is shown in context; the user
+        // can retry or back out with "המשך עריכה".
         setError(body.error || COPY.genericError);
         return;
       }
 
+      setConfirmOpen(false);
       // Same reasoning as StartEditingButton's router.refresh(): a
       // successful discard deletes the Draft row, which the page's own
       // pendingVersion read needs to re-derive (pendingStatus flips back to
@@ -75,14 +96,22 @@ export default function CancelEditingButton({ talentId, versionId }) {
 
   return (
     <div className={styles.wrapper}>
-      <SecondaryButton type="button" onClick={handleClick} disabled={loading}>
+      <SecondaryButton type="button" onClick={handleOpenConfirm} disabled={loading}>
         {loading ? COPY.loading : COPY.label}
       </SecondaryButton>
-      {error ? (
-        <span className={styles.error} role="alert">
-          {error}
-        </span>
-      ) : null}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title={COPY.confirmTitle}
+        body={COPY.confirmBody}
+        confirmLabel={COPY.confirmLabel}
+        cancelLabel={COPY.confirmCancelLabel}
+        onConfirm={handleConfirmDiscard}
+        onCancel={handleCancelConfirm}
+        confirming={loading}
+        confirmingLabel={COPY.loading}
+        error={error}
+      />
     </div>
   );
 }

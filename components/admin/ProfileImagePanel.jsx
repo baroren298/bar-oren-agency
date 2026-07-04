@@ -61,6 +61,12 @@ export default function ProfileImagePanel({
   pendingImagePosition = null,
   pendingImageScale = null,
   displayName,
+  // Pre-merge blocker fix sprint (QA finding #1) — computed server-side
+  // (lib/storage/availability.js, via app/admin/talent/[id]/page.jsx) and
+  // passed down: false when the active storage provider is `local` in a
+  // production build. Gates only the upload surface; position/zoom, Save
+  // Draft and Submit keep working.
+  uploadsEnabled = true,
 }) {
   const sectionCopy = he.talent.detail.profile.image;
   const mediaCopy = he.media;
@@ -230,6 +236,7 @@ export default function ProfileImagePanel({
         onProposedChange={handleProposedChange}
         purpose="profile"
         disabled={!versionId}
+        uploadDisabled={!uploadsEnabled}
         defaultPosition="center top"
         alt={he.talent.detail.profile.imageAlt(displayName)}
         // Talent Detail UX Refactor, Phase 2 — single-section view/editing
@@ -250,6 +257,7 @@ export default function ProfileImagePanel({
           preview: mediaCopy.preview,
           positionControls: mediaCopy.positionControls,
           disabledHint: sectionCopy.noEditableVersionHint,
+          uploadsDisabledHint: mediaCopy.uploadsDisabledHint,
           errors: mediaCopy.errors,
         }}
       />

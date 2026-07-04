@@ -273,9 +273,17 @@ export default function MediaGalleryEditor({
   emptyProposedTitle = he.gallery.noProposedImagesTitle,
   emptyProposedDescription = he.gallery.noProposedImagesDescription,
   role = null,
+  // Pre-merge blocker fix sprint (QA finding #1) — computed server-side
+  // (lib/storage/availability.js, via app/admin/talent/[id]/page.jsx):
+  // false when the active storage provider is `local` in a production
+  // build. Gates only the upload surface (AddImageCard becomes the inert
+  // placeholder + a Hebrew notice renders); reorder/alt/crop editing, Save
+  // Draft, Submit and Publish keep working.
+  uploadsEnabled = true,
 }) {
   const router = useRouter();
   const hasPersistence = Boolean(talentId);
+  const canUpload = hasPersistence && uploadsEnabled;
   const isOwner = role === ROLE.OWNER;
   const initialSeed = draftImages.length > 0 ? draftImages : publishedImages;
 
@@ -476,7 +484,9 @@ export default function MediaGalleryEditor({
   // default (current proposed-list length) race-free, and means a failure
   // partway through never aborts the files still queued behind it.
   async function handleSelectFiles(files) {
-    if (!hasPersistence || !files || files.length === 0) return;
+    // `canUpload` is a courtesy guard only — the upload route independently
+    // refuses with 503 when uploads are unavailable in this environment.
+    if (!canUpload || !files || files.length === 0) return;
 
     const queueItems = files.map((file) => ({
       clientId: `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -678,6 +688,16 @@ export default function MediaGalleryEditor({
           {isEditing ? he.gallery.proposedSubtitle : he.gallery.publishedSubtitle}
         </p>
 
+        {isEditing && !uploadsEnabled ? (
+          // Pre-merge blocker fix sprint (QA finding #1) — clear Hebrew
+          // notice that uploads are unavailable in this environment; the
+          // AddImageCard below renders as its inert placeholder
+          // (onSelectFiles null) rather than a working dropzone.
+          <div className={styles.previewNotice} role="note">
+            <p className={styles.previewNoticeBody}>{he.gallery.errors.uploadsDisabled}</p>
+          </div>
+        ) : null}
+
         {isEditing ? (
           proposedImages.length === 0 && uploadQueue.length === 0 ? (
             <EmptyState
@@ -686,7 +706,7 @@ export default function MediaGalleryEditor({
               action={
                 <AddImageCard
                   className={styles.emptyProposedAction}
-                  onSelectFiles={hasPersistence ? handleSelectFiles : null}
+                  onSelectFiles={canUpload ? handleSelectFiles : null}
                 />
               }
             />
@@ -714,7 +734,7 @@ export default function MediaGalleryEditor({
                       onDismiss={() => dismissUploadItem(item.clientId)}
                     />
                   ))}
-                  <AddImageCard onSelectFiles={hasPersistence ? handleSelectFiles : null} />
+                  <AddImageCard onSelectFiles={canUpload ? handleSelectFiles : null} />
                 </div>
               </SortableContext>
             </DndContext>
