@@ -17,6 +17,34 @@ const nextConfig = {
   },
 
   /*
+   * Baseline security headers — pre-merge hardening (audit finding S3).
+   * Applied to every response, public and admin:
+   *   - X-Frame-Options: DENY — no page (especially /admin/login) may be
+   *     framed by any origin; blocks clickjacking. Nothing on this site is
+   *     legitimately embedded in an iframe elsewhere.
+   *   - X-Content-Type-Options: nosniff — browsers must honor the declared
+   *     Content-Type instead of sniffing bytes.
+   *   - Referrer-Policy: strict-origin-when-cross-origin — cross-origin
+   *     requests only ever see the origin, never full URLs (which include
+   *     admin paths).
+   * Deliberately NOT a full Content-Security-Policy — that needs a
+   * dedicated pass (inline styles/scripts, YouTube frame-src, Next image
+   * domains) and is out of scope for this sprint.
+   */
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
+
+  /*
    * Locale routing — Hebrew stays unprefixed at "/", English lives at "/en".
    *
    * Internally every route is implemented once under app/[locale]/, so these
