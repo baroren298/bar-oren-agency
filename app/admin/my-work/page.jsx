@@ -10,12 +10,20 @@
  * /admin/* session check (see app/admin/AdminShell.jsx's header comment) —
  * no new auth code needed.
  *
- * Data source: lib/admin/mock-workflow.js — local mock data only, per this
- * sprint's explicit scope (no database, no Prisma, no API route). The
- * page itself only calls getWorkflowSections() and renders the result, so
- * swapping that for a real query later (e.g. something backed by the Core
- * Content Engine in lib/admin/engine/) shouldn't require touching this
- * file's JSX at all.
+ * Data source — pre-merge stabilization: getWorkflowSections() is now
+ * called with an explicit empty items array. The hardcoded demo items in
+ * lib/admin/mock-workflow.js previously fed this page, which meant the
+ * Owner saw fictitious drafts / "waiting for approval" items after login.
+ * Until a real cross-entity query exists (e.g. a future
+ * versionService.listForOwner() backed by the Core Content Engine in
+ * lib/admin/engine/), the truthful state of this page is "nothing tracked
+ * yet" — so every section renders its existing EmptyState. Swapping in the
+ * real query later only means replacing the `[]` argument below; the JSX
+ * is unchanged. The section definitions/labels still come from
+ * mock-workflow.js's getWorkflowSections(), whose WORKFLOW_STATUS /
+ * STATUS_LABEL / STATUS_TONE constants are also real (they're shared with
+ * lib/admin/talent-workspace.js) — only the demo items array is no longer
+ * rendered anywhere.
  *
  * Reuses the existing admin design system as-is: AdminShell for the
  * page chrome, PageHeader for the title, EmptyState for sections with no
@@ -36,7 +44,9 @@ export const metadata = {
 };
 
 export default function AdminMyWorkPage() {
-  const sections = getWorkflowSections();
+  // Explicit empty list — no real workflow query exists yet; never render
+  // the demo items (see header comment).
+  const sections = getWorkflowSections([]);
 
   return (
     <AdminShell>

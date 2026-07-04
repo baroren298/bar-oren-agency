@@ -53,12 +53,16 @@
   width: 100%;
   max-width: 156px;
   height: auto;
-  /* Align to the sidebar's inline-end (right, in this RTL shell). The
-     inline-end margin matches .navLink's own inline-end padding (0.75rem)
-     so the logo's edge lines up with the nav *text*, not the outer edge
-     of the nav button's hover/active background box. */
-  align-self: flex-end;
-  margin-inline-end: 0.75rem;
+  /* Align to the sidebar's inline-start, which is the *right* edge in this
+     RTL shell (for a column flex container, cross-start follows the
+     inline-start side of `direction`, so flex-start = right under
+     dir="rtl" — flex-end would put it on the left). The inline-start
+     margin exactly cancels .sidebar's own inline padding (1.25rem, see
+     above) rather than an arbitrary guessed offset, so the logo lands
+     flush with the sidebar's outer edge — right where that padding
+     begins — independent of .navLink's padding/alignment. */
+  align-self: flex-start;
+  margin-inline-start: -1.25rem;
   margin-block: 0 0.5rem;
 }
 

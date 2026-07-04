@@ -32,26 +32,6 @@ function getClientIp(request) {
   return request.headers.get("x-real-ip") || "unknown";
 }
 
-// [SPRINT 4.4 DIAGNOSTIC — TEMPORARY, remove once login investigation is
-// closed] Same masking helper as scripts/create-owner.mjs's diagnostic
-// addition — host/port/dbname only, never credentials.
-function maskDbUrl(url) {
-  if (!url) return "(unset)";
-  try {
-    const u = new URL(url);
-    return `${u.protocol}//***:***@${u.host}${u.pathname}`;
-  } catch {
-    return "(unparseable)";
-  }
-}
-
-// [SPRINT 4.4 DIAGNOSTIC — TEMPORARY] bcrypt hash *format* only — length and
-// cost-factor prefix — never the hash value itself.
-function hashFormat(hash) {
-  if (!hash) return "(none)";
-  return `length=${hash.length} prefix=${hash.slice(0, 7)}`;
-}
-
 export async function POST(request) {
   let body;
   try {

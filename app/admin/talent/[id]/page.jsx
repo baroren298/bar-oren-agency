@@ -293,7 +293,7 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
  * `versionStatus` is what lets it pick the right button label and decide
  * whether Submit may be offered at all (Submit stays DRAFT-only).
  */
-function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, role }) {
+function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role }) {
   if (!publishedVersion) {
     return (
       <EmptyState
@@ -308,13 +308,37 @@ function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, rol
   const editableVersionId = isEditablePending ? pendingVersion.id : null;
 
   return (
-    <TalentDetailsEditor
-      talentId={talentId}
-      versionId={editableVersionId}
-      versionStatus={isEditablePending ? pendingVersion.status : null}
-      groups={buildDetailsGroups(publishedVersion, pendingVersion)}
-      role={role}
-    />
+    <>
+      {/*
+        UI/structure fix — Profile Image scoped to פרטים tab only. This used
+        to render globally above <TalentWorkspaceTabs> (and therefore also
+        above every other tab's edit mode: Gallery/Socials/Podcast/SEO/
+        History), which was confusing since editing e.g. Socials had nothing
+        to do with the profile image. Moved here, inside the Details tab's
+        own content, so it only ever appears when פרטים is the active tab.
+        No prop, behavior, upload, or storage change — same
+        <ProfileImagePanel> with the exact same props it always received.
+      */}
+      <ProfileImagePanel
+        talentId={talentId}
+        versionId={editableVersionId}
+        versionStatus={isEditablePending ? pendingVersion.status : null}
+        imageUrl={publishedVersion.profileImageAsset?.blobUrl ?? null}
+        profileImagePosition={publishedVersion.profileImagePosition}
+        profileImageScale={publishedVersion.profileImageScale}
+        pendingImageUrl={pendingVersion?.profileImageAsset?.blobUrl ?? null}
+        pendingImagePosition={pendingVersion?.profileImagePosition ?? null}
+        pendingImageScale={pendingVersion?.profileImageScale ?? null}
+        displayName={displayName}
+      />
+      <TalentDetailsEditor
+        talentId={talentId}
+        versionId={editableVersionId}
+        versionStatus={isEditablePending ? pendingVersion.status : null}
+        groups={buildDetailsGroups(publishedVersion, pendingVersion)}
+        role={role}
+      />
+    </>
   );
 }
 
@@ -638,7 +662,9 @@ function HistorySectionContent({ versions }) {
  *
  * Profile Image section sprint — the small circular avatar that used to
  * live in this block moved out into its own dedicated
- * <ProfileImagePanel> (rendered separately below).
+ * <ProfileImagePanel>. That panel initially rendered globally above the
+ * tabs; the "Profile Image scoped to Details" fix later moved it inside
+ * <DetailsSectionContent>, so it now renders only in the פרטים tab.
  *
  * "Location & age" cleanup sprint — this standalone facts block (birth
  * date / computed age) is now removed entirely. It felt disconnected
@@ -732,6 +758,7 @@ export default async function AdminTalentDetailPage({ params }) {
             talentId={talent.id}
             publishedVersion={publishedVersion}
             pendingVersion={pendingVersion}
+            displayName={displayName}
             role={role}
           />
         ),
@@ -791,14 +818,6 @@ export default async function AdminTalentDetailPage({ params }) {
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
 
-  // Profile Image Replace sprint — same isEditablePending/editableVersionId
-  // pattern DetailsSectionContent/PodcastSectionContent already use above,
-  // computed here instead since <ProfileImagePanel> renders directly in
-  // this function's JSX rather than inside its own SectionContent wrapper.
-  const isProfileImageEditablePending =
-    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
-  const profileImageEditableVersionId = isProfileImageEditablePending ? pendingVersion.id : null;
-
   // Talent Visibility sprint (admin UI) — single source of truth for the
   // header's Hide/Restore action button (see deriveCurrentVisibility's own
   // header comment for the "pending wins over published" rule). Also feeds
@@ -856,8 +875,8 @@ export default async function AdminTalentDetailPage({ params }) {
             {/*
               Talent Visibility sprint (admin UI) — requirement #2: the real
               Hide-from-Public-Site / Restore-Visibility action. Only
-              rendered once a Published version exists (same guard
-              <ProfileImagePanel> below already uses) — there is nothing
+              rendered once a Published version exists (same publishedVersion
+              guard <DetailsSectionContent> uses) — there is nothing
               meaningful to hide/restore for a talent that has never been
               published and has no draft either. Never publishes by itself;
               see TalentVisibilityAction.jsx for exactly what it does.
@@ -874,21 +893,6 @@ export default async function AdminTalentDetailPage({ params }) {
           </div>
         }
       />
-
-      {publishedVersion ? (
-        <ProfileImagePanel
-          talentId={talent.id}
-          versionId={profileImageEditableVersionId}
-          versionStatus={profileImageEditableVersionId ? pendingVersion.status : null}
-          imageUrl={publishedVersion.profileImageAsset?.blobUrl ?? null}
-          profileImagePosition={publishedVersion.profileImagePosition}
-          profileImageScale={publishedVersion.profileImageScale}
-          pendingImageUrl={pendingVersion?.profileImageAsset?.blobUrl ?? null}
-          pendingImagePosition={pendingVersion?.profileImagePosition ?? null}
-          pendingImageScale={pendingVersion?.profileImageScale ?? null}
-          displayName={displayName}
-        />
-      ) : null}
 
       {rejectionNote ? (
         <div className={styles.rejectionNotice} role="note">
