@@ -1,25 +1,24 @@
 "use client";
 
 /*
- * UsersPageClient — Sprint 3: Users UI.
+ * UsersPageClient — Sprint 3: Users UI, revised by Sprint 3.1 (User Details
+ * Page).
  *
- * All the interactive pieces of /admin/users: the "add employee" form,
- * inline displayName editing, and the activate/deactivate toggle (with a
- * confirmation dialog, mirroring TalentVisibilityAction.jsx's shape). Every
- * write goes through the new /api/admin/users REST routes via fetch, then
- * router.refresh() re-reads the server-side list from page.jsx — same
- * pattern as StartEditingButton/CancelEditingButton/TalentVisibilityAction,
- * no client-side DB/service access of any kind.
+ * All the interactive pieces of /admin/users: the "add employee" form and
+ * the users table. Sprint 3.1's product decision — "editing a user should
+ * open a full user management screen" — replaced this file's old inline
+ * displayName edit and activate/deactivate toggle-with-confirm-dialog with
+ * a single "ניהול" link per row to /admin/users/[id]
+ * (app/admin/users/[id]/UserDetailClient.jsx), which now owns every write
+ * to an existing user (displayName, activation, password reset). This file
+ * still owns user *creation* (the add-employee form below) — that stays
+ * here since it's a list-level action with no per-row id to navigate to
+ * yet.
  *
- * Role changes and deletion are not offered anywhere in this file — there
- * is no role selector and no delete action, matching this sprint's explicit
- * scope. Deactivating an OWNER row is not offered either: since this sprint
- * has no way to provision a second Owner, the acting Owner's own row is
- * always the only OWNER row here, and hiding its toggle entirely (rather
- * than showing it disabled) is the simplest way to make "you can't disable
- * yourself / the only Owner" true by construction in the UI, on top of (not
- * instead of) userService.setActive's own server-side enforcement of both
- * rules.
+ * Role changes and deletion are not offered anywhere in this file or the
+ * detail page — matching this sprint's explicit scope. The status column
+ * below is now read-only display; the "ניהול" link is how an Owner reaches
+ * the activate/deactivate control that used to live inline here.
  *
  * Props:
  *   - initialUsers (array, required) — from userService.listUsers(), see
@@ -33,7 +32,6 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/admin/Card";
 import PrimaryButton from "@/components/admin/PrimaryButton";
 import SecondaryButton from "@/components/admin/SecondaryButton";
-import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import StatusBadge from "@/components/admin/StatusBadge";
 import EmptyState from "@/components/admin/EmptyState";
 import { he } from "@/lib/admin/i18n/he";
@@ -60,15 +58,6 @@ export default function UsersPageClient({ initialUsers, currentUserId }) {
   const [createFieldErrors, setCreateFieldErrors] = useState({});
   const [createError, setCreateError] = useState(null);
   const [creating, setCreating] = useState(false);
-
-  const [editingUserId, setEditingUserId] = useState(null);
-  const [editValue, setEditValue] = useState("");
-  const [editError, setEditError] = useState(null);
-  const [savingEdit, setSavingEdit] = useState(false);
-
-  const [dialogUser, setDialogUser] = useState(null);
-  const [confirming, setConfirming] = useState(false);
-  const [dialogError, setDialogError] = useState(null);
 
   function updateCreateField(field, value) {
     setCreateForm((prev) => ({ ...prev, [field]: value }));
@@ -115,89 +104,6 @@ export default function UsersPageClient({ initialUsers, currentUserId }) {
       setCreating(false);
     }
   }
-
-  function startEditing(user) {
-    setEditingUserId(user.id);
-    setEditValue(user.displayName || "");
-    setEditError(null);
-  }
-
-  function cancelEditing() {
-    setEditingUserId(null);
-    setEditValue("");
-    setEditError(null);
-  }
-
-  async function saveDisplayName(userId) {
-    setSavingEdit(true);
-    setEditError(null);
-
-    try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName: editValue }),
-      });
-      const body = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setEditError(body.error || COPY.errors.serverError);
-        setSavingEdit(false);
-        return;
-      }
-
-      setSavingEdit(false);
-      setEditingUserId(null);
-      setEditValue("");
-      router.refresh();
-    } catch {
-      setEditError(COPY.errors.networkError);
-      setSavingEdit(false);
-    }
-  }
-
-  function openToggleDialog(user) {
-    setDialogUser(user);
-    setDialogError(null);
-  }
-
-  function closeToggleDialog() {
-    if (confirming) return;
-    setDialogUser(null);
-    setDialogError(null);
-  }
-
-  async function confirmToggle() {
-    if (!dialogUser) return;
-    setConfirming(true);
-    setDialogError(null);
-
-    const nextActive = !dialogUser.isActive;
-
-    try {
-      const response = await fetch(`/api/admin/users/${dialogUser.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: nextActive }),
-      });
-      const body = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setDialogError(body.error || COPY.errors.serverError);
-        setConfirming(false);
-        return;
-      }
-
-      setConfirming(false);
-      setDialogUser(null);
-      router.refresh();
-    } catch {
-      setDialogError(COPY.errors.networkError);
-      setConfirming(false);
-    }
-  }
-
-  const isDeactivating = dialogUser ? dialogUser.isActive : false;
 
   return (
     <div className={styles.tokens}>
@@ -296,9 +202,7 @@ export default function UsersPageClient({ initialUsers, currentUserId }) {
               </thead>
               <tbody>
                 {initialUsers.map((user) => {
-                  const isEditing = editingUserId === user.id;
                   const isSelf = user.id === currentUserId;
-                  const isOwnerRow = user.role === ROLE.OWNER;
 
                   return (
                     <tr key={user.id}>
@@ -306,43 +210,7 @@ export default function UsersPageClient({ initialUsers, currentUserId }) {
                         {user.email}
                         {isSelf ? <span className={styles.selfTag}> {COPY.table.you}</span> : null}
                       </td>
-                      <td>
-                        {isEditing ? (
-                          <div className={styles.editRow}>
-                            <input
-                              type="text"
-                              className={styles.inlineInput}
-                              value={editValue}
-                              onChange={(event) => setEditValue(event.target.value)}
-                              disabled={savingEdit}
-                            />
-                            <button
-                              type="button"
-                              className={styles.linkButton}
-                              onClick={() => saveDisplayName(user.id)}
-                              disabled={savingEdit}
-                            >
-                              {savingEdit ? COPY.editDisplayName.saving : COPY.editDisplayName.save}
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.linkButton}
-                              onClick={cancelEditing}
-                              disabled={savingEdit}
-                            >
-                              {COPY.editDisplayName.cancel}
-                            </button>
-                            {editError ? <div className={styles.fieldError}>{editError}</div> : null}
-                          </div>
-                        ) : (
-                          <div className={styles.displayNameRow}>
-                            <span>{user.displayName || COPY.table.noDisplayName}</span>
-                            <button type="button" className={styles.linkButton} onClick={() => startEditing(user)}>
-                              {COPY.editDisplayName.trigger}
-                            </button>
-                          </div>
-                        )}
-                      </td>
+                      <td>{user.displayName || COPY.table.noDisplayName}</td>
                       <td>{user.role === ROLE.OWNER ? he.roles.owner : he.roles.employee}</td>
                       <td>
                         <StatusBadge
@@ -353,13 +221,7 @@ export default function UsersPageClient({ initialUsers, currentUserId }) {
                       <td>{formatDateTime(user.lastLoginAt)}</td>
                       <td>{formatDateTime(user.createdAt)}</td>
                       <td>
-                        {isOwnerRow ? (
-                          <span className={styles.mutedNote}>{COPY.activation.ownerHint}</span>
-                        ) : (
-                          <SecondaryButton type="button" onClick={() => openToggleDialog(user)}>
-                            {user.isActive ? COPY.activation.deactivate : COPY.activation.activate}
-                          </SecondaryButton>
-                        )}
+                        <SecondaryButton href={`/admin/users/${user.id}`}>{COPY.detail.manage}</SecondaryButton>
                       </td>
                     </tr>
                   );
@@ -369,19 +231,6 @@ export default function UsersPageClient({ initialUsers, currentUserId }) {
           </div>
         </Card>
       )}
-
-      <ConfirmDialog
-        open={Boolean(dialogUser)}
-        title={isDeactivating ? COPY.activation.confirmDeactivateTitle : COPY.activation.confirmActivateTitle}
-        body={isDeactivating ? COPY.activation.confirmDeactivateBody : COPY.activation.confirmActivateBody}
-        confirmLabel={isDeactivating ? COPY.activation.deactivate : COPY.activation.activate}
-        confirmingLabel={isDeactivating ? COPY.activation.deactivating : COPY.activation.activating}
-        cancelLabel={COPY.activation.confirmCancelLabel}
-        onConfirm={confirmToggle}
-        onCancel={closeToggleDialog}
-        confirming={confirming}
-        error={dialogError}
-      />
     </div>
   );
 }
