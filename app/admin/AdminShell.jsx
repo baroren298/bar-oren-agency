@@ -17,15 +17,32 @@
  * Server Component. The only client pieces are AdminNavLinks (needs
  * usePathname() for the active-link highlight) and AdminLogoutButton
  * (needs an onClick handler) — both imported in, not inlined here.
+ *
+ * Sprint 3 (Users UI): this is now an async Server Component so it can
+ * derive the current session's role once, here, and pass it down to
+ * AdminNavLinks — the only change needed to gate the new Owner-only
+ * "Users" nav item without touching every page that renders <AdminShell>.
+ * Same `getSessionUser({ cookies: await cookies() })` pattern every other
+ * role-aware Server Component page already uses (see
+ * app/admin/talent/[id]/page.jsx). A caller with no session (shouldn't
+ * happen here — middleware.js already redirects unauthenticated requests
+ * away from every /admin/* page before this ever renders) just gets
+ * role: null, which AdminNavLinks treats as "not Owner" — the nav item is
+ * hidden, not a crash.
  */
 
 import Image from "next/image";
+import { cookies } from "next/headers";
+import { getSessionUser } from "@/lib/admin/auth/authorize";
 import AdminNavLinks from "./AdminNavLinks";
 import AdminLogoutButton from "./AdminLogoutButton";
 import styles from "./admin-shell.module.css";
 import { he } from "@/lib/admin/i18n/he";
 
-export default function AdminShell({ children }) {
+export default async function AdminShell({ children }) {
+  const session = await getSessionUser({ cookies: await cookies() });
+  const role = session?.role ?? null;
+
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -41,7 +58,7 @@ export default function AdminShell({ children }) {
           priority
           className={styles.brandLogo}
         />
-        <AdminNavLinks className={styles.nav} />
+        <AdminNavLinks className={styles.nav} role={role} />
       </aside>
 
       <div className={styles.main}>
@@ -49,7 +66,7 @@ export default function AdminShell({ children }) {
           <AdminLogoutButton />
         </header>
 
-        <AdminNavLinks className={styles.mobileNav} />
+        <AdminNavLinks className={styles.mobileNav} role={role} />
 
         <main className={styles.content}>{children}</main>
       </div>
