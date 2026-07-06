@@ -60,45 +60,6 @@
   color: var(--admin-text-primary);
 }
 
-.editRow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.inlineInput {
-  font-family: inherit;
-  font-size: 0.9rem;
-  color: var(--admin-text-primary);
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius);
-  padding: 0.3rem 0.55rem;
-  min-width: 10rem;
-}
-
-.linkButton {
-  font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--admin-accent-strong);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.linkButton:hover {
-  text-decoration: underline;
-}
-
-.linkButton:disabled {
-  color: var(--admin-text-muted);
-  cursor: default;
-  text-decoration: none;
-}
-
 .mutedNote {
   margin: 0.75rem 0 0;
   font-size: 0.8rem;

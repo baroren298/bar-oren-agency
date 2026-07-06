@@ -1,5 +1,6 @@
 /*
- * /admin/users/[id] — Sprint 3.1: User Details Page.
+ * /admin/users/[id] — Sprint 3.1: User Details Page, revised by Sprint 3.2
+ * (User Detail UX Cleanup).
  *
  * Owner-only, same role-derivation-from-session-cookie + redirect pattern
  * every other Owner-only Server Component page already uses (see
@@ -11,10 +12,10 @@
  * Initial read is direct via userService.getUserDetail (same "no
  * client-side fetch needed just to render the first paint" pattern as
  * page.jsx's listUsers() call) — a pure read, no writes. All writes
- * (displayName edit, password reset, activation toggle) happen in
- * UserDetailClient.jsx via fetch to the existing/new /api/admin/users
- * routes, followed by router.refresh() to re-read this same server-side
- * detail.
+ * (profile edit — displayName + email, password reset, activation toggle)
+ * happen in UserDetailClient.jsx via fetch to the existing/new
+ * /api/admin/users routes, followed by router.refresh() to re-read this
+ * same server-side detail.
  *
  * Role editing is NOT implemented here — see he.js's
  * he.users.detail.role.readOnlyNote (rendered directly in the Role &
@@ -92,7 +93,12 @@ export default async function AdminUserDetailPage({ params }) {
         {he.users.detail.backToList}
       </a>
 
-      <PageHeader title={user.displayName || user.email} description={user.email} />
+      {/* Sprint 3.2 QA fix: show displayName as the title when available,
+          falling back to email — but never show email as both title and
+          subtitle. The subtitle only appears when it adds information
+          (i.e. there is a displayName, so the email isn't already the
+          title). */}
+      <PageHeader title={user.displayName || user.email} description={user.displayName ? user.email : undefined} />
 
       <UserDetailClient user={user} />
     </AdminShell>

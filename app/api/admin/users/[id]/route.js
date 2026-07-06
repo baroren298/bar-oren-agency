@@ -1,13 +1,26 @@
 /*
- * PATCH /api/admin/users/[id] — Sprint 3: Users UI.
+ * PATCH /api/admin/users/[id] — Sprint 3: Users UI, extended by Sprint 3.2
+ * (User Detail UX Cleanup).
  *
- * Owner-only. Body may include `displayName` and/or `isActive` — this
- * route applies whichever of the two is present, similar in shape to the
- * existing proposals PATCH route's partial-fields body (app/api/admin/
+ * Owner-only. Body may include `displayName`, `email`, and/or `isActive` —
+ * this route applies whichever of the three is present, similar in shape to
+ * the existing proposals PATCH route's partial-fields body (app/api/admin/
  * talent/[id]/proposals/[versionId]/route.js). `role` is never accepted at
  * all: this sprint explicitly does not support changing role, and a `role`
  * key in the body is rejected outright (400) rather than silently ignored,
  * so a client bug can't quietly no-op instead of surfacing.
+ *
+ * The Profile section on /admin/users/[id] sends `displayName` and `email`
+ * together in one PATCH (a single "edit profile" mode — see
+ * UserDetailClient.jsx). They're still applied as two independent
+ * userService calls, displayName first, email second: email is the more
+ * likely of the two to fail (duplicate-email protection), and it's also the
+ * more sensitive field (it changes the user's login identity), so ordering
+ * it last means a failed email update never leaves a half-applied write
+ * more consequential than a harmless displayName rename. This is the same
+ * "not a single atomic transaction" tradeoff this route already made for
+ * displayName+isActive; a true multi-field transaction is a follow-up if it
+ * ever becomes worth the complexity.
  *
  * No DELETE handler exists on this route — deleting users is out of scope
  * this sprint (isActive is a soft, reversible toggle only).
@@ -64,11 +77,12 @@ export async function PATCH(request, { params }) {
   }
 
   const hasDisplayName = typeof body?.displayName === 'string';
+  const hasEmail = typeof body?.email === 'string';
   const hasIsActive = typeof body?.isActive === 'boolean';
 
-  if (!hasDisplayName && !hasIsActive) {
+  if (!hasDisplayName && !hasEmail && !hasIsActive) {
     return NextResponse.json(
-      { error: 'Nothing to update — provide displayName and/or isActive.' },
+      { error: 'Nothing to update — provide displayName, email, and/or isActive.' },
       { status: 400 }
     );
   }
@@ -77,6 +91,9 @@ export async function PATCH(request, { params }) {
     let user;
     if (hasDisplayName) {
       user = await userService.updateDisplayName(id, body.displayName, { actorRole: session.role });
+    }
+    if (hasEmail) {
+      user = await userService.updateEmail(id, body.email, { actorRole: session.role });
     }
     if (hasIsActive) {
       user = await userService.setActive(id, body.isActive, {

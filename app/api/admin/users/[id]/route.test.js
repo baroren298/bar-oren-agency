@@ -1,16 +1,19 @@
 /*
- * PATCH /api/admin/users/[id] — route-level coverage (Sprint 3: Users UI).
+ * PATCH /api/admin/users/[id] — route-level coverage (Sprint 3: Users UI,
+ * extended by Sprint 3.2: User Detail UX Cleanup).
  *
  * requireOwner and userService are both mocked — verifies the route's own
  * job: the auth gate, rejecting a `role` key outright, requiring at least
- * one of displayName/isActive, and mapping userService's thrown errors
- * (self-disable / only-owner / not-found) to the right HTTP status.
+ * one of displayName/email/isActive, and mapping userService's thrown
+ * errors (self-disable / only-owner / not-found / duplicate-email) to the
+ * right HTTP status.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const hoisted = vi.hoisted(() => ({
   requireOwner: vi.fn(),
   updateDisplayName: vi.fn(),
+  updateEmail: vi.fn(),
   setActive: vi.fn(),
 }));
 
@@ -21,6 +24,7 @@ vi.mock('@/lib/admin/auth/authorize', () => ({
 vi.mock('@/lib/admin/userService', () => ({
   userService: {
     updateDisplayName: hoisted.updateDisplayName,
+    updateEmail: hoisted.updateEmail,
     setActive: hoisted.setActive,
   },
 }));
@@ -89,6 +93,57 @@ describe('PATCH /api/admin/users/[id]', () => {
     expect(response.status).toBe(200);
     expect(body).toEqual({ user: { id: 'user-1', displayName: 'New Name' } });
     expect(hoisted.updateDisplayName).toHaveBeenCalledWith('user-1', 'New Name', { actorRole: 'OWNER' });
+  });
+
+  it('updates email and returns the updated user', async () => {
+    hoisted.requireOwner.mockResolvedValue({ userId: 'owner-1', role: 'OWNER' });
+    hoisted.updateEmail.mockResolvedValue({ id: 'user-1', email: 'new@example.com' });
+
+    const response = await PATCH(makeRequest({ email: 'new@example.com' }), makeParams('user-1'));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ user: { id: 'user-1', email: 'new@example.com' } });
+    expect(hoisted.updateEmail).toHaveBeenCalledWith('user-1', 'new@example.com', { actorRole: 'OWNER' });
+    expect(hoisted.updateDisplayName).not.toHaveBeenCalled();
+  });
+
+  it('applies displayName before email when both are present in one request', async () => {
+    hoisted.requireOwner.mockResolvedValue({ userId: 'owner-1', role: 'OWNER' });
+    hoisted.updateDisplayName.mockResolvedValue({ id: 'user-1', displayName: 'New Name' });
+    hoisted.updateEmail.mockResolvedValue({ id: 'user-1', displayName: 'New Name', email: 'new@example.com' });
+
+    const response = await PATCH(
+      makeRequest({ displayName: 'New Name', email: 'new@example.com' }),
+      makeParams('user-1')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ user: { id: 'user-1', displayName: 'New Name', email: 'new@example.com' } });
+    expect(hoisted.updateDisplayName).toHaveBeenCalledWith('user-1', 'New Name', { actorRole: 'OWNER' });
+    expect(hoisted.updateEmail).toHaveBeenCalledWith('user-1', 'new@example.com', { actorRole: 'OWNER' });
+
+    const displayNameOrder = hoisted.updateDisplayName.mock.invocationCallOrder[0];
+    const emailOrder = hoisted.updateEmail.mock.invocationCallOrder[0];
+    expect(displayNameOrder).toBeLessThan(emailOrder);
+  });
+
+  it('maps a duplicate-email VALIDATION_ERROR from userService.updateEmail to a 400 with fieldErrors.email', async () => {
+    hoisted.requireOwner.mockResolvedValue({ userId: 'owner-1', role: 'OWNER' });
+    hoisted.updateEmail.mockRejectedValue(
+      Object.assign(new Error('A user with this email already exists.'), {
+        statusCode: 400,
+        code: 'VALIDATION_ERROR',
+        fieldErrors: { email: 'A user with this email already exists.' },
+      })
+    );
+
+    const response = await PATCH(makeRequest({ email: 'taken@example.com' }), makeParams('user-1'));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.fieldErrors).toEqual({ email: 'A user with this email already exists.' });
   });
 
   it('toggles isActive and forwards actorId for the self/only-owner checks', async () => {

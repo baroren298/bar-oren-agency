@@ -1,7 +1,8 @@
 "use client";
 
 /*
- * UserDetailClient — Sprint 3.1: User Details Page.
+ * UserDetailClient — Sprint 3.1: User Details Page, revised by Sprint 3.2
+ * (User Detail UX Cleanup).
  *
  * The interactive body of /admin/users/[id]: four Card sections (Profile,
  * Role & permissions, Security, Status), each a focused piece of this
@@ -13,9 +14,23 @@
  * routes, then router.refresh() to re-read the server-side user prop from
  * page.jsx — same pattern as UsersPageClient.jsx (no client-side DB/service
  * access of any kind):
- *   - Profile displayName edit  -> PATCH /api/admin/users/[id]
- *   - Status activate/deactivate -> PATCH /api/admin/users/[id]
- *   - Security password reset  -> POST /api/admin/users/[id]/password
+ *   - Profile displayName + email edit -> PATCH /api/admin/users/[id]
+ *   - Status activate/deactivate       -> PATCH /api/admin/users/[id]
+ *   - Security password reset          -> POST /api/admin/users/[id]/password
+ *
+ * Sprint 3.2 QA fix (#3/#4): the Profile section used to have its own
+ * separate inline "ערוך" trigger just for displayName, with email shown as
+ * permanently read-only. That's replaced with a single top-level "ערוך
+ * פרופיל" (Edit profile) mode — one Edit button flips both displayName and
+ * email into editable inputs together, with one Save/Cancel pair — the same
+ * "click Edit, the whole section's fields become editable, Save/Cancel the
+ * whole thing" feel as the Talent editor (see StartEditingButton.jsx /
+ * CancelEditingButton.jsx), rather than a per-field inline edit link. Save
+ * sends one PATCH with both fields; the route (app/api/admin/users/[id]/
+ * route.js) applies them as two independent userService calls server-side
+ * (displayName, then email — see that route's header comment for why that
+ * order), but from this component's point of view it's one request, one
+ * pending state, one error surface.
  *
  * Role & permissions is deliberately read-only — see he.js's
  * he.users.detail.role.readOnlyNote (rendered below) for why role editing
@@ -69,48 +84,59 @@ export default function UserDetailClient({ user }) {
   const router = useRouter();
   const isOwnerRow = user.role === ROLE.OWNER;
 
-  // Profile section — displayName edit
-  const [editingDisplayName, setEditingDisplayName] = useState(false);
+  // Profile section — single "edit profile" mode covering displayName +
+  // email together (Sprint 3.2 QA fix #3/#4), replacing the old
+  // displayName-only inline edit.
+  const [editingProfile, setEditingProfile] = useState(false);
   const [displayNameValue, setDisplayNameValue] = useState(user.displayName || "");
-  const [savingDisplayName, setSavingDisplayName] = useState(false);
-  const [displayNameError, setDisplayNameError] = useState(null);
+  const [emailValue, setEmailValue] = useState(user.email || "");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+  const [profileFieldErrors, setProfileFieldErrors] = useState({});
 
-  function startEditingDisplayName() {
+  function startEditingProfile() {
     setDisplayNameValue(user.displayName || "");
-    setDisplayNameError(null);
-    setEditingDisplayName(true);
+    setEmailValue(user.email || "");
+    setProfileError(null);
+    setProfileFieldErrors({});
+    setEditingProfile(true);
   }
 
-  function cancelEditingDisplayName() {
-    setEditingDisplayName(false);
+  function cancelEditingProfile() {
+    setEditingProfile(false);
     setDisplayNameValue(user.displayName || "");
-    setDisplayNameError(null);
+    setEmailValue(user.email || "");
+    setProfileError(null);
+    setProfileFieldErrors({});
   }
 
-  async function saveDisplayName() {
-    setSavingDisplayName(true);
-    setDisplayNameError(null);
+  async function saveProfile(event) {
+    event.preventDefault();
+    setSavingProfile(true);
+    setProfileError(null);
+    setProfileFieldErrors({});
 
     try {
       const response = await fetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName: displayNameValue }),
+        body: JSON.stringify({ displayName: displayNameValue, email: emailValue }),
       });
       const body = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setDisplayNameError(body.error || COPY.errors.serverError);
-        setSavingDisplayName(false);
+        setProfileFieldErrors(body.fieldErrors || {});
+        setProfileError(body.error || COPY.errors.serverError);
+        setSavingProfile(false);
         return;
       }
 
-      setSavingDisplayName(false);
-      setEditingDisplayName(false);
+      setSavingProfile(false);
+      setEditingProfile(false);
       router.refresh();
     } catch {
-      setDisplayNameError(COPY.errors.networkError);
-      setSavingDisplayName(false);
+      setProfileError(COPY.errors.networkError);
+      setSavingProfile(false);
     }
   }
 
@@ -203,60 +229,92 @@ export default function UserDetailClient({ user }) {
       <Card title={COPY.detail.sections.profile}>
         <p className={styles.sectionDescription}>{COPY.detail.profile.description}</p>
 
-        <div className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{COPY.detail.fields.email}</span>
-          <span className={styles.fieldValue} dir="ltr">
-            {user.email}
-          </span>
-        </div>
+        {!editingProfile ? (
+          <>
+            <div className={styles.fieldRow}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.email}</span>
+              <span className={styles.fieldValue} dir="ltr">
+                {user.email}
+              </span>
+            </div>
 
-        <div className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{COPY.detail.fields.displayName}</span>
-          {editingDisplayName ? (
-            <div className={styles.editRow}>
+            <div className={styles.fieldRow}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.displayName}</span>
+              <span className={styles.fieldValue}>{user.displayName || COPY.table.noDisplayName}</span>
+            </div>
+
+            <div className={styles.fieldRow}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.lastLoginAt}</span>
+              <span className={styles.fieldValue}>{formatDateTime(user.lastLoginAt)}</span>
+            </div>
+
+            <div className={styles.fieldRow}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.createdAt}</span>
+              <span className={styles.fieldValue}>{formatDateTime(user.createdAt)}</span>
+            </div>
+
+            <div className={styles.formActions}>
+              <SecondaryButton type="button" onClick={startEditingProfile}>
+                {COPY.editProfile.trigger}
+              </SecondaryButton>
+            </div>
+          </>
+        ) : (
+          <form className={styles.resetForm} onSubmit={saveProfile}>
+            {profileError ? (
+              <p className={styles.formError} role="alert">
+                {profileError}
+              </p>
+            ) : null}
+
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.email}</span>
+              <input
+                type="email"
+                dir="ltr"
+                className={styles.input}
+                value={emailValue}
+                onChange={(event) => setEmailValue(event.target.value)}
+                disabled={savingProfile}
+                autoComplete="email"
+              />
+              {profileFieldErrors.email ? <span className={styles.fieldError}>{profileFieldErrors.email}</span> : null}
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.displayName}</span>
               <input
                 type="text"
-                className={styles.inlineInput}
+                className={styles.input}
                 value={displayNameValue}
                 onChange={(event) => setDisplayNameValue(event.target.value)}
-                disabled={savingDisplayName}
+                disabled={savingProfile}
               />
-              <button type="button" className={styles.linkButton} onClick={saveDisplayName} disabled={savingDisplayName}>
-                {savingDisplayName ? COPY.editDisplayName.saving : COPY.editDisplayName.save}
-              </button>
-              <button
-                type="button"
-                className={styles.linkButton}
-                onClick={cancelEditingDisplayName}
-                disabled={savingDisplayName}
-              >
-                {COPY.editDisplayName.cancel}
-              </button>
-            </div>
-          ) : (
-            <div className={styles.editRow}>
-              <span className={styles.fieldValue}>{user.displayName || COPY.table.noDisplayName}</span>
-              <button type="button" className={styles.linkButton} onClick={startEditingDisplayName}>
-                {COPY.editDisplayName.trigger}
-              </button>
-            </div>
-          )}
-        </div>
-        {displayNameError ? (
-          <p className={styles.fieldError} role="alert">
-            {displayNameError}
-          </p>
-        ) : null}
+              {profileFieldErrors.displayName ? (
+                <span className={styles.fieldError}>{profileFieldErrors.displayName}</span>
+              ) : null}
+            </label>
 
-        <div className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{COPY.detail.fields.lastLoginAt}</span>
-          <span className={styles.fieldValue}>{formatDateTime(user.lastLoginAt)}</span>
-        </div>
+            <div className={styles.fieldRow}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.lastLoginAt}</span>
+              <span className={styles.fieldValue}>{formatDateTime(user.lastLoginAt)}</span>
+            </div>
 
-        <div className={styles.fieldRow}>
-          <span className={styles.fieldLabel}>{COPY.detail.fields.createdAt}</span>
-          <span className={styles.fieldValue}>{formatDateTime(user.createdAt)}</span>
-        </div>
+            <div className={styles.fieldRow}>
+              <span className={styles.fieldLabel}>{COPY.detail.fields.createdAt}</span>
+              <span className={styles.fieldValue}>{formatDateTime(user.createdAt)}</span>
+            </div>
+
+            <div className={styles.formActions}>
+              <SecondaryButton type="button" onClick={cancelEditingProfile} disabled={savingProfile}>
+                {COPY.editProfile.cancel}
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={savingProfile}>
+                {savingProfile ? COPY.editProfile.saving : COPY.editProfile.save}
+              </PrimaryButton>
+            </div>
+          </form>
+        )}
       </Card>
 
       {/* Role & permissions */}
