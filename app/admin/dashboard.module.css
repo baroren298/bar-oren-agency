@@ -60,3 +60,53 @@
     grid-template-columns: 1fr;
   }
 }
+
+/*
+ * Owner Dashboard Sprint 1 — deliberately minimal queue-row styles
+ * (placeholder cards only, no visual polish per the sprint brief; the
+ * spec's full visual hierarchy — accent treatment for Pending Approvals,
+ * tiers, aging flags — is a later sprint).
+ */
+
+.queueList {
+  composes: tokens;
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.queueRow {
+  composes: tokens;
+  display: block;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--admin-text-primary);
+}
+
+.queueRow:hover {
+  background: var(--admin-surface-hover, rgba(0, 0, 0, 0.03));
+}
+
+.queueRowTitle {
+  margin: 0 0 0.15rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.queueRowMeta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+}
+
+.queueEmpty {
+  composes: tokens;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--admin-text-secondary);
+}
