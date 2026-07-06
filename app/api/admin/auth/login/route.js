@@ -1,5 +1,6 @@
 /*
- * POST /api/admin/auth/login — Phase 2: Auth/Security.
+ * POST /api/admin/auth/login — Phase 2: Auth/Security, extended by the
+ * User Model Completion sprint (Sprint 2).
  *
  * Explicit route handler (not a Server Action, per the approved Phase 2
  * plan). Runs in the Node.js runtime (the App Router default for route
@@ -7,9 +8,13 @@
  * happens in this file — middleware.js never does this, since it runs on
  * the Edge runtime and only verifies the already-issued session JWT.
  *
- * Always returns one of exactly three generic outcomes — success, 401, or
- * 429 — never anything that would let a caller distinguish "no such
- * email" from "wrong password" (Section 11 — no enumeration leaks).
+ * Outcomes: success, 401 (bad credentials — email/password), 429 (rate
+ * limited), or 403 (Sprint 2 addition: correct credentials but the account
+ * is deactivated). The 401/429/success split never lets a caller
+ * distinguish "no such email" from "wrong password" (Section 11 — no
+ * enumeration leaks); the 403 only fires after a password has already
+ * verified correctly, so it reveals nothing an attacker didn't already
+ * prove they knew.
  */
 
 import { NextResponse } from "next/server";
@@ -83,9 +88,33 @@ export async function POST(request) {
 
   clearAttempts(ip, email);
 
+  // Sprint 2 (User Model Completion): an otherwise-valid login is refused
+  // if the account has been deactivated. Checked only after the password
+  // has verified correctly (and rate-limit attempts already cleared), so
+  // this never adds a new way to distinguish "wrong password" from "no
+  // such user" — it only ever fires once the caller has already proven
+  // they know the correct password for a real account.
+  if (user.isActive === false) {
+    console.warn("[admin/auth/login] Login attempt for deactivated account", {
+      userId: user.id,
+      email: user.email,
+      ip,
+    });
+    return NextResponse.json(
+      { error: "This account has been deactivated." },
+      { status: 403 },
+    );
+  }
+
   const token = await signSession({ userId: user.id, role: user.role });
   const response = NextResponse.json({ success: true });
   response.cookies.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
+
+  // Sprint 2: record the successful login. Awaited so a failure here is
+  // visible (surfaces as a 500) rather than silently ignored, but it runs
+  // after the session cookie is already prepared — a lastLoginAt write
+  // failure is a data-quality problem, not a reason to fail the login.
+  await userRepository.updateLastLoginAt(user.id);
 
   console.log("[admin/auth/login] Successful login", {
     userId: user.id,

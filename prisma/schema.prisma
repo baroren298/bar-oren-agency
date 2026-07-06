@@ -169,6 +169,22 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role     @default(OWNER)
+
+  // User Model Completion sprint — profile/management fields (additive,
+  // no capability/permission-table changes). `displayName` is optional
+  // since the existing Owner row(s) predate this field and have no value
+  // to backfill; new Employee accounts are expected to always set it via
+  // userRepository.createEmployee(), but nothing enforces that at the DB
+  // level yet. `isActive` defaults to true so every pre-existing user
+  // (including the current Owner) keeps logging in exactly as before this
+  // migration runs. `lastLoginAt` is null until the first successful
+  // login after this field existed; the login route
+  // (app/api/admin/auth/login/route.js) sets it on every successful
+  // login going forward.
+  displayName String?
+  isActive    Boolean  @default(true)
+  lastLoginAt DateTime?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
