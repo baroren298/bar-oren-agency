@@ -22,6 +22,10 @@
  *   - one or more images invalid (including missing id) -> 422, { error, code: 'VALIDATION_FAILED', details }
  *   - an image id not found / belongs to another talent -> 404
  *   - an image id exists but isn't PUBLISHED/DRAFT/PROPOSED -> 409
+ *   - EMPLOYEE editing a DRAFT/PROPOSED image created by a different user
+ *     -> 403, { error, code: 'FORBIDDEN_NOT_DRAFT_OWNER' } (Auth Hardening +
+ *     Draft Ownership Sprint 1 — enforced inside galleryService.saveDraft()
+ *     itself, not here; OWNER may edit any image)
  *   - otherwise                   -> 200, { images }
  *
  * Out of scope (not this sprint): image upload, replace, add — see this
@@ -72,6 +76,7 @@ export async function PATCH(request, { params }) {
       parentId: id,
       images,
       actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ images: saved }, { status: 200 });
@@ -80,6 +85,12 @@ export async function PATCH(request, { params }) {
       return NextResponse.json(
         { error: he.gallery.errors.validationSummary, code: error.code, details: error.details },
         { status: 422 }
+      );
+    }
+    if (error.code === 'FORBIDDEN_NOT_DRAFT_OWNER') {
+      return NextResponse.json(
+        { error: he.gallery.errors.notDraftOwner, code: error.code },
+        { status: 403 }
       );
     }
     if (error.message && error.message.includes('not found for this talent')) {

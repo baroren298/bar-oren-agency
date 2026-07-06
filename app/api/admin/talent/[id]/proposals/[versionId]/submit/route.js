@@ -29,6 +29,10 @@
  *   - version exists but isn't DRAFT      -> 409 (server-side authority —
  *     proposalService.submit() is what actually enforces this; this status
  *     code just reflects the error it throws)
+ *   - EMPLOYEE submitting a version created by a different user -> 403,
+ *     { error, code: 'FORBIDDEN_NOT_DRAFT_OWNER' } (Auth Hardening + Draft
+ *     Ownership Sprint 1 — enforced inside proposalService.submit() itself,
+ *     not here; OWNER may submit any version)
  *   - otherwise                           -> 200, { version }
  *
  * Out of scope (later sprints, not this one): IN_REVIEW, Start Review,
@@ -88,10 +92,14 @@ export async function POST(request, { params }) {
       parentId: id,
       versionId,
       actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ version }, { status: 200 });
   } catch (error) {
+    if (error.code === 'FORBIDDEN_NOT_DRAFT_OWNER') {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 403 });
+    }
     console.error(
       '[POST /api/admin/talent/[id]/proposals/[versionId]/submit] failed to submit:',
       error

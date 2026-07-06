@@ -95,6 +95,7 @@ export async function POST(request, { params }) {
         parentId: id,
         versionId,
         actorId: session.userId,
+        actorRole: session.role,
       });
     }
 

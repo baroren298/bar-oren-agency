@@ -26,8 +26,13 @@
  *     (app/api/admin/talent/[id]/proposals/[versionId]/reject/route.js),
  *     which this route never calls and does not change
  *   - both OWNER and EMPLOYEE may discard a Draft (requireOwnerOrEmployee,
- *     same as the submit/save-draft routes) — no extra role check, since
- *     "abandon your own in-progress edit" is symmetric across both roles
+ *     same as the submit/save-draft routes), but per the Auth Hardening +
+ *     Draft Ownership Sprint 1 audit, an EMPLOYEE may only discard a Draft
+ *     they themselves created — "abandon your own in-progress edit" is
+ *     symmetric across both roles only when it's actually your own edit;
+ *     OWNER may still discard any Draft. Enforced inside
+ *     proposalService.discard() itself (updated superseding this file's
+ *     original "no extra role check" note), not by this route.
  *
  * Behavior:
  *   - no session                          -> 401 (also enforced by middleware)
@@ -35,6 +40,8 @@
  *   - talent not found                    -> 404
  *   - version not found / wrong talent    -> 404
  *   - version exists but isn't DRAFT      -> 409, { error, code: 'NOT_DISCARDABLE' }
+ *   - EMPLOYEE discarding a version created by a different user -> 403,
+ *     { error, code: 'FORBIDDEN_NOT_DRAFT_OWNER' }
  *   - otherwise                           -> 200, { discarded: true }
  *
  * Out of scope (later sprints, not this one): Gallery/Socials/SEO discard,
@@ -94,10 +101,14 @@ export async function POST(request, { params }) {
       parentId: id,
       versionId,
       actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ discarded: true }, { status: 200 });
   } catch (error) {
+    if (error.code === 'FORBIDDEN_NOT_DRAFT_OWNER') {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 403 });
+    }
     console.error(
       '[POST /api/admin/talent/[id]/proposals/[versionId]/discard] failed to discard:',
       error

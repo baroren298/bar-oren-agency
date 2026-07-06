@@ -7,11 +7,18 @@
  * -> talentRepository.submitDraftGalleryImagesForTalent's single
  * transaction).
  *
+ * Auth Hardening + Draft Ownership Sprint 1: an EMPLOYEE actor here only
+ * ever submits DRAFT rows they themselves created — galleryService.submit()
+ * forces that scoping server-side whenever `actorRole` isn't OWNER, so
+ * another author's unfinished drafts are simply left DRAFT, untouched. An
+ * OWNER actor is unaffected (still submits every DRAFT row).
+ *
  * Behavior:
  *   - no session                  -> 401 (also enforced by middleware)
  *   - missing id                  -> 400
  *   - talent not found            -> 404
- *   - no DRAFT gallery rows exist  -> 409, { error, code: 'NOTHING_TO_SUBMIT' }
+ *   - no DRAFT gallery rows exist (none at all, or an EMPLOYEE has none of
+ *     their own) -> 409, { error, code: 'NOTHING_TO_SUBMIT' }
  *   - otherwise                   -> 200, { images }
  *
  * Out of scope (not this sprint): Approve/Reject/Publish for gallery rows —
@@ -49,6 +56,7 @@ export async function POST(request, { params }) {
     const { images } = await galleryService.submit(talentAdapter, {
       parentId: id,
       actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ images }, { status: 200 });

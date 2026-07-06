@@ -6,9 +6,13 @@
  * nothing but parse the multipart body then call the engine — no
  * repository/Prisma import here, only `assetService`.
  *
- * requireUser (not requireRole/requireOwner): per the approved sprint
+ * requireOwnerOrEmployee (not requireOwner): per the approved sprint
  * scope, uploading is a draft/admin editing action like gallery draft
- * saves, not an Owner approval action.
+ * saves, not an Owner approval action. Auth Hardening + Draft Ownership
+ * Sprint 1: was requireUser (any authenticated session, not role-checked)
+ * — tightened to requireOwnerOrEmployee so a third role added later doesn't
+ * silently inherit this action just by having a valid session, matching
+ * every sibling draft-mutation route in this tree.
  *
  * Body: multipart/form-data, fields `file` (the binary) and `purpose`
  * (a key into lib/storage/utils/validationProfiles.js, e.g. "gallery").
@@ -26,7 +30,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/admin/auth/authorize';
+import { requireOwnerOrEmployee } from '@/lib/admin/auth/authorize';
 import { assetService } from '@/lib/admin/engine/assetService';
 import { isUploadAvailable } from '@/lib/storage/availability';
 import { he } from '@/lib/admin/i18n/he';
@@ -34,7 +38,7 @@ import { he } from '@/lib/admin/i18n/he';
 export async function POST(request) {
   let session;
   try {
-    session = await requireUser(request);
+    session = await requireOwnerOrEmployee(request);
   } catch (error) {
     return NextResponse.json(
       { error: he.gallery.errors.notAuthenticated },
