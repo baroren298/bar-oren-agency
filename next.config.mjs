@@ -2,6 +2,18 @@
 const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
+    /*
+     * Allow the Next.js image optimizer to fetch from Vercel Blob public
+     * stores. Without this, gallery images served from
+     * https://<store-id>.public.blob.vercel-storage.com fail with
+     * 400 INVALID_IMAGE_OPTIMIZE_REQUEST.
+     */
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
+    ],
   },
 
   /*
