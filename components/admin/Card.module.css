@@ -20,3 +20,16 @@
   color: var(--admin-text-secondary);
   font-size: 0.95rem;
 }
+
+/*
+ * Owner Dashboard Sprint 2 — the one accent-surface variant permitted by
+ * OWNER_DASHBOARD_UX_SPEC.md §2 (Pending Approvals only). Slightly more
+ * padding + a warm accent border + a faint accent wash, never a full
+ * saturated fill (that would read as a banner, not a card).
+ */
+.accent {
+  padding: 1.85rem;
+  border-color: var(--admin-accent);
+  background: linear-gradient(180deg, var(--admin-accent-subtle) 0%, var(--admin-surface) 55%);
+  box-shadow: 0 1px 0 rgba(184, 154, 111, 0.08);
+}

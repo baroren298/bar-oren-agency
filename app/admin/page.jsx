@@ -1,19 +1,29 @@
 /*
- * /admin — Owner Dashboard (Sprint 1: data architecture + page skeleton).
+ * /admin — Owner Dashboard (Sprint 2: first real UI).
  *
- * Implements OWNER_DASHBOARD_UX_SPEC.md's structure with real data and
- * deliberately unpolished placeholder cards — the sprint's goal is the
- * architecture (page → dashboardService → dashboardRepository), not the
- * final UI. Per the spec:
+ * Sprint 1 built the architecture (page → dashboardService →
+ * dashboardDto) with deliberately unpolished placeholder cards. This
+ * sprint implements OWNER_DASHBOARD_UX_SPEC.md's visual hierarchy (§2) on
+ * top of that same data flow — no repository changes, no new queries, no
+ * redesign of the service/DTO boundary. Per the spec:
  *
  *   - Section order is fixed (spec §1): Greeting → Pending Approvals →
- *     Rejected Items → Employee Drafts. Recent Activity is out of scope
- *     for Sprint 1 and intentionally absent.
+ *     Rejected Items → Employee Drafts. Recent Activity remains out of
+ *     scope (sprint brief) and intentionally absent.
  *   - Read-and-route only (spec §9): every approval/rejected row is a
  *     deep link into the talent workspace where the decision happens; no
  *     approve buttons, no inline actions anywhere on this page.
  *   - The greeting count is Pending Approvals ONLY (spec §3).
  *   - Max five rows per section — enforced by the DTO, not the JSX.
+ *   - Visual tiers (spec §2): the greeting is plain text, never a card
+ *     (Tier 1); Pending Approvals is the only section with the accent
+ *     surface (Tier 2, `<Card tone="accent">`) and the only section whose
+ *     CTA uses the accent-colored <PrimaryButton> — Rejected Items and
+ *     Employee Drafts use <SecondaryButton> so "one accent color, one
+ *     owner" holds. Rejected Items' only warning treatment is the tinted
+ *     row metadata text, never a red card.
+ *   - Aging flag (spec §7/§3): a Pending Approvals item waiting more than
+ *     3 days gets a quiet "ממתין X ימים" text flag — no color, no badge.
  *
  * Owner-only (spec: Owner Dashboard and Employee Dashboard are different
  * products): a non-Owner session is redirected to /admin/my-work before
@@ -25,9 +35,10 @@
  * queue screens (full approvals list, rejected list, drafts-by-employee)
  * are later sprints; when they exist, only these three hrefs change.
  *
- * Loading/empty-state design, mobile layout, and visual hierarchy polish
- * are explicitly out of Sprint 1 scope (sprint brief) — empty sections
- * render a single quiet line so the page stays truthful, nothing more.
+ * Still explicitly out of scope this sprint (per the sprint brief):
+ * Recent Activity, the Employee Dashboard, mobile-specific polish,
+ * skeleton loading states, and empty-state illustrations. Empty sections
+ * keep Sprint 1's single quiet line.
  */
 
 import { cookies } from "next/headers";
@@ -35,9 +46,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import AdminShell from "./AdminShell";
-import PageHeader from "@/components/admin/PageHeader";
 import Card from "@/components/admin/Card";
 import PrimaryButton from "@/components/admin/PrimaryButton";
+import SecondaryButton from "@/components/admin/SecondaryButton";
 import EmptyState from "@/components/admin/EmptyState";
 import { getSessionUser } from "@/lib/admin/auth/authorize";
 import { ROLE } from "@/lib/admin/constants/enums";
@@ -51,6 +62,10 @@ export const metadata = {
 };
 
 const t = he.dashboard.owner;
+
+/** An item waiting longer than this many days gets the quiet aging flag (spec §7). */
+const AGING_THRESHOLD_DAYS = 3;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /** Placeholder-grade timestamp formatting; relative times ("לפני שעתיים") are a later sprint. */
 const dateTimeFormat = new Intl.DateTimeFormat("he-IL", {
@@ -78,14 +93,49 @@ function summarySentence(count) {
   return t.summaryMany(count);
 }
 
+/*
+ * Dashboard UX refinement — time-of-day greeting. The duplicated "לוח
+ * בקרה" PageHeader is gone (the sidebar already shows the active page), so
+ * the main content now opens with a personal greeting instead.
+ *
+ * The hour is resolved in the agency's timezone explicitly (not the
+ * server's local clock) because this is a Server Component: on a UTC host
+ * the untranslated hour would greet Bar "בוקר טוב" at 9pm Israel time.
+ */
+const GREETING_TIME_ZONE = "Asia/Jerusalem";
+
+function greetingPeriod(date = new Date()) {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: GREETING_TIME_ZONE,
+      hour: "numeric",
+      hour12: false,
+    }).format(date)
+  );
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 17) return "afternoon";
+  if (hour >= 17 && hour < 22) return "evening";
+  return "night"; // 22:00–04:59 (Intl may emit "24" for midnight — still night)
+}
+
+function greetingText(displayName) {
+  return he.dashboard.timeGreeting[greetingPeriod()](displayName);
+}
+
+/** Whole days between submittedAt and "now" (the DTO's generatedAt) — spec §7 aging flag. */
+function daysWaiting(submittedAtIso, generatedAtIso) {
+  const elapsed = new Date(generatedAtIso).getTime() - new Date(submittedAtIso).getTime();
+  return Math.floor(elapsed / MS_PER_DAY);
+}
+
 /** Shared shell for the three queue sections: title, rows, one CTA (spec §2). */
-function QueueSection({ title, emptyText, cta, children, hasItems }) {
+function QueueSection({ title, emptyText, cta, children, hasItems, tone, CtaButton = SecondaryButton }) {
   return (
-    <Card title={title} as="section">
+    <Card title={title} as="section" tone={tone}>
       {hasItems ? (
         <>
           {children}
-          <PrimaryButton href={cta.href}>{cta.label}</PrimaryButton>
+          <CtaButton href={cta.href}>{cta.label}</CtaButton>
         </>
       ) : (
         // Spec §4.2: empty sections shrink to one quiet line; the CTA is
@@ -111,7 +161,12 @@ export default async function OwnerDashboardPage() {
   if (!isDatabaseConfigured) {
     return (
       <AdminShell>
-        <PageHeader title={he.nav.dashboard} />
+        {/* No dashboard data without a DB — greet with the fallback name
+            (the session token carries no displayName) and skip the summary
+            subline, since there's no pending count to summarize. */}
+        <div className={styles.greetingBlock}>
+          <h1 className={styles.greeting}>{greetingText(t.defaultDisplayName)}</h1>
+        </div>
         <EmptyState title={t.dbNotConfiguredTitle} description={t.dbNotConfiguredDescription} />
       </AdminShell>
     );
@@ -126,88 +181,121 @@ export default async function OwnerDashboardPage() {
 
   return (
     <AdminShell>
-      <PageHeader title={he.nav.dashboard} />
-
-      {/* 1 — Greeting (spec §1/§7). */}
-      <Card>
-        <h2 className={styles.greeting}>{he.dashboard.greeting(displayName)}</h2>
+      {/* 1 — Greeting (spec §1/§2/§7): plain text on the page background,
+          never a card — the only element on the page allowed personality.
+          Now also the page's opening element (and its h1): the "לוח בקרה"
+          PageHeader was removed as duplicated — the sidebar already marks
+          the active page. */}
+      <div className={styles.greetingBlock}>
+        <h1 className={styles.greeting}>{greetingText(displayName)}</h1>
         <p className={styles.subline}>
           {summarySentence(dashboard.greeting.pendingApprovalsCount)}
         </p>
-      </Card>
+      </div>
 
-      {/* 2 — Pending Approvals: rows deep-link, CTA goes to the queue (spec §8). */}
-      <QueueSection
-        title={`${t.sections.pendingApprovals} · ${dashboard.pendingApprovals.totalCount}`}
-        emptyText={t.empty.pendingApprovals}
-        cta={{ href: "/admin/talent", label: t.cta.pendingApprovals }}
-        hasItems={dashboard.pendingApprovals.items.length > 0}
-      >
-        <ul className={styles.queueList}>
-          {dashboard.pendingApprovals.items.map((item) => (
-            <li key={item.key}>
-              <Link href={item.href} className={styles.queueRow}>
-                <p className={styles.queueRowTitle}>{itemTitle(item)}</p>
-                <p className={styles.queueRowMeta}>
-                  {[
-                    actorName(item.submittedBy) ? t.submittedBy(actorName(item.submittedBy)) : null,
-                    formatWhen(item.submittedAt),
-                    item.itemCount > 1 ? t.itemCount(item.itemCount) : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </QueueSection>
+      <div className={styles.sectionStack}>
+        {/* 2 — Pending Approvals: the dominant section (spec §2) — the only
+            accent-surface Card and the only accent-colored CTA. Rows
+            deep-link, the CTA goes to the queue (spec §8). */}
+        <QueueSection
+          title={`${t.sections.pendingApprovals} · ${dashboard.pendingApprovals.totalCount}`}
+          emptyText={t.empty.pendingApprovals}
+          cta={{ href: "/admin/talent", label: t.cta.pendingApprovals }}
+          hasItems={dashboard.pendingApprovals.items.length > 0}
+          tone="accent"
+          CtaButton={PrimaryButton}
+        >
+          <ul className={`${styles.queueList} ${styles.queueListApprovals}`}>
+            {dashboard.pendingApprovals.items.map((item) => {
+              const waited = daysWaiting(item.submittedAt, dashboard.generatedAt);
+              return (
+                <li key={item.key}>
+                  <Link href={item.href} className={styles.queueRow}>
+                    <div className={styles.queueRowText}>
+                      <p className={styles.queueRowTitle}>{itemTitle(item)}</p>
+                      <p className={styles.queueRowMeta}>
+                        {[
+                          actorName(item.submittedBy)
+                            ? t.submittedBy(actorName(item.submittedBy))
+                            : null,
+                          formatWhen(item.submittedAt),
+                          item.itemCount > 1 ? t.itemCount(item.itemCount) : null,
+                          waited > AGING_THRESHOLD_DAYS ? (
+                            <span key="aging" className={styles.agingFlag}>
+                              {t.agingFlag(waited)}
+                            </span>
+                          ) : null,
+                        ]
+                          .filter((part) => part !== null)
+                          .reduce((acc, part, i) => (i === 0 ? [part] : [...acc, " · ", part]), [])}
+                      </p>
+                    </div>
+                    <span className={styles.chevron} aria-hidden="true">
+                      ‹
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </QueueSection>
 
-      {/* 3 — Rejected Items ("הוחזרו לתיקון") — above drafts: stalled beats healthy (spec §1). */}
-      <QueueSection
-        title={`${t.sections.rejectedItems} · ${dashboard.rejectedItems.totalCount}`}
-        emptyText={t.empty.rejectedItems}
-        cta={{ href: "/admin/talent", label: t.cta.rejectedItems }}
-        hasItems={dashboard.rejectedItems.items.length > 0}
-      >
-        <ul className={styles.queueList}>
-          {dashboard.rejectedItems.items.map((item) => (
-            <li key={item.key}>
-              <Link href={item.href} className={styles.queueRow}>
-                <p className={styles.queueRowTitle}>{itemTitle(item)}</p>
-                <p className={styles.queueRowMeta}>
-                  {[t.rejectedBy(actorName(item.rejectedBy)), formatWhen(item.rejectedAt)].join(
-                    " · "
-                  )}
-                </p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </QueueSection>
+        {/* 3 — Rejected Items ("הוחזרו לתיקון") — above drafts: stalled beats
+            healthy (spec §1). Neutral card; the only warning treatment is
+            the tinted row metadata text (spec §2), never a red card. */}
+        <QueueSection
+          title={`${t.sections.rejectedItems} · ${dashboard.rejectedItems.totalCount}`}
+          emptyText={t.empty.rejectedItems}
+          cta={{ href: "/admin/talent", label: t.cta.rejectedItems }}
+          hasItems={dashboard.rejectedItems.items.length > 0}
+        >
+          <ul className={styles.queueList}>
+            {dashboard.rejectedItems.items.map((item) => (
+              <li key={item.key}>
+                <Link href={item.href} className={styles.queueRow}>
+                  <div className={styles.queueRowText}>
+                    <p className={styles.queueRowTitle}>{itemTitle(item)}</p>
+                    <p className={styles.rejectedMeta}>
+                      {[t.rejectedBy(actorName(item.rejectedBy)), formatWhen(item.rejectedAt)].join(
+                        " · "
+                      )}
+                    </p>
+                  </div>
+                  <span className={styles.chevron} aria-hidden="true">
+                    ‹
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </QueueSection>
 
-      {/* 4 — Employee Drafts, grouped by employee. Groups are not links yet:
-          there is no drafts-filtered-by-employee screen to deep-link to
-          (spec §8 wants one; that's the CTA's future destination). */}
-      <QueueSection
-        title={t.sections.employeeDrafts}
-        emptyText={t.empty.employeeDrafts}
-        cta={{ href: "/admin/talent", label: t.cta.employeeDrafts }}
-        hasItems={dashboard.employeeDrafts.groups.length > 0}
-      >
-        <ul className={styles.queueList}>
-          {dashboard.employeeDrafts.groups.map((group) => (
-            <li key={group.key} className={styles.queueRow}>
-              <p className={styles.queueRowTitle}>{actorName(group.employee)}</p>
-              <p className={styles.queueRowMeta}>
-                {[t.draftCount(group.draftCount), t.lastUpdated(formatWhen(group.lastUpdatedAt))].join(
-                  " · "
-                )}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </QueueSection>
+        {/* 4 — Employee Drafts, grouped by employee. Groups are not links
+            yet: there is no drafts-filtered-by-employee screen to deep-link
+            to (spec §8 wants one; that's the CTA's future destination). */}
+        <QueueSection
+          title={t.sections.employeeDrafts}
+          emptyText={t.empty.employeeDrafts}
+          cta={{ href: "/admin/talent", label: t.cta.employeeDrafts }}
+          hasItems={dashboard.employeeDrafts.groups.length > 0}
+        >
+          <ul className={styles.queueList}>
+            {dashboard.employeeDrafts.groups.map((group) => (
+              <li key={group.key} className={styles.queueRow}>
+                <div className={styles.queueRowText}>
+                  <p className={styles.queueRowTitle}>{actorName(group.employee)}</p>
+                  <p className={styles.queueRowMeta}>
+                    {[
+                      t.draftCount(group.draftCount),
+                      t.lastUpdated(formatWhen(group.lastUpdatedAt)),
+                    ].join(" · ")}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </QueueSection>
+      </div>
     </AdminShell>
   );
 }

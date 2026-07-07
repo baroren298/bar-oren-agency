@@ -23,6 +23,13 @@
   --admin-border: #e7e2d8;
   --admin-accent: #b89a6f;
   --admin-accent-subtle: #f1ebe0;
+  /* Sidebar UX refinement — the sidebar's own surface, kept only ~1%
+     darker than --admin-bg (#faf8f5) so the separation is felt rather
+     than seen: a quiet, boutique-style tint rather than a visibly
+     different cream panel. Paired with the existing 1px divider
+     (border-inline-end below) so the sidebar still reads as its own
+     area. Main content bg unchanged. */
+  --admin-sidebar-bg: #f8f6f3;
   --admin-radius: 8px;
 
   display: flex;
@@ -36,7 +43,10 @@
 .sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: var(--admin-surface);
+  /* Sidebar UX refinement — was var(--admin-surface) (white). A very light
+     warm tint + the existing subtle 1px separator below make the sidebar
+     feel like its own area in a quiet, premium way. */
+  background: var(--admin-sidebar-bg);
   /* Logical property (not border-right): in this RTL admin shell the
      sidebar sits on the inline-end side of the row, so the border that
      faces the main content is border-inline-end, not a fixed physical
