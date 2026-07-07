@@ -19,6 +19,12 @@
  *
  * Behavior:
  *   - no session                          -> 401 (also enforced by middleware)
+ *   - uploads unavailable in this env     -> 503, code UPLOADS_DISABLED
+ *   - too many uploads in a short window  -> 429, code RATE_LIMITED
+ *     (Production Upload Enablement sprint — per-user fixed window via
+ *     lib/admin/auth/uploadRateLimit.js, checked after auth so the key is
+ *     the authenticated userId, and after the availability gate so a 503'd
+ *     environment never consumes slots)
  *   - missing file or purpose             -> 400
  *   - unknown purpose                     -> 400
  *   - file too large / wrong mime type    -> 422
@@ -31,6 +37,7 @@
 
 import { NextResponse } from 'next/server';
 import { requireOwnerOrEmployee } from '@/lib/admin/auth/authorize';
+import { consumeUploadSlot } from '@/lib/admin/auth/uploadRateLimit';
 import { assetService } from '@/lib/admin/engine/assetService';
 import { isUploadAvailable } from '@/lib/storage/availability';
 import { he } from '@/lib/admin/i18n/he';
@@ -62,6 +69,17 @@ export async function POST(request) {
     return NextResponse.json(
       { error: he.gallery.errors.uploadsDisabled, code: 'UPLOADS_DISABLED' },
       { status: 503 }
+    );
+  }
+
+  // Production Upload Enablement sprint — per-user rate limit, applied
+  // before the body is read so a limited user can't make the server buffer
+  // 8MB just to be told no. Consuming counts the attempt whether or not the
+  // rest of the request turns out valid.
+  if (!consumeUploadSlot(session.userId)) {
+    return NextResponse.json(
+      { error: he.gallery.errors.uploadRateLimited, code: 'RATE_LIMITED' },
+      { status: 429 }
     );
   }
 

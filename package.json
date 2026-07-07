@@ -19,6 +19,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^6.19.3",
+    "@vercel/blob": "^1.1.1",
     "bcryptjs": "^2.4.3",
     "framer-motion": "^11.3.0",
     "jose": "^5.9.6",
