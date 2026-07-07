@@ -7,9 +7,15 @@
  * StatusBadge) with no proven need elsewhere yet — promote it to
  * components/admin/ if a second page needs the same item shape.
  *
+ * My Work — real data sprint: when the item carries an `href` (real items
+ * deep-link to their talent workspace, same pattern as the Owner
+ * Dashboard's queue rows), the whole card becomes a <Link>. Items without
+ * an href render exactly as before — the card itself is unchanged.
+ *
  * Plain presentational component — no "use client", no hooks.
  */
 
+import Link from "next/link";
 import Card from "@/components/admin/Card";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { STATUS_LABEL, STATUS_TONE, WORKFLOW_STATUS } from "@/lib/admin/mock-workflow";
@@ -30,7 +36,7 @@ export default function WorkflowItemCard({ item }) {
   const ownerLabel =
     item.status === WORKFLOW_STATUS.WAITING_FOR_APPROVAL ? he.meta.submittedBy : he.meta.assignedTo;
 
-  return (
+  const card = (
     <Card>
       <div className={styles.itemHeader}>
         <h3 className={styles.itemTitle}>{item.title}</h3>
@@ -59,5 +65,13 @@ export default function WorkflowItemCard({ item }) {
 
       {item.description ? <p className={styles.itemDescription}>{item.description}</p> : null}
     </Card>
+  );
+
+  if (!item.href) return card;
+
+  return (
+    <Link href={item.href} className={styles.cardLink}>
+      {card}
+    </Link>
   );
 }
