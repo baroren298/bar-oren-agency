@@ -12,17 +12,14 @@
   padding: 0.6rem;
 }
 
-.imageWrapper {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  border-radius: var(--admin-radius);
-  overflow: hidden;
-  background: var(--admin-accent-subtle);
-}
-
-.image {
-  object-fit: cover;
-}
+/*
+ * Gallery UX Completion sprint — the old .imageWrapper/.image pair (a
+ * static next/image thumbnail) is gone; the card now renders ImagePreview
+ * in editable mode (see GalleryImageCard.jsx), whose own frame styles
+ * already provide the relative positioning, rounded corners, overflow
+ * clipping, background and cursor affordances this wrapper used to provide
+ * — the frame's aspect ratio (4 / 5, unchanged) is passed as a prop.
+ */
 
 /*
  * Gallery UX Polish sprint — drag handle for @dnd-kit/sortable's
@@ -85,6 +82,45 @@
   border: 1px solid var(--admin-border);
   border-radius: var(--admin-radius);
   line-height: 1.4;
+}
+
+/*
+ * Gallery UX Completion sprint — one always-visible row under the preview:
+ * the ImagePositionControls zoom slider (which brings its own internal
+ * layout) plus the small "איפוס מיקום" reset text-button. Flex-wrap keeps
+ * the reset from crushing the slider at narrow grid-track widths; the
+ * logical margin-inline keeps RTL correct without direction-specific
+ * rules.
+ */
+.positionRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.5rem;
+}
+
+.positionRow > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.resetButton {
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-inline-start: auto;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.resetButton:hover {
+  color: var(--admin-text-primary);
 }
 
 .actions {

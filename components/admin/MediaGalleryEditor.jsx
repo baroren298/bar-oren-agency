@@ -68,6 +68,23 @@
  * inside the same grid — they are not part of `SortableContext`'s `items`,
  * so they're never drag targets, only the real image cards are.
  *
+ * UPDATED — Gallery UX Completion sprint:
+ *   1. Save Draft's response is now normalized through the same
+ *      buildGalleryImages (lib/admin/gallery-images.js, extracted from
+ *      app/admin/talent/[id]/page.jsx) the page uses on load — previously
+ *      the raw repository rows (imageAsset.blobUrl, no src/alt) were fed
+ *      straight into state and every card lost its `src` after the first
+ *      save. New optional `displayName` prop feeds that normalization's
+ *      generated-alt fallback.
+ *   2. A freshly-uploaded row now seeds position: "50% 50%" / scale: 1
+ *      (buildUploadedGalleryImage, same module) instead of nulls, giving
+ *      GalleryImageCard's new interactive positioning surface an explicit
+ *      starting framing. Existing rows keep their values, nulls included.
+ *   3. GalleryImageCard now composes ImagePreview (editable drag-to-
+ *      position) + ImagePositionControls (zoom) per card — see that file.
+ *      This editor's onChange plumbing is unchanged: the card still calls
+ *      onChange("position"/"scale", value) into handleFieldChange.
+ *
  * Per Gallery Sprint 1's explicit scope:
  *   - Existing images only. There is still no Add Image / Replace Image /
  *     Upload — AddImageCard and GalleryImageCard's "החלף" button stay
@@ -121,6 +138,7 @@ import PrimaryButton from "./PrimaryButton";
 import { he } from "@/lib/admin/i18n/he";
 import { VERSION_STATUS, ROLE } from "@/lib/admin/constants/enums";
 import { filterUnresolvedRejectedGalleryImages } from "@/lib/admin/gallery-review";
+import { buildGalleryImages, buildUploadedGalleryImage } from "@/lib/admin/gallery-images";
 
 /*
  * Kept for any future standalone/no-talentId render of this editor — see
@@ -265,6 +283,11 @@ function toComparablePayload(images) {
 
 export default function MediaGalleryEditor({
   talentId = null,
+  // Gallery UX Completion sprint — the talent's display name, needed only
+  // for buildGalleryImages' generated-alt fallback when normalizing the
+  // Save Draft response below (the page passes the same value it already
+  // used for its own buildGalleryImages calls).
+  displayName = "",
   publishedImages = [],
   draftImages = [],
   rejectedImages = [],
@@ -528,25 +551,14 @@ export default function MediaGalleryEditor({
       }
 
       const asset = body.asset;
-      setProposedImages((previous) => [
-        ...previous,
-        {
-          _key: `new-${asset.id}`,
-          imageAssetId: asset.id,
-          src: asset.blobUrl,
-          alt: he.gallery.newImageAlt,
-          altHe: null,
-          altEn: null,
-          position: null,
-          scale: null,
-          // Sensible defaults: append at the end of both the desktop and
-          // mobile order — toComparablePayload recomputes `order` from
-          // array position on save anyway, but mobileOrder has no such
-          // recompute, so it's seeded explicitly here.
-          order: previous.length,
-          mobileOrder: previous.length,
-        },
-      ]);
+      // Gallery UX Completion sprint — the appended row's shape (and its
+      // new position: "50% 50%" / scale: 1 defaults for the interactive
+      // positioning surface) now lives in buildUploadedGalleryImage — see
+      // lib/admin/gallery-images.js. Same append-at-the-end semantics as
+      // before: `order` is recomputed from array position on save anyway,
+      // but mobileOrder has no such recompute, so it's seeded from the
+      // current list length explicitly.
+      setProposedImages((previous) => [...previous, buildUploadedGalleryImage(asset, previous.length)]);
       setUploadQueue((previous) => previous.filter((queued) => queued.clientId !== item.clientId));
     } catch (error) {
       setUploadQueue((previous) =>
@@ -588,7 +600,14 @@ export default function MediaGalleryEditor({
         throw new Error(body.error || he.gallery.errors.serverError);
       }
 
-      const saved = withKeys(body.images || []);
+      // Gallery UX Completion sprint — the PATCH route returns raw
+      // repository rows (`imageAsset: { blobUrl }`, no `src`/`alt`); feed
+      // them through the exact same buildGalleryImages normalization the
+      // page uses on load, so post-save state is byte-shaped like the
+      // initial seed (previously withKeys() got the raw rows directly and
+      // every card lost its `src` after the first save — see
+      // lib/admin/gallery-images.js's header).
+      const saved = withKeys(buildGalleryImages(body.images || [], displayName));
       setProposedImages(saved);
       setSavedImages(saved);
       setSaveDraftStatus("saved");

@@ -1,3 +1,5 @@
+"use client";
+
 /*
  * GalleryImageCard — Gallery Editor Foundation sprint.
  *
@@ -11,10 +13,10 @@
  * MediaGalleryEditor's Save Draft / Submit) — Replace/Add/Upload remain
  * untouched and disabled, exactly as before.
  *
- * Gallery Upload Sprint 2 fix-up — the five metadata inputs below are now
- * collapsed behind a "ערוך פרטים נוספים" disclosure, closed by default, so
- * a proposed card reads as a compact thumbnail + action row again (this is
- * purely a default-collapsed `useState`, not a removal — every field is
+ * Gallery Upload Sprint 2 fix-up — the metadata inputs below are collapsed
+ * behind a "ערוך פרטים נוספים" disclosure, closed by default, so a
+ * proposed card reads as a compact thumbnail + action row (this is purely
+ * a default-collapsed `useState`, not a removal — every remaining field is
  * still rendered, still wired to the same `onChange`, and still part of
  * the Save Draft payload the moment it's edited; collapsing it only hides
  * the DOM nodes, it never clears a value). No props changed.
@@ -40,8 +42,48 @@
  * Note: unlike the framer-motion attempt, dnd-kit's `attributes` makes the
  * handle keyboard-operable out of the box (focus it, Space to pick up,
  * arrow keys to move, Space to drop) once MediaGalleryEditor's
- * `<DndContext>` registers a KeyboardSensor — see that file. This closes
- * the keyboard-accessibility gap the previous attempt left open.
+ * `<DndContext>` registers a KeyboardSensor — see that file.
+ *
+ * UPDATED — Gallery UX Completion sprint: the gallery finally gets the
+ * interactive positioning the profile image has had since the
+ * Single-Section Editing UX sprint, composed exactly the way the atoms'
+ * own reuse-boundary notes prescribe (one atom per grid cell, NOT the
+ * single-image ImageEditorCard/ImageAssetEditor composites):
+ *
+ *   - The static next/image thumbnail is replaced by ImagePreview in
+ *     editable mode — pointer-dragging the photo pans it inside the same
+ *     4/5 frame and writes a continuous "<x>% <y>%" string through the
+ *     EXISTING onChange("position", value) plumbing (that column was
+ *     always a free-form CSS object-position string, so legacy keyword
+ *     values like "center 36%" both render and drag correctly —
+ *     ImagePreview.parsePosition normalizes them). The card's preview now
+ *     also visually applies position/scale for the first time, so edits
+ *     finally have live feedback.
+ *   - ImagePositionControls (the zoom slider atom) renders below the
+ *     actions row, wired to the EXISTING onChange("scale", value). A row
+ *     with scale: null shows the slider at its 100% floor without writing
+ *     anything until the user actually moves it — nulls stay nulls.
+ *   - A small "איפוס מיקום" reset action sets position to "50% 50%" and
+ *     scale to 1 (the same defaults buildUploadedGalleryImage seeds onto
+ *     brand-new uploads — see lib/admin/gallery-images.js).
+ *   - The raw `position`/`scale` text inputs are gone from the disclosure
+ *     (the interactive surface replaced them; keeping both would let the
+ *     two drift mid-edit). altHe/altEn/mobileOrder stay behind the
+ *     disclosure unchanged. he.gallery.fields.position/scale label keys
+ *     are still read by GalleryOwnerReview — only this card stopped using
+ *     them.
+ *
+ *   Reorder-vs-position drag disambiguation: ImagePreview listens for
+ *   pointerdown on the frame; the ⠿ reorder handle (rendered INSIDE the
+ *   frame as an ImagePreview overlay child, same visual spot as before)
+ *   must not let its pointerdown bubble into the frame, or one press would
+ *   start both drags at once. The handle's own onPointerDown (defined
+ *   AFTER spreading dnd-kit's `listeners`, so it wraps rather than loses
+ *   dnd-kit's handler) stops propagation first, then delegates to
+ *   dnd-kit's — so the handle drags the card, the photo drags the
+ *   framing, and neither ever triggers the other. dnd-kit's PointerSensor
+ *   has no listeners anywhere else on the card, so dragging the photo can
+ *   never reorder.
  *
  * Props:
  *   - image ({ src, alt, altHe, altEn, position, scale, mobileOrder })
@@ -52,13 +94,16 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import Image from "next/image";
 import styles from "./GalleryImageCard.module.css";
 import SecondaryButton from "./SecondaryButton";
+import ImagePreview from "./ImagePreview";
+import ImagePositionControls from "./ImagePositionControls";
+import { DEFAULT_UPLOAD_POSITION, DEFAULT_UPLOAD_SCALE } from "@/lib/admin/gallery-images";
 import { he } from "@/lib/admin/i18n/he";
 
 export default function GalleryImageCard({ image, onChange = () => {}, onRemove = () => {} }) {
   const fields = he.gallery.fields;
+  const positionCopy = he.gallery.positionControls;
   const [detailsOpen, setDetailsOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: image._key,
@@ -69,14 +114,27 @@ export default function GalleryImageCard({ image, onChange = () => {}, onRemove 
     transition,
   };
 
+  function handleResetPosition() {
+    onChange("position", DEFAULT_UPLOAD_POSITION);
+    onChange("scale", DEFAULT_UPLOAD_SCALE);
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={`${styles.tokens} ${styles.card} ${isDragging ? styles.dragging : ""}`}
     >
-      <div className={styles.imageWrapper}>
-        <Image src={image.src} alt={image.alt} fill sizes="240px" className={styles.image} />
+      <ImagePreview
+        src={image.src}
+        alt={image.alt}
+        position={image.position}
+        scale={image.scale}
+        aspectRatio="4 / 5"
+        editable
+        onPositionChange={(value) => onChange("position", value)}
+        dragHint={positionCopy.dragHint}
+      >
         <span className={styles.previewBadge}>{he.gallery.previewBadge}</span>
         <button
           type="button"
@@ -85,8 +143,32 @@ export default function GalleryImageCard({ image, onChange = () => {}, onRemove 
           title={he.gallery.dragReorderHint}
           {...attributes}
           {...listeners}
+          // Defined after the `listeners` spread on purpose: stops the
+          // press from bubbling into ImagePreview's frame-level
+          // pointerdown (which would start a positioning drag under the
+          // reorder drag), then hands the event to dnd-kit's own handler.
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            listeners?.onPointerDown?.(event);
+          }}
         >
           ⠿
+        </button>
+      </ImagePreview>
+
+      <div className={styles.positionRow}>
+        <ImagePositionControls
+          scale={image.scale}
+          onScaleChange={(value) => onChange("scale", value)}
+          labels={{ zoomLabel: positionCopy.zoomLabel }}
+        />
+        <button
+          type="button"
+          className={styles.resetButton}
+          onClick={handleResetPosition}
+          title={positionCopy.resetHint}
+        >
+          {positionCopy.resetAction}
         </button>
       </div>
 
@@ -135,33 +217,6 @@ export default function GalleryImageCard({ image, onChange = () => {}, onRemove 
               value={image.altEn ?? ""}
               placeholder={fields.altEnPlaceholder}
               onChange={(event) => onChange("altEn", event.target.value)}
-            />
-          </label>
-
-          <label className={styles.fieldRow}>
-            <span className={styles.fieldLabel}>{fields.position}</span>
-            <input
-              type="text"
-              className={styles.fieldInput}
-              value={image.position ?? ""}
-              placeholder={fields.positionPlaceholder}
-              title={fields.positionHelper}
-              onChange={(event) => onChange("position", event.target.value)}
-            />
-          </label>
-
-          <label className={styles.fieldRow}>
-            <span className={styles.fieldLabel}>{fields.scale}</span>
-            <input
-              type="number"
-              step="0.05"
-              min="0"
-              className={styles.fieldInput}
-              value={image.scale ?? ""}
-              title={fields.scaleHelper}
-              onChange={(event) =>
-                onChange("scale", event.target.value === "" ? null : Number(event.target.value))
-              }
             />
           </label>
 
