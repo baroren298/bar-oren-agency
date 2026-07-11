@@ -620,28 +620,61 @@ function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, dis
 }
 
 /*
- * SEO Editor Foundation sprint — same reasoning as buildSocialLinks above:
- * no seo query exists yet on talentAdapter/versionService (and adding one
- * is out of scope for a UI-only sprint), and data/talent/index.js doesn't
- * model SEO fields at all today. So every field is surfaced as `null` —
- * SeoFieldRow already renders `null` as a calm "לא קיים" placeholder,
- * exactly like a talent that genuinely has no SEO metadata set yet.
- * Wiring this up to a real "page SEO" record is later work; this sprint
- * only prepares the layout and the editing surface.
+ * Talent SEO + Slug Management sprint — the SEO tab now reads and writes
+ * real, versioned data. The SEO block (and the proposed slug) live as
+ * normal columns on the same TalentVersion rows this page already loads
+ * (publishedVersion / pendingVersion) — no extra query. Field keys match
+ * the column names, so this mapping is a plain pick.
  */
-function buildSeoFields() {
+function buildSeoValues(version) {
+  if (!version) return {};
   return {
-    title: null,
-    description: null,
-    keywords: [],
-    ogTitle: null,
-    ogDescription: null,
+    seoTitle: version.seoTitle ?? null,
+    seoDescription: version.seoDescription ?? null,
+    seoCanonicalUrl: version.seoCanonicalUrl ?? null,
+    seoOgTitle: version.seoOgTitle ?? null,
+    seoOgDescription: version.seoOgDescription ?? null,
+    seoOgImageUrl: version.seoOgImageUrl ?? null,
+    seoNoindex: version.seoNoindex ?? false,
   };
 }
 
-function SeoSectionContent({ globalEditing }) {
-  const publishedSeo = buildSeoFields();
-  return <SeoEditor publishedSeo={publishedSeo} globalEditing={globalEditing} />;
+/*
+ * Talent SEO + Slug Management sprint — mirrors DetailsSectionContent/
+ * PodcastSectionContent's wiring exactly: `versionId`/`versionStatus` only
+ * ever point at an editable DRAFT/PROPOSED version, `role` gates the
+ * Owner-only Publish Now button, and the same proposals API routes carry
+ * Save Draft / Submit / Publish. `defaults` feeds the sprint's smart
+ * defaults (empty SEO title → talent name, empty description → bio, empty
+ * OG image → profile image, empty canonical → the public URL) into the
+ * live Google/Open Graph previews, matching what lib/public/seo.js applies
+ * on the live page. `publishedSlug` is the parent Talent.slug — the live
+ * public URL, which only ever changes when a version proposing a new slug
+ * is actually published.
+ */
+function SeoSectionContent({ talent, publishedVersion, pendingVersion, role, globalEditing }) {
+  const isEditablePending =
+    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
+
+  return (
+    <SeoEditor
+      talentId={talent.id}
+      versionId={isEditablePending ? pendingVersion.id : null}
+      versionStatus={isEditablePending ? pendingVersion.status : null}
+      role={role}
+      globalEditing={globalEditing}
+      publishedSlug={talent.slug}
+      publishedSeo={buildSeoValues(publishedVersion)}
+      draftSeo={isEditablePending ? buildSeoValues(pendingVersion) : null}
+      draftSlug={isEditablePending ? pendingVersion.slug ?? talent.slug : null}
+      defaults={{
+        name: publishedVersion?.name ?? pendingVersion?.name ?? null,
+        nameEn: publishedVersion?.nameEn ?? pendingVersion?.nameEn ?? null,
+        bio: publishedVersion?.bioHe ?? publishedVersion?.bioEn ?? null,
+        profileImage: publishedVersion?.profileImageAsset?.blobUrl ?? null,
+      }}
+    />
+  );
 }
 
 /*
@@ -888,7 +921,18 @@ export default async function AdminTalentDetailPage({ params }) {
       };
     }
     if (section.key === 'seo') {
-      return { ...section, content: <SeoSectionContent globalEditing={globalEditing} /> };
+      return {
+        ...section,
+        content: (
+          <SeoSectionContent
+            talent={talent}
+            publishedVersion={publishedVersion}
+            pendingVersion={pendingVersion}
+            role={role}
+            globalEditing={globalEditing}
+          />
+        ),
+      };
     }
     if (section.key === 'podcast') {
       return {

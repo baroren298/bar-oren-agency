@@ -169,6 +169,123 @@
   justify-content: flex-end;
 }
 
+/* ---------- Slug management — Talent SEO + Slug Management sprint ---------- */
+
+.slugSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.slugHelper {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--admin-text-muted);
+  max-width: 56ch;
+}
+
+/* URL prefix + editable slug segment, one visual unit. LTR container so
+   the URL reads left-to-right inside the RTL admin. */
+.slugInputRow {
+  display: flex;
+  align-items: stretch;
+  max-width: 34rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface, #fff);
+  overflow: hidden;
+}
+
+.slugInputRow:focus-within {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.slugPrefix {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.82rem;
+  color: var(--admin-text-muted);
+  background: var(--admin-accent-subtle);
+  white-space: nowrap;
+}
+
+.slugInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+.slugInput:focus {
+  outline: none;
+}
+
+.slugActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.slugErrors {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.78rem;
+  color: var(--admin-danger, #b3261e);
+}
+
+.slugStatus,
+.slugStatusOk,
+.slugStatusError {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.slugStatus {
+  color: var(--admin-text-muted);
+}
+
+.slugStatusOk {
+  color: var(--admin-success, #2e7d32);
+}
+
+.slugStatusError {
+  color: var(--admin-danger, #b3261e);
+  font-weight: 600;
+}
+
+.slugUrlPreview {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--admin-text-secondary);
+}
+
+.slugUrlLabel {
+  font-weight: 700;
+}
+
+.slugUrlValue {
+  unicode-bidi: embed;
+  word-break: break-all;
+}
+
+.slugNotice {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+  font-style: italic;
+}
+
 @media (max-width: 640px) {
   .proposedSection {
     padding: 1.5rem 1.25rem;

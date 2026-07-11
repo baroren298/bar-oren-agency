@@ -305,6 +305,40 @@ model TalentVersion {
   podcastImageAsset    Asset? @relation("TalentVersionPodcastImage", fields: [podcastImageAssetId], references: [id])
   podcastVideoEmbedUrl String?
 
+  // Talent SEO + Slug Management sprint — slug and SEO become normal
+  // versioned fields on TalentVersion, exactly like `visibility` and the
+  // podcast block above, so they ride the existing Draft → Proposed →
+  // Published workflow with no parallel approval engine.
+  //
+  // `slug` is the PROPOSED slug for this version. The authoritative public
+  // slug remains Talent.slug (stable identity, @unique) — it is only ever
+  // rewritten by talentRepository.publishTalentVersion's transaction when a
+  // version whose `slug` differs is published, after an in-transaction
+  // duplicate check against every other Talent row. Nullable so every
+  // pre-existing version row means "no slug change" and falls back to the
+  // parent Talent.slug; the public URL therefore never changes before a
+  // Publish.
+  //
+  // The dedicated `Seo` model below is deliberately NOT used for talent
+  // pages: it versions each SEO row independently of TalentVersion, which
+  // would create a second, parallel Draft/Approve lifecycle for the same
+  // talent — the exact thing this sprint must avoid. It remains reserved
+  // for site-level pages (about/contact/legal) in the Production SEO phase.
+  //
+  // seoOgImageUrl is a plain URL (not an Asset FK): the Open Graph image
+  // may legitimately be an external URL, and when empty the public page
+  // falls back to the profile image asset — so no upload/asset plumbing is
+  // required for the common case. seoNoindex defaults to false so every
+  // existing row keeps today's indexable behavior with no data migration.
+  slug             String?
+  seoTitle         String?
+  seoDescription   String?
+  seoCanonicalUrl  String?
+  seoOgTitle       String?
+  seoOgDescription String?
+  seoOgImageUrl    String?
+  seoNoindex       Boolean @default(false)
+
   createdById String
   createdBy   User     @relation("TalentVersionCreatedBy", fields: [createdById], references: [id])
   createdAt   DateTime @default(now())

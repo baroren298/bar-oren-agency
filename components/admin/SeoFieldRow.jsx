@@ -1,55 +1,89 @@
 /*
- * SeoFieldRow — SEO Editor Foundation sprint.
+ * SeoFieldRow — SEO Editor Foundation sprint, completed by the Talent SEO
+ * + Slug Management sprint.
  *
  * A single SEO field inside SeoEditor: label + either a read-only value
- * (published column) or an input/textarea (proposed column), plus a
- * gentle helper line explaining what the field actually controls. Mirrors
- * SocialLinkRow's role inside SocialLinksEditor and ComparisonView's
- * per-field-row layout — the one piece that knows how to render a single
- * SEO field — but stays a plain presentational component (no hooks, no
- * "use client") since it never owns any state itself; SeoEditor is the
- * only thing that touches `proposedValues`.
+ * (published view) or an input/textarea/checkbox (editing view), plus a
+ * gentle helper line explaining what the field actually controls. Stays a
+ * plain presentational component (no hooks, no "use client") since it never
+ * owns any state itself; SeoEditor is the only thing that touches
+ * `proposedValues`.
  *
- * Entity-agnostic on purpose, same reasoning as SocialLinkRow: this file
- * knows nothing about "talent" specifically, only a `field`
- * ({ key, label, type, helper, maxLength }) and a value, so the same row
- * backs talent SEO, homepage SEO, or any other page's SEO later — only the
- * `groups` array passed into SeoEditor changes.
+ * Talent SEO + Slug Management sprint additions:
+ *   - "boolean" type (seoNoindex): a checkbox row, mirroring
+ *     ComparisonView's own boolean field treatment.
+ *   - `dir` (from the field registry): URL-valued fields render LTR inside
+ *     the RTL admin.
+ *   - `defaultHint` (string, optional): what the public site falls back to
+ *     when this field is empty (the sprint's smart defaults — talent name /
+ *     bio / profile image / public URL). Shown instead of the bare "לא
+ *     קיים" in read-only mode, and as the input's placeholder while
+ *     editing, so an empty field honestly reads as "using the automatic
+ *     value."
  *
  * The `maxLength` character count shown here is a *visual guide only* —
- * "42/60 תווים" — never an enforced limit, never real SEO scoring, per
- * this sprint's explicit "no real validation" scope.
+ * never an enforced limit.
  *
  * Props:
- *   - field ({ key, label, type, helper, maxLength }) — from
+ *   - field ({ key, label, type, helper, maxLength, dir }) — from
  *     lib/admin/seo-fields.js
- *   - value (string|string[]|null)
+ *   - value (string|boolean|string[]|null)
  *   - readOnly (boolean, optional, default false)
- *   - onChange (function, optional) — (value: string|string[]) => void,
- *     ignored when readOnly
+ *   - onChange (function, optional) — ignored when readOnly
+ *   - defaultHint (string, optional) — smart-default explanation for an
+ *     empty value
  */
 
 import styles from "./SeoFieldRow.module.css";
 import { he } from "@/lib/admin/i18n/he";
 
 function formatReadOnlyValue(field, value) {
+  if (field.type === "boolean") {
+    return value ? "כן" : "לא";
+  }
   if (field.type === "list") {
     return Array.isArray(value) && value.length ? value.join("، ") : null;
   }
   return value || null;
 }
 
-export default function SeoFieldRow({ field, value, readOnly = false, onChange = () => {} }) {
-  const { key, label, type, helper, maxLength } = field;
+export default function SeoFieldRow({ field, value, readOnly = false, onChange = () => {}, defaultHint }) {
+  const { key, label, type, helper, maxLength, dir } = field;
 
   if (readOnly) {
     const displayValue = formatReadOnlyValue(field, value);
+    const emptyText = defaultHint
+      ? `${he.seo.notSet} — ${he.seo.defaults.usingDefault}: ${defaultHint}`
+      : he.seo.notSet;
     return (
       <div className={styles.row}>
         <span className={styles.label}>{label}</span>
-        <span className={displayValue ? styles.readOnlyValue : styles.emptyValue}>
-          {displayValue || he.seo.notSet}
+        <span
+          className={displayValue ? styles.readOnlyValue : styles.emptyValue}
+          dir={displayValue && dir ? dir : undefined}
+        >
+          {displayValue || emptyText}
         </span>
+      </div>
+    );
+  }
+
+  if (type === "boolean") {
+    return (
+      <div className={styles.rowEditable}>
+        <label className={styles.checkboxRow}>
+          <input
+            type="checkbox"
+            checked={!!value}
+            onChange={(event) => onChange(event.target.checked)}
+            aria-label={label}
+          />
+          <span className={styles.labelEditable}>
+            <span className={styles.changeDot} aria-hidden="true" />
+            {label}
+          </span>
+        </label>
+        {helper ? <p className={styles.helper}>{helper}</p> : null}
       </div>
     );
   }
@@ -70,6 +104,8 @@ export default function SeoFieldRow({ field, value, readOnly = false, onChange =
     }
   }
 
+  const placeholder = defaultHint ? `${he.seo.defaults.usingDefault}: ${defaultHint}` : undefined;
+
   return (
     <div className={styles.rowEditable}>
       <label htmlFor={`seo-${key}`} className={styles.labelEditable}>
@@ -87,6 +123,8 @@ export default function SeoFieldRow({ field, value, readOnly = false, onChange =
           onChange={handleChange}
           rows={3}
           aria-label={label}
+          placeholder={placeholder}
+          dir={dir}
         />
       ) : (
         <input
@@ -96,6 +134,8 @@ export default function SeoFieldRow({ field, value, readOnly = false, onChange =
           value={textValue}
           onChange={handleChange}
           aria-label={label}
+          placeholder={placeholder}
+          dir={dir}
         />
       )}
 

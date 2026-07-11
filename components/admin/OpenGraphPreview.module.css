@@ -1,0 +1,85 @@
+/*
+ * OpenGraphPreview styles — Talent SEO + Slug Management sprint.
+ * Mirrors SearchResultPreview.module.css's calm card language; the inner
+ * share card intentionally resembles a generic messenger link preview
+ * (image on top, domain, bold title, muted description).
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--admin-text-secondary);
+}
+
+.subtitle {
+  font-size: 0.76rem;
+  color: var(--admin-text-muted);
+}
+
+.shareCard {
+  max-width: 32rem;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface, #fff);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
+  background: var(--admin-accent-subtle);
+}
+
+.imagePlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 7rem;
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+  background: var(--admin-accent-subtle);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.url {
+  font-size: 0.72rem;
+  text-transform: lowercase;
+  color: var(--admin-text-muted);
+}
+
+.title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--admin-text-primary, #1f1c17);
+}
+
+.description {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--admin-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

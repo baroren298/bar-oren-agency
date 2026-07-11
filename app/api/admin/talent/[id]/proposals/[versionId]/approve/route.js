@@ -34,7 +34,11 @@ import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { approvalService } from '@/lib/admin/engine/approvalService';
-import { REVISION_CONFLICT_ERROR_CODE } from '@/lib/admin/constants/enums';
+import {
+  REVISION_CONFLICT_ERROR_CODE,
+  SLUG_CONFLICT_ERROR_CODE,
+  SLUG_INVALID_ERROR_CODE,
+} from '@/lib/admin/constants/enums';
 
 export async function POST(request, { params }) {
   let session;
@@ -79,6 +83,30 @@ export async function POST(request, { params }) {
     if (error.code === REVISION_CONFLICT_ERROR_CODE) {
       return NextResponse.json(
         { error: 'This talent changed since this proposal was created.', code: REVISION_CONFLICT_ERROR_CODE, conflict: error.conflict },
+        { status: 409 }
+      );
+    }
+    // Talent SEO + Slug Management sprint — the publish transaction's
+    // authoritative slug gates (talentRepository.publishTalentVersion).
+    // Publishing is blocked, nothing was written; surfaced as 409 so the
+    // editor can tell the user to pick a different slug.
+    if (error.code === SLUG_CONFLICT_ERROR_CODE) {
+      return NextResponse.json(
+        {
+          error: `The slug "${error.slug}" is already used by another talent. Choose a different slug before publishing.`,
+          code: SLUG_CONFLICT_ERROR_CODE,
+          slug: error.slug,
+        },
+        { status: 409 }
+      );
+    }
+    if (error.code === SLUG_INVALID_ERROR_CODE) {
+      return NextResponse.json(
+        {
+          error: `The proposed slug "${error.slug}" is invalid (allowed: a-z, 0-9, single hyphens). Fix it before publishing.`,
+          code: SLUG_INVALID_ERROR_CODE,
+          slug: error.slug,
+        },
         { status: 409 }
       );
     }

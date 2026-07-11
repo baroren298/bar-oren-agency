@@ -103,6 +103,16 @@ export async function POST(request, { params }) {
 
   const fields = extractTalentVersionFields(publishedVersion);
 
+  // Talent SEO + Slug Management sprint — a published version created
+  // before the slug column existed carries `slug: null` ("no slug
+  // change"). Seed the new Draft's slug from the parent Talent's live slug
+  // instead, so the Slug editor always starts from the real public slug
+  // rather than an empty field. Purely a seeding default: the Draft's slug
+  // remains fully editable and only ever reaches Talent.slug via Publish.
+  if (fields.slug == null) {
+    fields.slug = talent.slug;
+  }
+
   try {
     const { version } = await proposalService.create(talentAdapter, {
       parentId: id,

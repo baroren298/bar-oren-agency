@@ -119,6 +119,24 @@
   color: var(--admin-text-muted);
 }
 
+/*
+ * Talent SEO + Slug Management sprint — the seoNoindex boolean field's
+ * checkbox row (SeoFieldRow's new "boolean" type).
+ */
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkboxRow input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--admin-accent);
+  cursor: pointer;
+}
+
 @media (max-width: 640px) {
   .row {
     grid-template-columns: 1fr;
