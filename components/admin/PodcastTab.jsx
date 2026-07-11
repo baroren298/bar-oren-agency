@@ -73,6 +73,7 @@ import EmptyState from "./EmptyState";
 import PrimaryButton from "./PrimaryButton";
 import TalentDetailsEditor from "./TalentDetailsEditor";
 import { he } from "@/lib/admin/i18n/he";
+import { toYouTubeWatchUrl } from "@/lib/youtube";
 
 export default function PodcastTab({
   talentId,
@@ -86,6 +87,12 @@ export default function PodcastTab({
   role = null,
 }) {
   const copy = he.talent.detail.podcastTab;
+
+  // The stored value is a YouTube *embed* URL (what the public iframe
+  // needs). Opening an embed URL as a top-level page triggers YouTube
+  // Error 153, so the admin button gets a derived /watch URL instead. The
+  // stored value itself is never touched.
+  const youtubeWatchUrl = toYouTubeWatchUrl(podcastVideoEmbedUrl);
 
   const editorColumn = (
     <div className={styles.editorColumn}>
@@ -139,9 +146,9 @@ export default function PodcastTab({
               </button>
               <p className={styles.comingSoonHint}>{copy.comingSoonHint}</p>
 
-              {podcastVideoEmbedUrl ? (
+              {youtubeWatchUrl ? (
                 <PrimaryButton
-                  href={podcastVideoEmbedUrl}
+                  href={youtubeWatchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.youtubeButton}
