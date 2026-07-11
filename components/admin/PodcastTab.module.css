@@ -85,30 +85,77 @@
 }
 
 /*
- * Disabled placeholder — same "reserved space, not wired up yet" pattern
- * as ProfileImagePanel.module.css's .controlButton. No existing podcast
- * image upload flow exists to hook this into; building one is out of
- * scope for this sprint.
+ * Podcast Image Upload sprint — "החלף תמונה" is a real, enabled control
+ * now (was a permanently-disabled dashed placeholder). Enabled style
+ * follows the admin's quiet secondary-button language; the [disabled]
+ * state (no editable draft / uploads unavailable / upload in flight)
+ * reuses the old placeholder look so "can't right now" reads the same as
+ * it always did.
  */
 .imageButton {
   composes: tokens;
   width: 100%;
   padding: 0.5rem 0.9rem;
-  border: 1px dashed var(--admin-border);
+  border: 1px solid var(--admin-border);
   border-radius: var(--admin-radius);
   background: var(--admin-bg);
-  color: var(--admin-text-muted);
+  color: var(--admin-text-secondary);
   font-size: 0.84rem;
   font-weight: 500;
   text-align: center;
+  cursor: pointer;
+}
+
+.imageButton:hover:not(:disabled) {
+  background: var(--admin-accent-subtle);
+}
+
+.imageButton:disabled {
+  border-style: dashed;
+  color: var(--admin-text-muted);
   cursor: not-allowed;
 }
 
-.comingSoonHint {
+/*
+ * The real <input type="file"> stays out of the layout entirely — the
+ * visible button drives it via ref click. visually-hidden (not
+ * display:none) so the element still exists for the change event in every
+ * browser.
+ */
+.hiddenFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Small explanatory line under the button (uploads disabled in this
+ * environment / start a draft first / new image pending, not published). */
+.hint {
   margin: 0;
   font-size: 0.72rem;
   color: var(--admin-text-muted);
   max-width: 16rem;
+}
+
+.uploadStatus {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--admin-text-secondary);
+}
+
+.uploadStatusError {
+  margin: 0;
+  font-size: 0.74rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--admin-radius);
+  background: var(--admin-status-danger-bg);
+  color: var(--admin-status-danger-text);
 }
 
 .youtubeButton {

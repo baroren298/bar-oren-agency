@@ -523,10 +523,10 @@ function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocial
  * group, same shape buildDetailsGroups above already produces for the
  * פרטים tab. Deliberately a single unlabeled group (no sub-groups needed for
  * just four fields) and deliberately only these four: podcastImageAssetId
- * is not included here because there is no safe existing upload/picker flow
- * to route an image-replace edit through yet (sprint rule #2/#6) — the
- * image stays a read-only preview with a disabled "החלף תמונה" placeholder
- * in <PodcastTab>.
+ * is still not a ComparisonView field — since the Podcast Image Upload
+ * sprint it's edited through <PodcastTab>'s own "החלף תמונה" upload control
+ * (an id-typed column has nothing meaningful to show in a text comparison
+ * row), which PATCHes it through the same proposals/[versionId] route.
  */
 function buildPodcastGroups(publishedVersion, pendingVersion) {
   const published = publishedVersion || {};
@@ -583,7 +583,15 @@ function buildPodcastGroups(publishedVersion, pendingVersion) {
  * version yet — <PodcastTab> itself renders a clear empty state when every
  * field is empty.
  */
-function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role }) {
+/*
+ * Podcast Image Upload sprint — `uploadsEnabled` (the same server-computed
+ * gate DetailsSectionContent/GallerySectionContent already receive) and
+ * `pendingPodcastImageUrl` now flow through too. The pending URL comes off
+ * the same `pendingVersion` this page already reads (loadPendingVersion →
+ * listVersionsForParent, whose repository query now includes the
+ * podcastImageAsset relation) — no extra database read is made for it.
+ */
+function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role, uploadsEnabled }) {
   const isEditablePending =
     pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
   const editableVersionId = isEditablePending ? pendingVersion.id : null;
@@ -595,6 +603,8 @@ function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, dis
       versionStatus={isEditablePending ? pendingVersion.status : null}
       groups={buildPodcastGroups(publishedVersion, pendingVersion)}
       podcastImageUrl={publishedVersion?.podcastImageAsset?.blobUrl ?? null}
+      pendingPodcastImageUrl={isEditablePending ? pendingVersion?.podcastImageAsset?.blobUrl ?? null : null}
+      uploadsEnabled={uploadsEnabled}
       podcastVideoEmbedUrl={publishedVersion?.podcastVideoEmbedUrl ?? null}
       hasPodcastData={Boolean(
         publishedVersion?.podcastTitle ||
@@ -890,6 +900,7 @@ export default async function AdminTalentDetailPage({ params }) {
             pendingVersion={pendingVersion}
             displayName={displayName}
             role={role}
+            uploadsEnabled={uploadsEnabled}
           />
         ),
       };
