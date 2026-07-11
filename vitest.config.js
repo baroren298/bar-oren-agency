@@ -17,11 +17,28 @@
  * module; this alias is the safety net underneath, not the mock itself.
  * The real @vercel/blob (package.json dependency) is untouched at
  * build/runtime — Next.js never reads this file.
+ *
+ * Global Edit Mode UX sprint: `esbuild.jsx: 'automatic'` aligns the test
+ * runner's JSX transform with the one Next.js itself uses. Next compiles
+ * every component with React 17+'s automatic runtime (JSX becomes imports
+ * from 'react/jsx-runtime'; no `import React` needed and none of our
+ * components have one). Vite/esbuild's DEFAULT, however, is the classic
+ * transform — JSX becomes `React.createElement(...)` — so the first test
+ * that rendered real components (components/admin/__tests__/
+ * globalEditMode.test.jsx, via react-dom/server) hit "ReferenceError:
+ * React is not defined" inside MediaGalleryEditor/SocialLinksEditor/
+ * SeoEditor: not a bug in those components, just two toolchains disagreeing
+ * about what JSX compiles to. Fixing it here (tests-only, Next never reads
+ * this file) keeps app source untouched — adding `import React` to
+ * components would have papered over the mismatch instead of removing it.
  */
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic',
+  },
   resolve: {
     alias: {
       '@vercel/blob': path.resolve(

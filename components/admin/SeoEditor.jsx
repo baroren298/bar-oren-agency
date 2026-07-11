@@ -47,9 +47,9 @@ import styles from "./SeoEditor.module.css";
 import SeoFieldRow from "./SeoFieldRow";
 import SearchResultPreview from "./SearchResultPreview";
 import EditorActionBar from "./EditorActionBar";
-import PrimaryButton from "./PrimaryButton";
 import { he } from "@/lib/admin/i18n/he";
 import { SEO_FIELD_GROUPS } from "@/lib/admin/seo-fields";
+import { deriveEffectiveEditing } from "@/lib/admin/edit-mode";
 
 /*
  * SEO-specific stand-in for the retired shared <EditorHelperNote>, same
@@ -75,14 +75,26 @@ function buildInitialValues(groups, publishedSeo) {
   }, {});
 }
 
-export default function SeoEditor({ publishedSeo = {}, groups = SEO_FIELD_GROUPS, previewUrl }) {
+// Global Edit Mode UX sprint — `globalEditing` mirrors Gallery/Socials: true
+// when the page-level "Start Editing" flow is active (pending TalentVersion
+// DRAFT/PROPOSED, derived by app/admin/talent/[id]/page.jsx). When true, the
+// existing preview/editing surface opens immediately with no local CTA. SEO
+// remains preview-only exactly as before — no persistence module exists yet,
+// so the action bar still renders only its disabled placeholders and nothing
+// here ever talks to a server.
+export default function SeoEditor({ publishedSeo = {}, groups = SEO_FIELD_GROUPS, previewUrl, globalEditing = false }) {
   const [proposedValues, setProposedValues] = useState(() => buildInitialValues(groups, publishedSeo));
 
   // Single-Section Editing UX sprint — SEO has no Draft/Proposed entity of
   // its own at all (it never persists anything yet — see the file header),
-  // so unlike Social/Gallery there is no "resume an in-progress session"
-  // case to default into. Always starts in the read-only view.
-  const [isEditing, setIsEditing] = useState(false);
+  // so there is no "resume an in-progress session" case to default into.
+  //
+  // One Edit Activation sprint — there is no local manual activation
+  // anymore, and SEO has no module-specific draft to seed one from either.
+  // The effective mode is derived purely from `globalEditing`: read-only
+  // until the page-level header button starts a global editing session,
+  // and back to read-only once it ends.
+  const isEditing = deriveEffectiveEditing({ globalEditing });
 
   function handleChange(key, value) {
     setProposedValues((previous) => ({ ...previous, [key]: value }));
@@ -90,15 +102,9 @@ export default function SeoEditor({ publishedSeo = {}, groups = SEO_FIELD_GROUPS
 
   // Local-only reset — never talks to a server, just discards whatever the
   // employee typed and snaps the proposed fields back to published, in
-  // memory. Single-Section Editing UX sprint — also exits edit mode, same
-  // "end the editing session" semantics as Social/Gallery's handleCancel.
+  // memory.
   function handleCancel() {
     setProposedValues(buildInitialValues(groups, publishedSeo));
-    setIsEditing(false);
-  }
-
-  function handleStartEditing() {
-    setIsEditing(true);
   }
 
   return (
@@ -166,13 +172,7 @@ export default function SeoEditor({ publishedSeo = {}, groups = SEO_FIELD_GROUPS
           <PreviewModeNotice />
           <EditorActionBar onCancel={handleCancel} showSaveDraft={false} showSubmit={false} />
         </>
-      ) : (
-        <div className={styles.startEditingRow}>
-          <PrimaryButton type="button" onClick={handleStartEditing}>
-            {he.editor.actions.startEditing}
-          </PrimaryButton>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

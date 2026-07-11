@@ -82,6 +82,7 @@ import { he } from "@/lib/admin/i18n/he";
 import { SOCIAL_PLATFORMS, SOCIAL_ACCOUNT_LABELS, getPlatformEntry } from "@/lib/admin/social-platforms";
 import { VERSION_STATUS, ROLE } from "@/lib/admin/constants/enums";
 import { filterUnresolvedRejectedSocials } from "@/lib/admin/social-review";
+import { deriveEffectiveEditing, deriveInitialLocalEditing } from "@/lib/admin/edit-mode";
 
 function withKeys(accounts) {
   // Real DB rows already have a stable `id`; reuse it as the React/local-
@@ -237,6 +238,15 @@ export default function SocialLinksEditor({
   platforms = SOCIAL_PLATFORMS,
   labels = SOCIAL_ACCOUNT_LABELS,
   role = null,
+  // Global Edit Mode UX sprint — true when the page-level "Start Editing"
+  // flow is active (a pending TalentVersion DRAFT/PROPOSED exists — derived
+  // by app/admin/talent/[id]/page.jsx via isGlobalEditingStatus, a pure
+  // read of state the page already loads). When true, this tab's editable
+  // surface opens immediately and the local "התחל בעריכה" CTA is never
+  // rendered — one edit activation for the whole page. UX-only: TalentSocial
+  // draft rows are still only ever created by Save Draft, and every
+  // Save/Submit/Publish/Resume flow below is untouched.
+  globalEditing = false,
 }) {
   const router = useRouter();
   const hasPersistence = Boolean(talentId);
@@ -263,15 +273,21 @@ export default function SocialLinksEditor({
   // Single-Section Editing UX sprint — collapses the old simultaneous
   // "Published" + "Proposed" two-section layout into one section that
   // toggles between a read-only view and the exact same editable surface,
-  // mirroring ComparisonView/ImageAssetEditor's Phase 1/2 pattern. Unlike
-  // those two (whose `isEditing` is derived from whether an editable
-  // TalentVersion Draft/Proposed exists), Social Links has no such
-  // entity — its Draft/Proposed rows are only ever created by Save Draft
-  // itself — so entering "edit mode" here is purely local UI state, never
-  // an API call. Starts true whenever a real Draft/Proposed set already
-  // exists (resuming a session in progress reads as "still editing," not
-  // back to a fresh view), false otherwise.
-  const [isEditing, setIsEditing] = useState(() => draftSocials.length > 0);
+  // mirroring ComparisonView/ImageAssetEditor's Phase 1/2 pattern.
+  //
+  // One Edit Activation sprint — there is no local manual activation
+  // anymore. `hasModuleDraft` only reflects whether a real socials
+  // Draft/Proposed set already exists (resuming a session in progress reads
+  // as "still editing," not back to a fresh view); it is never flipped true
+  // by a button click. The effective mode actually rendered is the derived
+  // `isEditing` const below — `globalEditing || hasModuleDraft` —
+  // recomputed every render. When globalEditing later flips false (page
+  // draft published/discarded), the tab falls back to hasModuleDraft on its
+  // own: a socials draft keeps its session editable, otherwise the
+  // read-only view returns. The only way to *begin* an editing session from
+  // nothing is the page-level header button.
+  const hasModuleDraft = deriveInitialLocalEditing(draftSocials);
+  const isEditing = deriveEffectiveEditing({ globalEditing, localEditing: hasModuleDraft });
 
   const [saveDraftStatus, setSaveDraftStatus] = useState("idle"); // idle | saving | saved | error
   const [saveDraftError, setSaveDraftError] = useState(null);
@@ -375,24 +391,16 @@ export default function SocialLinksEditor({
 
   // Resets back to whatever was last actually saved (or, if nothing has
   // been saved yet this session, the original published/draft seed) —
-  // never talks to a server. Single-Section Editing UX sprint — also exits
-  // edit mode, since Cancel is meant to end the editing session entirely
-  // (same "בטל עריכה" semantics he.editor.actions.cancel already documents
-  // for the Details tab's top-level Cancel button), returning to the
-  // read-only published view.
+  // never talks to a server.
+  // One Edit Activation sprint — Cancel only resets the in-memory values.
+  // There is no local activation flag to clear anymore: while globalEditing
+  // is active the tab stays editable (one activation for the whole page),
+  // and while a module draft exists the tab stays editable on its own too —
+  // there is no per-tab exit from either.
   function handleCancel() {
     setProposedAccounts(savedAccounts);
     setSaveDraftStatus("idle");
     setSaveDraftError(null);
-    setIsEditing(false);
-  }
-
-  // Single-Section Editing UX sprint — the only place this component
-  // enters edit mode on its own. Purely local UI state, never an API call:
-  // no TalentSocial row is created or touched until Save Draft actually
-  // fires.
-  function handleStartEditing() {
-    setIsEditing(true);
   }
 
   // Appends, never replaces — this is what guarantees a second Instagram
@@ -506,11 +514,12 @@ export default function SocialLinksEditor({
       {/*
        * Single-Section Editing UX sprint — one section, one mode at a time,
        * mirroring ComparisonView's Phase 1 pattern exactly (see that file's
-       * header comment). `isEditing` here is local state (see above) rather
-       * than `Boolean(onSaveDraft)`, since Social Links has no separate
-       * Draft entity gating whether editing is possible at all — anyone can
-       * open the section and start typing; Save Draft is what actually
-       * persists it.
+       * header comment). `isEditing` here is derived per render from the
+       * page-level `globalEditing` prop OR the local activation state (see
+       * above) rather than `Boolean(onSaveDraft)`, since Social Links has no
+       * separate Draft entity gating whether editing is possible at all —
+       * anyone can open the section and start typing; Save Draft is what
+       * actually persists it.
        */}
       <section
         className={isEditing ? styles.proposedSection : styles.publishedSection}
@@ -592,13 +601,7 @@ export default function SocialLinksEditor({
             publishStatusMessage={publishStatus === "error" ? publishError : undefined}
           />
         </>
-      ) : (
-        <div className={styles.startEditingRow}>
-          <PrimaryButton type="button" onClick={handleStartEditing}>
-            {he.editor.actions.startEditing}
-          </PrimaryButton>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

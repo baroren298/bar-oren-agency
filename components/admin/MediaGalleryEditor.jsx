@@ -139,6 +139,7 @@ import { he } from "@/lib/admin/i18n/he";
 import { VERSION_STATUS, ROLE } from "@/lib/admin/constants/enums";
 import { filterUnresolvedRejectedGalleryImages } from "@/lib/admin/gallery-review";
 import { buildGalleryImages, buildUploadedGalleryImage } from "@/lib/admin/gallery-images";
+import { deriveEffectiveEditing, deriveInitialLocalEditing } from "@/lib/admin/edit-mode";
 
 /*
  * Kept for any future standalone/no-talentId render of this editor — see
@@ -303,6 +304,15 @@ export default function MediaGalleryEditor({
   // placeholder + a Hebrew notice renders); reorder/alt/crop editing, Save
   // Draft, Submit and Publish keep working.
   uploadsEnabled = true,
+  // Global Edit Mode UX sprint — true when the page-level "Start Editing"
+  // flow is active (a pending TalentVersion DRAFT/PROPOSED exists — derived
+  // by app/admin/talent/[id]/page.jsx via isGlobalEditingStatus, a pure
+  // read of state the page already loads). When true, this tab's editable
+  // surface opens immediately and the local "התחל בעריכה" CTA is never
+  // rendered — one edit activation for the whole page. UX-only: gallery
+  // draft rows are still only ever created by Save Draft, and every
+  // Save/Submit/Publish/Resume flow below is untouched.
+  globalEditing = false,
 }) {
   const router = useRouter();
   const hasPersistence = Boolean(talentId);
@@ -325,12 +335,20 @@ export default function MediaGalleryEditor({
   // Single-Section Editing UX sprint — collapses the old simultaneous
   // "Published" + "Proposed" two-section layout into one section that
   // toggles between a read-only view and the exact same editable surface,
-  // mirroring ComparisonView/SocialLinksEditor's Phase 1 pattern. Like
-  // Social Links, Gallery has no entity that gates whether editing is
-  // *possible* — entering edit mode is purely local UI state, never an API
-  // call. Starts true whenever a real Draft/Proposed set already exists
-  // (resuming a session in progress reads as "still editing").
-  const [isEditing, setIsEditing] = useState(() => draftImages.length > 0);
+  // mirroring ComparisonView/SocialLinksEditor's Phase 1 pattern.
+  //
+  // One Edit Activation sprint — there is no local manual activation
+  // anymore. `hasModuleDraft` only reflects whether a real gallery
+  // Draft/Proposed set already exists (resuming a session in progress reads
+  // as "still editing"); it is never flipped true by a button click. The
+  // effective mode actually rendered is the derived `isEditing` const below
+  // — `globalEditing || hasModuleDraft` — recomputed every render. When
+  // globalEditing later flips false (page draft published/discarded), the
+  // tab falls back to hasModuleDraft on its own: a gallery draft keeps its
+  // session editable, otherwise the read-only view returns. The only way to
+  // *begin* an editing session from nothing is the page-level header button.
+  const hasModuleDraft = deriveInitialLocalEditing(draftImages);
+  const isEditing = deriveEffectiveEditing({ globalEditing, localEditing: hasModuleDraft });
 
   const [saveDraftStatus, setSaveDraftStatus] = useState("idle"); // idle | saving | saved | error
   const [saveDraftError, setSaveDraftError] = useState(null);
@@ -457,20 +475,15 @@ export default function MediaGalleryEditor({
   // Resets back to whatever was last actually saved (or, if nothing has
   // been saved yet this session, the original published/draft seed) —
   // never talks to a server. Mirrors SocialLinksEditor's handleCancel.
-  // Single-Section Editing UX sprint — also exits edit mode, returning to
-  // the read-only published view, same as Social/SEO's Cancel.
+  // One Edit Activation sprint — Cancel only resets the in-memory values.
+  // There is no local activation flag to clear anymore: while globalEditing
+  // is active the tab stays editable (one activation for the whole page),
+  // and while a module draft exists the tab stays editable on its own too —
+  // there is no per-tab exit from either.
   function handleReset() {
     setProposedImages(savedImages);
     setSaveDraftStatus("idle");
     setSaveDraftError(null);
-    setIsEditing(false);
-  }
-
-  // Single-Section Editing UX sprint — the only place this component enters
-  // edit mode on its own. Purely local UI state, never an API call: no
-  // TalentGalleryImage row is created or touched until Save Draft fires.
-  function handleStartEditing() {
-    setIsEditing(true);
   }
 
   // Still local-only, never persisted — see this file's header comment.
@@ -797,13 +810,7 @@ export default function MediaGalleryEditor({
             publishStatusMessage={publishStatus === "error" ? publishError : undefined}
           />
         </>
-      ) : (
-        <div className={styles.startEditingRow}>
-          <PrimaryButton type="button" onClick={handleStartEditing}>
-            {he.editor.actions.startEditing}
-          </PrimaryButton>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

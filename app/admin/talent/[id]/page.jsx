@@ -97,6 +97,7 @@ import {
 } from '@/lib/admin/talent-history';
 import { he } from '@/lib/admin/i18n/he';
 import { buildGalleryImages } from '@/lib/admin/gallery-images';
+import { isGlobalEditingStatus } from '@/lib/admin/edit-mode';
 import { VERSION_STATUS, TALENT_VISIBILITY, ENTITY_TYPE } from '@/lib/admin/constants/enums';
 import styles from './talent-detail.module.css';
 
@@ -411,6 +412,16 @@ function PlaceholderSectionContent({ label }) {
  * effect of viewing this page" guarantee every other read on this page
  * already has).
  */
+/*
+ * Global Edit Mode UX sprint — `globalEditing` now also flows through (here
+ * and in SocialsSectionContent/SeoSectionContent below): one derived boolean
+ * from the same `pendingVersion` this page already reads (see
+ * isGlobalEditingStatus in lib/admin/edit-mode.js — the exact rule
+ * DetailsSectionContent's isEditablePending already applies). Purely a UX
+ * signal: it opens each tab's editable surface immediately and removes the
+ * duplicate local "התחל בעריכה" CTA, while every module keeps its own draft
+ * store and Save/Submit/Publish flows untouched.
+ */
 function GallerySectionContent({
   talentId,
   galleryImages,
@@ -420,6 +431,7 @@ function GallerySectionContent({
   displayName,
   role,
   uploadsEnabled,
+  globalEditing,
 }) {
   const publishedImages = buildGalleryImages(galleryImages, displayName);
   const draftImages = buildGalleryImages(draftGalleryImages, displayName);
@@ -437,6 +449,7 @@ function GallerySectionContent({
         rejectedImages={rejectedImages}
         role={role}
         uploadsEnabled={uploadsEnabled}
+        globalEditing={globalEditing}
       />
     </>
   );
@@ -485,7 +498,7 @@ function GallerySectionContent({
  * so a rejected account's Owner note renders right above the editor instead
  * of only being visible in the History tab.
  */
-function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials, rejectedSocials, role }) {
+function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials, rejectedSocials, role, globalEditing }) {
   return (
     <>
       <SocialLinksOwnerReview
@@ -499,6 +512,7 @@ function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocial
         draftSocials={draftSocials || []}
         rejectedSocials={rejectedSocials || []}
         role={role}
+        globalEditing={globalEditing}
       />
     </>
   );
@@ -615,9 +629,9 @@ function buildSeoFields() {
   };
 }
 
-function SeoSectionContent() {
+function SeoSectionContent({ globalEditing }) {
   const publishedSeo = buildSeoFields();
-  return <SeoEditor publishedSeo={publishedSeo} />;
+  return <SeoEditor publishedSeo={publishedSeo} globalEditing={globalEditing} />;
 }
 
 /*
@@ -802,6 +816,17 @@ export default async function AdminTalentDetailPage({ params }) {
   const displayName = publishedVersion?.name || talent.slug;
   const rejectionNote = deriveCurrentRejectionNote(versions);
 
+  // Global Edit Mode UX sprint — the page's single edit-activation signal,
+  // derived (never stored) from the same `pendingVersion` loadPendingVersion
+  // already read above for the header's StartEditingButton and the Details/
+  // Podcast tabs. True exactly when a DRAFT or PROPOSED TalentVersion
+  // exists — i.e. the page-level "Start Editing" flow is active. Passed to
+  // the Gallery/Socials/SEO sections so their editable surfaces open
+  // immediately instead of showing a second "התחל בעריכה" button. Pure
+  // derivation of an existing read: no new query, no write, no draft is
+  // ever created by rendering this page.
+  const globalEditing = isGlobalEditingStatus(pendingVersion?.status ?? null);
+
   const sections = TALENT_WORKSPACE_SECTIONS.map((section) => {
     if (section.key === 'details') {
       return {
@@ -831,6 +856,7 @@ export default async function AdminTalentDetailPage({ params }) {
             displayName={displayName}
             role={role}
             uploadsEnabled={uploadsEnabled}
+            globalEditing={globalEditing}
           />
         ),
       };
@@ -846,12 +872,13 @@ export default async function AdminTalentDetailPage({ params }) {
             proposedSocials={proposedSocials}
             rejectedSocials={rejectedSocials}
             role={role}
+            globalEditing={globalEditing}
           />
         ),
       };
     }
     if (section.key === 'seo') {
-      return { ...section, content: <SeoSectionContent /> };
+      return { ...section, content: <SeoSectionContent globalEditing={globalEditing} /> };
     }
     if (section.key === 'podcast') {
       return {
