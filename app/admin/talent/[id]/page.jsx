@@ -58,6 +58,8 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
+import { eventRepository } from '@/lib/admin/repository/eventRepository';
+import { userRepository } from '@/lib/admin/repository/userRepository';
 import { isDatabaseConfigured } from '@/lib/admin/db';
 import { isUploadAvailable } from '@/lib/storage/availability';
 import { getSessionUser } from '@/lib/admin/auth/authorize';
@@ -83,15 +85,19 @@ import {
   deriveDetailWorkflowStatus,
   deriveLastUpdated,
   formatHebrewDate,
-  buildVersionHistoryTimelineItems,
   calculateAge,
   deriveCurrentRejectionNote,
   deriveCurrentVisibility,
   selectDetailBadge,
 } from '@/lib/admin/talent-workspace';
+import {
+  buildTalentHistoryTimelineItems,
+  collectEventActorIds,
+  buildActorDisplayMap,
+} from '@/lib/admin/talent-history';
 import { he } from '@/lib/admin/i18n/he';
 import { buildGalleryImages } from '@/lib/admin/gallery-images';
-import { VERSION_STATUS, TALENT_VISIBILITY } from '@/lib/admin/constants/enums';
+import { VERSION_STATUS, TALENT_VISIBILITY, ENTITY_TYPE } from '@/lib/admin/constants/enums';
 import styles from './talent-detail.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -615,21 +621,66 @@ function SeoSectionContent() {
 }
 
 /*
- * History Tab Real Data sprint — renders <Timeline> from the real
- * version-history rows already fetched on this page
- * (versionService.listVersionHistory(talentAdapter, id), passed in as
- * `versions`), instead of lib/admin/mock-history.js's getTalentHistory().
- * All the row -> { action, date, user, summary, tone } mapping logic lives
- * in lib/admin/talent-workspace.js's buildVersionHistoryTimelineItems,
- * which reuses the same workflowStatusLabel/workflowStatusTone helpers
- * <StatusBadge> uses elsewhere on this page, per that sprint's requirement
- * to reuse existing label/tone vocabulary rather than inventing a new one.
- * <Timeline> itself is unchanged — it already renders an EmptyState when
- * `items` is empty (a brand-new talent with no versions yet).
+ * Sprint 2: Real Event-Based History Timeline — the History tab now renders
+ * from the stored, append-only Event log instead of one item per
+ * TalentVersion row (whose current-status projection collapsed a
+ * DRAFT → PROPOSED → PUBLISHED journey into a single "Published" item).
+ *
+ * Flow (all pure reads, all upstream of this component):
+ *   1. loadTalentEvents(id) below — eventRepository.listForEntity(
+ *      ENTITY_TYPE.TALENT, id), the existing read path, newest first.
+ *   2. Distinct non-null actorIds are collected off those rows and resolved
+ *      in ONE batched userRepository.getSafeByIds() call — no N+1. A null
+ *      actorId or a user that no longer resolves displays as "—".
+ *   3. buildTalentHistoryTimelineItems (lib/admin/talent-history.js)
+ *      projects events → timeline items (Hebrew labels + existing tones),
+ *      hiding ProposalUpdated/AssetUploaded by noise policy and skipping
+ *      unknown types, then falls back to the previous version-row
+ *      projection (buildVersionHistoryTimelineItems) when no visible event
+ *      items exist — so an older/imported talent never shows an empty tab
+ *      while it still has version history.
+ *
+ * <Timeline> itself is unchanged — same component, same RTL styling; it
+ * still renders an EmptyState for a brand-new talent with no history at
+ * all.
  */
-function HistorySectionContent({ versions }) {
-  const items = buildVersionHistoryTimelineItems(versions);
+function HistorySectionContent({ items }) {
   return <Timeline items={items} />;
+}
+
+/*
+ * Sprint 2: Real Event-Based History Timeline — pure read of the talent's
+ * stored Event rows via the existing eventRepository.listForEntity
+ * (newest first, per that method's own contract). Never throws, same
+ * degrade-gracefully pattern as loadPendingVersion above: a transient read
+ * failure falls back to [] — which downstream resolves to the version-row
+ * history projection rather than a broken page.
+ */
+async function loadTalentEvents(talentId) {
+  try {
+    return await eventRepository.listForEntity(ENTITY_TYPE.TALENT, talentId);
+  } catch (error) {
+    console.error('[AdminTalentDetailPage] loadTalentEvents failed, falling back to version-row history:', error);
+    return [];
+  }
+}
+
+/*
+ * Sprint 2: Real Event-Based History Timeline — one batched, safe
+ * (passwordHash never selected) user lookup for the event actors. Never
+ * throws: on failure every actor renders as "—" instead of breaking the
+ * page.
+ */
+async function loadEventActors(events) {
+  try {
+    const actorIds = collectEventActorIds(events);
+    if (actorIds.length === 0) return new Map();
+    const users = await userRepository.getSafeByIds(actorIds);
+    return buildActorDisplayMap(users);
+  } catch (error) {
+    console.error('[AdminTalentDetailPage] loadEventActors failed, actors will display as "—":', error);
+    return new Map();
+  }
 }
 
 /*
@@ -721,6 +772,7 @@ export default async function AdminTalentDetailPage({ params }) {
     draftGalleryImages,
     proposedGalleryImages,
     rejectedGalleryImages,
+    events,
   ] = await Promise.all([
       versionService.getCurrentPublished(talentAdapter, id),
       loadPendingVersion(talent),
@@ -733,7 +785,17 @@ export default async function AdminTalentDetailPage({ params }) {
       talentAdapter.getDraftOrProposedGalleryImages(talent.id),
       talentAdapter.getProposedGalleryImages(talent.id),
       talentAdapter.getRejectedGalleryImages(talent.id),
+      // Sprint 2: Real Event-Based History Timeline — pure read of the
+      // stored Event rows for this talent (see loadTalentEvents above).
+      loadTalentEvents(talent.id),
     ]);
+
+  // Sprint 2: Real Event-Based History Timeline — resolve actor identities
+  // in one batched query (must run after `events` resolves, hence not part
+  // of the Promise.all above), then project events → timeline items with
+  // the version-row fallback for talents that predate event emission.
+  const eventActorsById = await loadEventActors(events);
+  const historyItems = buildTalentHistoryTimelineItems(events, eventActorsById, versions);
 
   const status = deriveDetailWorkflowStatus(versions);
   const lastUpdated = deriveLastUpdated(versions, talent);
@@ -806,7 +868,7 @@ export default async function AdminTalentDetailPage({ params }) {
       };
     }
     if (section.key === 'history') {
-      return { ...section, content: <HistorySectionContent versions={versions} /> };
+      return { ...section, content: <HistorySectionContent items={historyItems} /> };
     }
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });
