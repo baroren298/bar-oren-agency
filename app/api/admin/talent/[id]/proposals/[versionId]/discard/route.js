@@ -6,7 +6,7 @@
  * TalentVersion and returning to the Published version. Pattern matches the
  * sibling submit route exactly (app/api/admin/talent/[id]/proposals/
  * [versionId]/submit/route.js): API Route (not a Server Action), auth via
- * requireOwnerOrEmployee() as defense in depth alongside middleware.js,
+ * requireOwnerOrEmployee() as defense in depth alongside proxy.js,
  * route does nothing but param-validate then call the engine — no
  * repository/Prisma import here, and the actual DRAFT-only guard is
  * enforced by proposalService.discard() itself, not by this route.

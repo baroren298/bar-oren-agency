@@ -7,7 +7,7 @@
  * TalentVersion to PROPOSED. Pattern matches the sibling PATCH route exactly
  * (app/api/admin/talent/[id]/proposals/[versionId]/route.js): API Route (not
  * a Server Action), auth via requireUser() as defense in depth alongside
- * middleware.js, route does nothing but param-validate then call the engine
+ * proxy.js, route does nothing but param-validate then call the engine
  * — no repository/Prisma import here, and the actual DRAFT-only guard is
  * enforced by proposalService.submit() itself, not by this route.
  *

@@ -2,7 +2,7 @@
  * GET/POST /api/admin/users — Sprint 3: Users UI.
  *
  * Owner-only user list/create. requireOwner(request) is the first,
- * independent auth gate (in addition to middleware.js's existing
+ * independent auth gate (in addition to proxy.js's existing
  * /api/admin/* session check); userService's own assertActorIsOwner is the
  * second — same defense-in-depth pattern as the existing talent
  * approve/reject routes (see app/api/admin/talent/[id]/proposals/

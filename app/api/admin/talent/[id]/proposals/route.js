@@ -8,7 +8,7 @@
  *
  * Pattern: API Route, not a Server Action — matches the rest of this
  * codebase's admin mutations (app/api/admin/auth/login|logout/route.js),
- * which already documented that choice explicitly. middleware.js already
+ * which already documented that choice explicitly. proxy.js already
  * 401s any unauthenticated request under /api/admin/* before this file
  * runs; requireUser() below re-derives the session from the same cookie
  * independently anyway, as defense in depth (the same pattern

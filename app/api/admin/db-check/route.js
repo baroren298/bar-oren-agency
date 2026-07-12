@@ -6,7 +6,7 @@
  * singleton (lib/admin/db.js) — no new client instance, no schema/table
  * dependency (`SELECT 1`), no data read or written.
  *
- * Auth: middleware.js already 401s any unauthenticated request under
+ * Auth: proxy.js already 401s any unauthenticated request under
  * /api/admin/* before this file runs; requireOwner() re-derives the
  * session independently as defense in depth, matching the pattern used by
  * the other admin routes (e.g. app/api/admin/talent/[id]/proposals/route.js).

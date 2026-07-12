@@ -2,7 +2,7 @@
  * POST /api/admin/assets/upload — Gallery Upload Sprint 1
  * (GALLERY_UPLOAD_SPRINT_1_ARCHITECTURE.md §5/§8). Same pattern as
  * app/api/admin/talent/[id]/gallery/route.js: API Route, auth via
- * requireUser() as defense in depth alongside middleware.js, route does
+ * requireUser() as defense in depth alongside proxy.js, route does
  * nothing but parse the multipart body then call the engine — no
  * repository/Prisma import here, only `assetService`.
  *

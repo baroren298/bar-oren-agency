@@ -5,7 +5,7 @@
  * Explicit route handler (not a Server Action, per the approved Phase 2
  * plan). Runs in the Node.js runtime (the App Router default for route
  * handlers), which is required here since bcryptjs password comparison
- * happens in this file — middleware.js never does this, since it runs on
+ * happens in this file — proxy.js never does this, since it runs on
  * the Edge runtime and only verifies the already-issued session JWT.
  *
  * Outcomes: success, 401 (bad credentials — email/password), 429 (rate

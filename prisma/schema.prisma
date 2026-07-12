@@ -4,16 +4,16 @@
 // (approval model) + Section 5 (soft delete) + Section 6 (optimistic
 // locking) + Section 4.1 (audit log).
 //
-// PHASE 1 SCOPE: this schema defines the data model only. Nothing in this
-// repo yet connects to a real database, runs a migration, or is wired into
-// any route. The public site (`data/*.js`, app/[locale]/**) is completely
-// unaffected by this file's existence — see ADMIN_PANEL_PLAN.md Section 1.
+// STATUS (updated, Infrastructure Cleanup sprint): the database phase is
+// live — a Neon Postgres instance (separate development and production
+// branches) backs this schema, migrations exist under prisma/migrations/,
+// and the admin routes use the client via lib/admin/db.js. The public site
+// (`data/*.js`, app/[locale]/**) still does not read from the database.
 //
-// To actually use this schema later (not part of Phase 1):
-//   1. `npm install` (adds prisma + @prisma/client — already declared in
-//      package.json, not yet installed in this environment).
-//   2. Set a real DATABASE_URL in .env.local (see .env.local.example).
-//   3. `npm run prisma:migrate:dev` to create the first migration.
+// CLI configuration lives in prisma.config.ts (replaces the deprecated
+// package.json#prisma block). Connection env vars (DATABASE_URL pooled,
+// DIRECT_URL direct — see the datasource block below) are documented in
+// .env.local.example and read by the CLI from ./.env.
 // ─────────────────────────────────────────────────────────────────────────
 
 generator client {
@@ -22,7 +22,21 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+
+  // Neon connection architecture (Infrastructure Cleanup sprint):
+  //   - DATABASE_URL — the POOLED endpoint (host contains "-pooler").
+  //     Used by the generated @prisma/client at runtime (lib/admin/db.js),
+  //     where serverless-friendly pooling is what we want.
+  //   - DIRECT_URL — the DIRECT (non-pooled) endpoint for the SAME Neon
+  //     branch. Used exclusively by Prisma CLI commands (migrate dev /
+  //     deploy / status, db pull, etc.), which require a direct connection —
+  //     schema changes and advisory locks misbehave through a pooler.
+  // `directUrl` is CLI-only: the runtime client never reads DIRECT_URL, so
+  // production runtime behavior is unchanged by its addition. Both vars are
+  // documented in .env.local.example; the CLI reads them from ./.env (see
+  // prisma.config.ts).
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────────────────────────────────────────────────

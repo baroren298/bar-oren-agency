@@ -24,7 +24,7 @@ import styles from './[locale]/not-found.module.css';
  * It also receives no params and isn't rendered inside the Next.js router
  * tree, so usePathname() isn't available either (and this must be a
  * Server Component to support generateMetadata, ruling out client hooks
- * anyway). middleware.js stamps the original request pathname onto an
+ * anyway). proxy.js stamps the original request pathname onto an
  * "x-pathname" header specifically so this component can recover it via
  * headers() and pick the right locale/copy — same convention as
  * getLocaleFromPathname() already uses elsewhere (checks for an "/en"

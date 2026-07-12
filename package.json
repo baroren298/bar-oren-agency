@@ -9,6 +9,8 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:status": "prisma migrate status",
     "admin:create-owner": "node scripts/create-owner.mjs",
     "admin:seed-dev-talent": "node scripts/seed-dev-talent.mjs",
     "admin:migrate-day-import": "node scripts/migrate-day-import.mjs",
@@ -32,8 +34,5 @@
     "eslint-config-next": "^16.2.7",
     "prisma": "^6.19.3",
     "vitest": "^3.0.0"
-  },
-  "prisma": {
-    "schema": "prisma/schema.prisma"
   }
 }

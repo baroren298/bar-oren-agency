@@ -5,7 +5,7 @@
  * כטיוטה" button. Pattern matches the sibling TalentVersion Save Draft
  * route (app/api/admin/talent/[id]/proposals/[versionId]/route.js) as
  * closely as the shape allows: API Route (not a Server Action), auth via
- * requireUser() as defense in depth alongside middleware.js, route does
+ * requireUser() as defense in depth alongside proxy.js, route does
  * nothing but param/body-validate then call the engine — no
  * repository/Prisma import here, only `talentAdapter` + the new
  * `socialsService`.

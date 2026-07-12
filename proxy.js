@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import { SESSION_COOKIE_NAME, verifySession } from '@/lib/admin/auth/session';
 
 /*
+ * proxy.js — Next.js 16 renamed the root `middleware` file convention to
+ * `proxy` (the old name triggered a build-time deprecation warning:
+ * "The middleware file convention is deprecated. Please use proxy
+ * instead." — https://nextjs.org/docs/messages/middleware-to-proxy).
+ * Renamed here in the Infrastructure Cleanup sprint: file middleware.js →
+ * proxy.js, exported function `middleware` → `proxy`. The body, matcher,
+ * and runtime behavior are byte-for-byte identical to the old file.
+ */
+
+/*
  * app/global-not-found.jsx is a Server Component with no props and no
  * access to usePathname()/params — Next's not-found.js conventions don't
  * pass those in. The standard way to make the originally-requested
@@ -9,8 +19,8 @@ import { SESSION_COOKIE_NAME, verifySession } from '@/lib/admin/auth/session';
  * header here, then read it back via headers() in that component.
  *
  * Deliberately reads request.nextUrl.pathname BEFORE the next.config.mjs
- * rewrites are applied (middleware runs ahead of rewrites), so this is
- * the original, public, browser-visible URL — e.g. "/not-existing-page"
+ * rewrites are applied (proxy/middleware runs ahead of rewrites), so this
+ * is the original, public, browser-visible URL — e.g. "/not-existing-page"
  * rather than the internal "/he/not-existing-page". That matches the
  * convention already used by getLocaleFromPathname() in lib/i18n.js
  * (checks for an "/en" prefix on the public URL).
@@ -21,7 +31,7 @@ import { SESSION_COOKIE_NAME, verifySession } from '@/lib/admin/auth/session';
 
 /*
  * Admin auth gating — Phase 2: Auth/Security (ADMIN_PANEL_PLAN.md Section
- * 11). Runs on the Edge runtime (Next's middleware default), so it only
+ * 11). Runs on the Edge runtime (the default for this file), so it only
  * verifies the already-signed session JWT via `jose` — it never touches
  * bcryptjs or the database. That's also why this only proves "is logged
  * in with a validly signed token," not full per-action role checks; those
@@ -46,7 +56,7 @@ function isAdminPath(pathname) {
   return pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
 }
 
-export async function middleware(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
 
   const requestHeaders = new Headers(request.headers);

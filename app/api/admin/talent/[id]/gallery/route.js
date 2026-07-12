@@ -3,7 +3,7 @@
  *
  * Sibling to app/api/admin/talent/[id]/socials/route.js — same pattern:
  * API Route (not a Server Action), auth via requireUser() as defense in
- * depth alongside middleware.js, route does nothing but param/body-validate
+ * depth alongside proxy.js, route does nothing but param/body-validate
  * then call the engine — no repository/Prisma import here, only
  * `talentAdapter` + `galleryService`.
  *

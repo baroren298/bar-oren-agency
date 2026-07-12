@@ -4,8 +4,8 @@
  * Clears the session cookie. POST (not GET) so logout can't be triggered
  * as a side effect of a prefetch or a link being crawled. No auth check
  * required to call this — logging out an already-logged-out session is a
- * harmless no-op, and middleware.js allow-lists this path for exactly
- * this reason (see middleware.js).
+ * harmless no-op, and proxy.js allow-lists this path for exactly
+ * this reason (see proxy.js).
  */
 
 import { NextResponse } from 'next/server';

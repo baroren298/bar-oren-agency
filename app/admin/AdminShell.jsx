@@ -10,8 +10,8 @@
  * completely unaffected.
  *
  * Purely presentational: no auth check here. Every page that uses this
- * shell is already gated by middleware.js's existing /admin/* session
- * check (see middleware.js's header comment) — this component doesn't
+ * shell is already gated by proxy.js's existing /admin/* session
+ * check (see proxy.js's header comment) — this component doesn't
  * touch or duplicate that logic.
  *
  * Server Component. The only client pieces are AdminNavLinks (needs
@@ -25,7 +25,7 @@
  * Same `getSessionUser({ cookies: await cookies() })` pattern every other
  * role-aware Server Component page already uses (see
  * app/admin/talent/[id]/page.jsx). A caller with no session (shouldn't
- * happen here — middleware.js already redirects unauthenticated requests
+ * happen here — proxy.js already redirects unauthenticated requests
  * away from every /admin/* page before this ever renders) just gets
  * role: null, which AdminNavLinks treats as "not Owner" — the nav item is
  * hidden, not a crash.

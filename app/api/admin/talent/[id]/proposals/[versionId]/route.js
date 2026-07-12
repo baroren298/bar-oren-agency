@@ -5,7 +5,7 @@
  * fields in place. Pattern matches the sibling POST route
  * (app/api/admin/talent/[id]/proposals/route.js) exactly: API Route (not a
  * Server Action), auth via requireUser() as defense in depth alongside
- * middleware.js, route does nothing but param-validate then call the engine
+ * proxy.js, route does nothing but param-validate then call the engine
  * — no repository/Prisma import here.
  *
  * Extended by the "Editable PROPOSED" sprint: this route now also accepts a
