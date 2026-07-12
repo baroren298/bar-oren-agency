@@ -245,3 +245,70 @@ describe('Action bar wiring — same workflow as every other Talent field', () =
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
+
+/*
+ * SEO effective-value presentation sprint — the read-only rows always show
+ * the effective public value with a small source badge ("אוטומטי" for a
+ * smart-default fallback, "מותאם אישית" for a stored value), and the old
+ * error-looking "לא קיים — ברירת מחדל אוטומטית: ..." wording is gone.
+ */
+describe('SEO effective values — automatic vs custom labels', () => {
+  it('read-only: empty fields show the effective automatic value with an "אוטומטי" badge', () => {
+    const html = renderToString(
+      h(SeoEditor, { talentId: 't-1', publishedSlug: 'noa-kirel', publishedSeo: {}, defaults: DEFAULTS })
+    );
+    // Effective values, exactly what the public page renders.
+    expect(html).toContain(DEFAULTS.name); // SEO title fallback
+    expect(html).toContain(`${DEFAULTS.name} | Bar Oren`); // OG title fallback
+    expect(html).toContain(DEFAULTS.profileImage); // OG image fallback
+    expect(html).toContain(he.seo.effective.automatic);
+    // No custom values stored → the custom badge never renders.
+    expect(html).not.toContain(he.seo.effective.custom);
+    // The old wording must be gone — it read like an error.
+    expect(html).not.toContain('לא קיים');
+    expect(html).not.toContain('ברירת מחדל אוטומטית');
+  });
+
+  it('read-only: a stored custom value shows with a "מותאם אישית" badge, other rows stay automatic', () => {
+    const html = renderToString(
+      h(SeoEditor, {
+        talentId: 't-1',
+        publishedSlug: 'michal-ben-david',
+        publishedSeo: { seoTitle: 'מיכל בן דוד | יוצרת תוכן' },
+        defaults: { ...DEFAULTS, name: 'מיכל בן דוד' },
+      })
+    );
+    expect(html).toContain('מיכל בן דוד | יוצרת תוכן');
+    expect(html).toContain(he.seo.effective.custom);
+    // The untouched fields (description, canonical, OG…) still show as automatic.
+    expect(html).toContain(he.seo.effective.automatic);
+    expect(html).not.toContain('לא קיים');
+  });
+
+  it('read-only: the canonical row shows the actual public URL as its automatic value', () => {
+    const html = renderToString(
+      h(SeoEditor, { talentId: 't-1', publishedSlug: 'noa-kirel', publishedSeo: {}, defaults: DEFAULTS })
+    );
+    expect(html).toContain('https://baroren.co.il/talent/noa-kirel');
+  });
+
+  it('editing: an empty field placeholder reads "אוטומטי: <source>" — clear, never broken-sounding', () => {
+    const html = renderToString(
+      h(SeoEditor, {
+        talentId: 't-1',
+        versionId: 'v-1',
+        versionStatus: VERSION_STATUS.DRAFT,
+        role: ROLE.EMPLOYEE,
+        globalEditing: true,
+        publishedSlug: 'noa-kirel',
+        draftSlug: 'noa-kirel',
+        publishedSeo: {},
+        draftSeo: {},
+        defaults: DEFAULTS,
+      })
+    );
+    expect(html).toContain(`${he.seo.effective.automatic}: ${DEFAULTS.name}`);
+    expect(html).not.toContain('ברירת מחדל אוטומטית');
+    expect(html).not.toContain('לא קיים');
+  });
+});

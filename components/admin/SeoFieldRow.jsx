@@ -16,10 +16,23 @@
  *     the RTL admin.
  *   - `defaultHint` (string, optional): what the public site falls back to
  *     when this field is empty (the sprint's smart defaults — talent name /
- *     bio / profile image / public URL). Shown instead of the bare "לא
- *     קיים" in read-only mode, and as the input's placeholder while
- *     editing, so an empty field honestly reads as "using the automatic
- *     value."
+ *     bio / profile image / public URL). Used as the input's placeholder
+ *     while editing, so an empty field honestly reads as "using the
+ *     automatic value."
+ *
+ * SEO effective-value presentation sprint — the read-only view no longer
+ * renders "לא קיים — ברירת מחדל אוטומטית: ..." (technically true, but it
+ * read like an error). Instead it ALWAYS shows the effective value the
+ * public page will actually render, plus a small status badge:
+ *   - "מותאם אישית" when a stored custom value exists (the value shown is
+ *     the stored one), or
+ *   - "אוטומטי" when the field is empty and the smart default applies (the
+ *     value shown is `fallbackValue` — resolved by SeoEditor through the
+ *     exact same fallback chain lib/public/seo.js applies on the live
+ *     page).
+ * When there is neither a stored value nor a fallback, a calm "—" renders
+ * with no badge. The fallback logic itself is untouched — this is purely
+ * presentation.
  *
  * The `maxLength` character count shown here is a *visual guide only* —
  * never an enforced limit.
@@ -30,8 +43,10 @@
  *   - value (string|boolean|string[]|null)
  *   - readOnly (boolean, optional, default false)
  *   - onChange (function, optional) — ignored when readOnly
- *   - defaultHint (string, optional) — smart-default explanation for an
- *     empty value
+ *   - defaultHint (string, optional) — smart-default source description,
+ *     used as the editing placeholder for an empty value
+ *   - fallbackValue (string, optional) — the actual effective value the
+ *     public page renders when this field is empty (read-only display)
  */
 
 import styles from "./SeoFieldRow.module.css";
@@ -47,22 +62,50 @@ function formatReadOnlyValue(field, value) {
   return value || null;
 }
 
-export default function SeoFieldRow({ field, value, readOnly = false, onChange = () => {}, defaultHint }) {
+export default function SeoFieldRow({
+  field,
+  value,
+  readOnly = false,
+  onChange = () => {},
+  defaultHint,
+  fallbackValue,
+}) {
   const { key, label, type, helper, maxLength, dir } = field;
 
   if (readOnly) {
-    const displayValue = formatReadOnlyValue(field, value);
-    const emptyText = defaultHint
-      ? `${he.seo.notSet} — ${he.seo.defaults.usingDefault}: ${defaultHint}`
-      : he.seo.notSet;
+    const customValue = formatReadOnlyValue(field, value);
+
+    // Booleans have no smart default — render the plain כן/לא value with
+    // no badge, exactly as before.
+    if (type === "boolean") {
+      return (
+        <div className={styles.row}>
+          <span className={styles.label}>{label}</span>
+          <span className={styles.readOnlyValue}>{customValue}</span>
+        </div>
+      );
+    }
+
+    // Effective value first: the stored custom value when one exists,
+    // otherwise the automatic fallback the public page actually renders.
+    const effectiveValue = customValue || (fallbackValue ? String(fallbackValue) : null);
+    const badge = customValue
+      ? { label: he.seo.effective.custom, className: styles.badgeCustom }
+      : effectiveValue
+        ? { label: he.seo.effective.automatic, className: styles.badgeAuto }
+        : null;
+
     return (
       <div className={styles.row}>
         <span className={styles.label}>{label}</span>
-        <span
-          className={displayValue ? styles.readOnlyValue : styles.emptyValue}
-          dir={displayValue && dir ? dir : undefined}
-        >
-          {displayValue || emptyText}
+        <span className={styles.valueCell}>
+          <span
+            className={effectiveValue ? styles.readOnlyValue : styles.emptyValue}
+            dir={effectiveValue && dir ? dir : undefined}
+          >
+            {effectiveValue || he.seo.effective.none}
+          </span>
+          {badge ? <span className={badge.className}>{badge.label}</span> : null}
         </span>
       </div>
     );
@@ -104,7 +147,10 @@ export default function SeoFieldRow({ field, value, readOnly = false, onChange =
     }
   }
 
-  const placeholder = defaultHint ? `${he.seo.defaults.usingDefault}: ${defaultHint}` : undefined;
+  // Editing mode: an empty input still honestly reads as "the automatic
+  // value applies" via the placeholder — without any "broken"-sounding
+  // wording.
+  const placeholder = defaultHint ? `${he.seo.effective.automatic}: ${defaultHint}` : undefined;
 
   return (
     <div className={styles.rowEditable}>

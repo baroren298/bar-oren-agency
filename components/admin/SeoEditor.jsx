@@ -366,6 +366,23 @@ export default function SeoEditor({
   const effectiveOgImage = displayValues.seoOgImageUrl?.trim() || defaults.profileImage || null;
   const previewUrl = publicUrlFor(displayValues.slug || publishedSlug);
 
+  // SEO effective-value presentation sprint — per-field automatic fallback
+  // values for the read-only rows: the exact value the public page renders
+  // when the field is empty (same chain as the effective* values above /
+  // lib/public/seo.js), so "empty" displays as the real automatic value
+  // with an "אוטומטי" badge instead of the old "לא קיים" wording.
+  // Presentation only — no fallback logic changed.
+  const fallbackValues = {
+    seoTitle: defaults.name || null,
+    seoDescription: defaults.bio || null,
+    seoCanonicalUrl: publicUrlFor(displayValues.slug || publishedSlug),
+    seoOgTitle: defaults.name ? `${defaults.name} | Bar Oren` : effectiveTitle,
+    // OG description falls back to the effective description (custom SEO
+    // description if one exists, else the bio) — same as the public chain.
+    seoOgDescription: displayValues.seoDescription?.trim() || defaults.bio || null,
+    seoOgImageUrl: defaults.profileImage || null,
+  };
+
   const slugChanged = isEditing && proposedValues.slug !== (publishedSlug ?? "");
 
   const saveDraftDisabled = !canPersist || !isDirty || busy || !slugValidation.valid;
@@ -513,6 +530,7 @@ export default function SeoEditor({
                     readOnly={!isEditing}
                     onChange={(value) => handleFieldChange(field.key, value)}
                     defaultHint={resolveDefaultHint(field.defaultKey, defaults, displayValues.slug || publishedSlug)}
+                    fallbackValue={fallbackValues[field.key] ?? null}
                   />
                 ))}
               </div>

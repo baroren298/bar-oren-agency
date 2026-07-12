@@ -54,7 +54,7 @@
  * Still zero writes, still `force-dynamic`.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
@@ -96,6 +96,7 @@ import {
   buildActorDisplayMap,
 } from '@/lib/admin/talent-history';
 import { he } from '@/lib/admin/i18n/he';
+import { resolveAdminTalentRoute } from '@/lib/admin/talent-route';
 import { buildGalleryImages } from '@/lib/admin/gallery-images';
 import { isGlobalEditingStatus } from '@/lib/admin/edit-mode';
 import { VERSION_STATUS, TALENT_VISIBILITY, ENTITY_TYPE } from '@/lib/admin/constants/enums';
@@ -778,12 +779,31 @@ export default async function AdminTalentDetailPage({ params }) {
     );
   }
 
-  const { id } = await params;
+  /*
+   * Clean Admin Talent URL sprint — the dynamic segment now accepts either
+   * the internal database ID (legacy links, backwards-compatible) or the
+   * current published slug (the canonical form). Resolution is exact-ID
+   * first, then slug (see lib/admin/talent-route.js); a legacy ID URL is
+   * redirected to /admin/talent/<current-published-slug> before any data
+   * loading. The folder deliberately stays [id] — only interpretation of
+   * the parameter widened. Everything below keeps using `talent.id`
+   * (`id` alias) for data reads and component props, so every API call and
+   * authorization check is unchanged.
+   */
+  const { id: routeParam } = await params;
 
-  const talent = await talentAdapter.getParent(id);
+  const { talent, redirectTo } = await resolveAdminTalentRoute(routeParam, {
+    getParent: (value) => talentAdapter.getParent(value),
+    getParentBySlug: (value) => talentAdapter.getParentBySlug(value),
+  });
   if (!talent) {
     notFound();
   }
+  if (redirectTo) {
+    redirect(redirectTo);
+  }
+
+  const id = talent.id;
 
   // Owner Direct Publish UX sprint — the one place this page reads the
   // session, mirroring every other read here ("pure read, nothing written").

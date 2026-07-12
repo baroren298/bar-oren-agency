@@ -44,6 +44,45 @@
   color: var(--admin-text-muted);
 }
 
+/*
+ * SEO effective-value presentation sprint — value + source badge on one
+ * read-only row. The badge hugs the value's inline end (left side in this
+ * RTL layout) and aligns to the first line even for a multi-line value
+ * like a bio-based description.
+ */
+.valueCell {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.badgeAuto,
+.badgeCustom {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Automatic fallback — deliberately subtle: informational, never an error. */
+.badgeAuto {
+  color: var(--admin-text-muted);
+  background: transparent;
+  border: 1px solid var(--admin-border);
+}
+
+/* Stored custom value — slightly more present, still calm. */
+.badgeCustom {
+  color: var(--admin-accent);
+  background: var(--admin-accent-subtle);
+  border: 1px solid transparent;
+}
+
 /* ---------- Proposed — editable ---------- */
 
 .rowEditable {
