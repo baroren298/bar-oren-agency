@@ -104,6 +104,21 @@
   font-weight: 600;
 }
 
+/* Administration Sprint 1 — non-interactive section heading inside the nav
+   (currently only the Owner-only "Administration" group; see
+   AdminNavLinks.jsx). Padding matches .navLink so the heading aligns with
+   the link text under it. */
+.navSectionLabel {
+  display: block;
+  margin-block-start: 0.9rem;
+  padding: 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--admin-text-secondary);
+  opacity: 0.75;
+}
+
 /* ── Header ──────────────────────────────────────────────────────────── */
 
 .header {
@@ -176,6 +191,13 @@
     background: var(--admin-surface);
     border-bottom: 1px solid var(--admin-border);
     overflow-x: auto;
+  }
+
+  /* The mobile nav is a horizontal scroll row — a section heading has no
+     sensible place in it, so it's hidden there. The section's *links* still
+     render, so an Owner loses nothing on mobile. */
+  .mobileNav .navSectionLabel {
+    display: none;
   }
 
   .header {

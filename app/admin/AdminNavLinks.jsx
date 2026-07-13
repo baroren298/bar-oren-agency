@@ -16,6 +16,17 @@
  * underlying API route/service re-checking OWNER independently (see
  * app/admin/users/page.jsx and lib/admin/userService.js). `role` is passed
  * down from AdminShell.jsx, which derives it once from the session cookie.
+ *
+ * Administration Sprint 1 moved that Users item under an "Administration"
+ * nav *section* (a non-interactive heading + its links), matching the
+ * frozen Administration architecture (Users / Sessions / Audit Log, with
+ * Roles & Permissions / Security Policies / Platform reserved). The whole
+ * section — heading included — renders only for ROLE.OWNER; the visibility
+ * rules and every deeper authorization layer are unchanged. Future
+ * Administration modules add an entry to ADMINISTRATION_NAV_ITEMS and
+ * nothing else here. URLs deliberately stay flat (/admin/users, not
+ * /admin/administration/users) — the grouping is presentation-only; see
+ * ADMINISTRATION_MIGRATION_PLAN.md ("Accepted deviations").
  */
 
 import { usePathname } from "next/navigation";
@@ -29,28 +40,39 @@ const BASE_NAV_ITEMS = [
   { href: "/admin/talent", label: he.nav.talent },
 ];
 
-const OWNER_ONLY_NAV_ITEMS = [{ href: "/admin/users", label: he.nav.users }];
+// Owner-only "Administration" section (frozen architecture). Sessions and
+// Audit Log items will be appended here by their own sprints — per the
+// approved Engineering Plan, no placeholder links for unbuilt modules.
+const ADMINISTRATION_NAV_ITEMS = [{ href: "/admin/users", label: he.nav.users }];
 
 export default function AdminNavLinks({ className, role }) {
   const pathname = usePathname();
-  const navItems = role === ROLE.OWNER ? [...BASE_NAV_ITEMS, ...OWNER_ONLY_NAV_ITEMS] : BASE_NAV_ITEMS;
+
+  function renderLink(item) {
+    const isActive =
+      item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+
+    return (
+      <a
+        key={item.href}
+        href={item.href}
+        className={isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink}
+      >
+        {item.label}
+      </a>
+    );
+  }
 
   return (
     <nav className={className}>
-      {navItems.map((item) => {
-        const isActive =
-          item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+      {BASE_NAV_ITEMS.map(renderLink)}
 
-        return (
-          <a
-            key={item.href}
-            href={item.href}
-            className={isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink}
-          >
-            {item.label}
-          </a>
-        );
-      })}
+      {role === ROLE.OWNER ? (
+        <>
+          <span className={styles.navSectionLabel}>{he.nav.administration}</span>
+          {ADMINISTRATION_NAV_ITEMS.map(renderLink)}
+        </>
+      ) : null}
     </nav>
   );
 }
