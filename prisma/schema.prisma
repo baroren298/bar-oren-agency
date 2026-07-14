@@ -109,6 +109,14 @@ enum TalentVisibility {
 /// Audit log action types (Section 4.1). LOGIN/LOGIN_FAILED are included
 /// now even though auth itself ships in Phase 2, so the AuditLog shape
 /// doesn't need to change when auth lands.
+///
+/// ACTIVATED / DEACTIVATED / PASSWORD_RESET — Administration Sprint 2a
+/// (Audit Log): action semantics for user-management audit rows.
+/// RESTORED/ARCHIVED are entity-lifecycle concepts and are deliberately
+/// not reused for account enable/disable. Additive `ALTER TYPE ... ADD
+/// VALUE` migration (20260714120000_audit_user_entity_and_action_types);
+/// no existing row is affected. Nothing emits these yet — user-mutation
+/// event emission is Sprint 2b.
 enum ActionType {
   CREATED
   UPDATED
@@ -120,12 +128,20 @@ enum ActionType {
   ARCHIVED
   LOGIN
   LOGIN_FAILED
+  ACTIVATED
+  DEACTIVATED
+  PASSWORD_RESET
 }
 
 /// Polymorphic discriminator used by AuditLog, SEO, and the generic
 /// Entity/EntityVersion pair to identify what kind of content a row is
 /// about without a hard foreign key (some of these — e.g. static pages —
 /// have no dedicated table of their own).
+///
+/// USER — Administration Sprint 2a (Audit Log): the target discriminator
+/// for user-management events/audit rows (Event.entityId / AuditLog.
+/// entityId then hold the TARGET user's id; the acting Owner is the
+/// actor). Same additive migration as the ActionType additions above.
 enum EntityType {
   TALENT
   SITE_CONTENT
@@ -134,6 +150,7 @@ enum EntityType {
   COLLABORATIONS
   AGENCY_SOCIAL
   IMAGE_ASSET
+  USER
 }
 
 /// Talent social platforms. Originally matched only the fixed set used in
