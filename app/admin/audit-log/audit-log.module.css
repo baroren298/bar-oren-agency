@@ -25,6 +25,17 @@
   composes: tokens from "../../../components/admin/admin-tokens.module.css";
 }
 
+/* Final-QA polish: the admin shell caps content at 960px for every page;
+   the audit narrative benefits from a bit more room on desktop. Equal
+   negative inline margins let THIS page's card grow to ~1088px (+13%)
+   while staying centered — page-scoped, no shared-shell change, and gated
+   to wide viewports so tablets/mobile are untouched. */
+@media (min-width: 1240px) {
+  .tokens {
+    margin-inline: -64px;
+  }
+}
+
 .list {
   list-style: none;
   margin: 0;
@@ -32,7 +43,9 @@
 }
 
 .row {
-  padding: 0.85rem 0.25rem;
+  /* Final-QA polish: +0.25rem per side (~8px per row) of breathing room;
+     divider and compact register unchanged. */
+  padding: 1.1rem 0.25rem;
   border-bottom: 1px solid var(--admin-border);
 }
 
@@ -43,7 +56,10 @@
 .rowMain {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  /* Final-QA polish: tighter icon↔narrative gap so the icon reads as part
+     of the row content, not detached at the inline-start edge (RTL-safe —
+     flex gap, no left/right). */
+  gap: 0.55rem;
 }
 
 /* Decorative event icon — a quiet circular chip so rows scan easily
@@ -111,10 +127,12 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.15rem 0.6rem;
+  /* Final-QA polish: a touch more horizontal padding + a modestly stronger
+     weight; colors themselves unchanged (restrained, label always shown). */
+  padding: 0.15rem 0.75rem;
   border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.4;
   white-space: nowrap;
 }
@@ -165,22 +183,28 @@
 
 /* ---- Details toggle + chevron ---- */
 
+/* Final-QA polish: reads as a proper control now — slightly larger hit
+   area, a hairline border that firms up on hover — but still quiet
+   (no fill, no shadow). Same native button, aria-expanded, and
+   focus-visible behavior. */
 .detailsToggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
   background: none;
-  border: none;
-  padding: 0.15rem 0.3rem;
+  border: 1px solid transparent;
+  padding: 0.3rem 0.6rem;
   border-radius: var(--admin-radius);
   color: var(--admin-accent-strong);
   font-size: 0.8rem;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .detailsToggle:hover {
   color: var(--admin-text-primary);
   background: var(--admin-accent-subtle);
+  border-color: var(--admin-border);
 }
 
 .detailsToggle:focus-visible {
@@ -189,8 +213,11 @@
 }
 
 .chevron {
-  width: 0.75rem;
-  height: 0.75rem;
+  /* Final-QA polish: a bit larger + heavier stroke (CSS wins over the
+     SVG's stroke-width attribute) so the open/closed cue is legible. */
+  width: 0.85rem;
+  height: 0.85rem;
+  stroke-width: 2;
   transition: transform 0.15s ease;
 }
 
@@ -205,7 +232,9 @@
 
 .detailsPanel {
   margin: 0.6rem 0 0.15rem;
-  margin-inline-start: 2.65rem;
+  /* icon chip (1.9rem) + icon↔text gap (0.55rem) — keeps the panel
+     aligned with the narrative column. */
+  margin-inline-start: 2.45rem;
   padding: 0.7rem 0.9rem;
   background: var(--admin-bg);
   border: 1px solid var(--admin-border);
@@ -258,7 +287,7 @@
   /* Badge + toggle drop below the narrative, aligned with the text column. */
   .rowSide {
     flex-basis: 100%;
-    margin-inline-start: 2.65rem;
+    margin-inline-start: 2.45rem;
     margin-block-start: 0.15rem;
   }
 
