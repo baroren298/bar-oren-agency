@@ -1,0 +1,272 @@
+/*
+ * /admin/audit-log styles — Administration Sprint 2c (Audit Log module),
+ * revised by the Sprint 2c UI-polish pass (presentation only).
+ *
+ * Composes the shared components/admin/admin-tokens.module.css palette,
+ * same as every other admin page module (e.g. app/admin/users/
+ * users.module.css). Card/SecondaryButton/EmptyState supply the surfaces;
+ * this file adds the narrative-list layout plus the page-local action
+ * badges (audit-log-display.js's buildActionBadgeVariant vocabulary —
+ * see AuditLogPageClient.jsx's header for why these aren't StatusBadge).
+ *
+ * Badge colors are restrained derivatives of the existing admin status
+ * palette: the four --admin-status-* pairs are reused directly where the
+ * meaning matches, and the three audit-specific variants (created /
+ * affirmed / published) stay in the same soft-background + deep-text
+ * register so nothing reads brighter than the rest of the admin UI. Text
+ * label always renders — color never carries the meaning alone.
+ *
+ * RTL: the layout uses logical properties/flexbox only (no left/right),
+ * so the admin shell's dir="rtl" flows it correctly; the chevron rotation
+ * is direction-agnostic (down → up).
+ */
+
+.tokens {
+  composes: tokens from "../../../components/admin/admin-tokens.module.css";
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  padding: 0.85rem 0.25rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowMain {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+/* Decorative event icon — a quiet circular chip so rows scan easily
+   without the icon competing with the narrative text. */
+.eventIcon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-block-start: 0.05rem;
+  border-radius: 50%;
+  background: var(--admin-accent-subtle);
+  color: var(--admin-text-secondary);
+}
+
+.eventIcon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.rowText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.narrative {
+  margin: 0;
+  color: var(--admin-text-primary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.timestamp {
+  color: var(--admin-text-muted);
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+/* Exact "20:09 · 15.07.2026" shown as secondary text when the primary
+   label is relative ("לפני שעה"). Hidden on narrow screens — the exact
+   form stays available via the title attribute. */
+.timestampExact {
+  color: var(--admin-text-muted);
+  opacity: 0.75;
+}
+
+.rowSide {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ---- Action badges (page-local; variant vocabulary from
+   audit-log-display.js) — soft background + deep text, mirroring
+   StatusBadge's register so they read as the same design system. ---- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* created — green (fresh, additive) */
+.badge_created {
+  background: var(--admin-status-success-bg);
+  color: var(--admin-status-success-text);
+}
+
+/* affirmed (approved/activated/restored) — darker green: same hue family
+   as created, deeper text + a hairline border to read as "stronger". */
+.badge_affirmed {
+  background: var(--admin-status-success-bg);
+  color: #33502b;
+  box-shadow: inset 0 0 0 1px #a9c39e;
+}
+
+/* updated/proposed — blue */
+.badge_updated {
+  background: var(--admin-status-info-bg);
+  color: var(--admin-status-info-text);
+}
+
+/* negative (deactivated/rejected/deleted/login-failed) — muted red */
+.badge_negative {
+  background: var(--admin-status-danger-bg);
+  color: var(--admin-status-danger-text);
+}
+
+/* security (password reset) — orange */
+.badge_security {
+  background: var(--admin-status-warning-bg);
+  color: #915617;
+}
+
+/* published (future ActionType) — muted purple in the same soft register */
+.badge_published {
+  background: #ece8f1;
+  color: #5a4a75;
+}
+
+/* unknown/neutral — gray */
+.badge_neutral {
+  background: var(--admin-status-neutral-bg);
+  color: var(--admin-status-neutral-text);
+}
+
+/* ---- Details toggle + chevron ---- */
+
+.detailsToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  padding: 0.15rem 0.3rem;
+  border-radius: var(--admin-radius);
+  color: var(--admin-accent-strong);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.detailsToggle:hover {
+  color: var(--admin-text-primary);
+  background: var(--admin-accent-subtle);
+}
+
+.detailsToggle:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 1px;
+}
+
+.chevron {
+  width: 0.75rem;
+  height: 0.75rem;
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ---- Expanded allowlisted-details panel — quiet, clearly subordinate to
+   the narrative row (sprint principle: narrative is the primary view).
+   Indented to align with the text column (icon width + gap) and marked
+   with a soft inline-start accent border (logical property — RTL-safe). ---- */
+
+.detailsPanel {
+  margin: 0.6rem 0 0.15rem;
+  margin-inline-start: 2.65rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--admin-bg);
+  border: 1px solid var(--admin-border);
+  border-inline-start: 3px solid var(--admin-accent);
+  border-radius: var(--admin-radius);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.detailRow {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.detailLabel {
+  margin: 0;
+  color: var(--admin-text-secondary);
+  min-width: 6rem;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  margin: 0;
+  color: var(--admin-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.loadError {
+  composes: tokens;
+  margin: 1rem 0 0;
+  color: var(--admin-status-danger-text);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.loadMoreRow {
+  composes: tokens;
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+  .rowMain {
+    flex-wrap: wrap;
+  }
+
+  /* Badge + toggle drop below the narrative, aligned with the text column. */
+  .rowSide {
+    flex-basis: 100%;
+    margin-inline-start: 2.65rem;
+    margin-block-start: 0.15rem;
+  }
+
+  .timestampExact {
+    display: none; /* exact form remains in the title attribute */
+  }
+
+  .detailsPanel {
+    margin-inline-start: 0;
+  }
+}

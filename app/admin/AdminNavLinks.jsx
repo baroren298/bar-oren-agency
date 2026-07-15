@@ -40,10 +40,14 @@ const BASE_NAV_ITEMS = [
   { href: "/admin/talent", label: he.nav.talent },
 ];
 
-// Owner-only "Administration" section (frozen architecture). Sessions and
-// Audit Log items will be appended here by their own sprints — per the
-// approved Engineering Plan, no placeholder links for unbuilt modules.
-const ADMINISTRATION_NAV_ITEMS = [{ href: "/admin/users", label: he.nav.users }];
+// Owner-only "Administration" section (frozen architecture). Sessions will
+// be appended here by its own sprint — per the approved Engineering Plan,
+// no placeholder links for unbuilt modules. Audit Log added by
+// Administration Sprint 2c (the module shipped in the same sprint).
+const ADMINISTRATION_NAV_ITEMS = [
+  { href: "/admin/users", label: he.nav.users },
+  { href: "/admin/audit-log", label: he.nav.auditLog },
+];
 
 export default function AdminNavLinks({ className, role }) {
   const pathname = usePathname();
