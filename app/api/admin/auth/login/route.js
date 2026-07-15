@@ -30,6 +30,7 @@ import {
   recordFailedAttempt,
   clearAttempts,
 } from "@/lib/admin/auth/rateLimit";
+import { sessionService } from "@/lib/admin/auth/sessionService";
 
 function getClientIp(request) {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -106,7 +107,20 @@ export async function POST(request) {
     );
   }
 
-  const token = await signSession({ userId: user.id, role: user.role });
+  // Sprint 3a (Session Security Foundation) — DB-backed session. Ordering
+  // is deliberate (plan Section D):
+  //   1. generate the sid (CSPRNG, service-owned);
+  //   2. SIGN THE JWT FIRST — the only realistic signing failure (missing
+  //      SESSION_SECRET) now aborts before any DB write;
+  //   3. create the Session row — a failure here bubbles up as a 500: no
+  //      cookie is set and no token ever leaves the server without a
+  //      backing row. (A failure AFTER this step can orphan one active
+  //      row no client holds a token for — unusable without a signed JWT
+  //      carrying its sid, and it expires within the max-age. Accepted.)
+  const sid = sessionService.generateSessionId();
+  const token = await signSession({ userId: user.id, role: user.role, sid });
+  await sessionService.createSession({ sid, userId: user.id });
+
   const response = NextResponse.json({ success: true });
   response.cookies.set(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 

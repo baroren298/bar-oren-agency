@@ -23,6 +23,9 @@ const hoisted = vi.hoisted(() => ({
   recordFailedAttempt: vi.fn(),
   clearAttempts: vi.fn(),
   signSession: vi.fn(),
+  // Sprint 3a — DB-backed sessions.
+  generateSessionId: vi.fn(),
+  createSession: vi.fn(),
 }));
 
 vi.mock('@/lib/admin/repository/userRepository', () => ({
@@ -49,7 +52,16 @@ vi.mock('@/lib/admin/auth/session', () => ({
   SESSION_COOKIE_NAME: 'admin_session',
 }));
 
+vi.mock('@/lib/admin/auth/sessionService', () => ({
+  sessionService: {
+    generateSessionId: hoisted.generateSessionId,
+    createSession: hoisted.createSession,
+  },
+}));
+
 import { POST } from './route';
+
+const TEST_SID = '11111111-2222-4333-8444-555555555555';
 
 function makeRequest({ email = 'owner@example.com', password = 'correct-password' } = {}) {
   return {
@@ -64,6 +76,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   hoisted.isRateLimited.mockReturnValue(false);
   hoisted.signSession.mockResolvedValue('signed-token');
+  hoisted.generateSessionId.mockReturnValue(TEST_SID);
+  hoisted.createSession.mockResolvedValue({ id: TEST_SID });
 });
 
 describe('POST /api/admin/auth/login', () => {
@@ -121,7 +135,7 @@ describe('POST /api/admin/auth/login', () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ success: true });
-    expect(hoisted.signSession).toHaveBeenCalledWith({ userId: 'owner-1', role: 'OWNER' });
+    expect(hoisted.signSession).toHaveBeenCalledWith({ userId: 'owner-1', role: 'OWNER', sid: TEST_SID });
     expect(hoisted.updateLastLoginAt).toHaveBeenCalledWith('owner-1');
     expect(hoisted.clearAttempts).toHaveBeenCalledWith('1.2.3.4', 'owner@example.com');
   });
@@ -139,7 +153,7 @@ describe('POST /api/admin/auth/login', () => {
     const response = await POST(makeRequest({ email: 'employee@example.com' }));
 
     expect(response.status).toBe(200);
-    expect(hoisted.signSession).toHaveBeenCalledWith({ userId: 'employee-1', role: 'EMPLOYEE' });
+    expect(hoisted.signSession).toHaveBeenCalledWith({ userId: 'employee-1', role: 'EMPLOYEE', sid: TEST_SID });
   });
 
   it('returns 403 and never signs a session when credentials are correct but the user is inactive', async () => {
@@ -174,5 +188,66 @@ describe('POST /api/admin/auth/login', () => {
     await POST(makeRequest({ email: 'disabled@example.com' }));
 
     expect(hoisted.recordFailedAttempt).not.toHaveBeenCalled();
+  });
+
+  /*
+   * Sprint 3a (Session Security Foundation) — DB-backed session creation.
+   */
+  describe('Sprint 3a — Session creation (S10/S11)', () => {
+    const owner = {
+      id: 'owner-1',
+      email: 'owner@example.com',
+      passwordHash: 'hash',
+      role: 'OWNER',
+      isActive: true,
+    };
+
+    it('S10: a successful login creates exactly one Session for the same sid the JWT carries', async () => {
+      hoisted.getByEmail.mockResolvedValue(owner);
+      hoisted.verifyPassword.mockResolvedValue(true);
+
+      const response = await POST(makeRequest());
+
+      expect(response.status).toBe(200);
+      expect(hoisted.generateSessionId).toHaveBeenCalledTimes(1);
+      expect(hoisted.createSession).toHaveBeenCalledTimes(1);
+      expect(hoisted.createSession).toHaveBeenCalledWith({ sid: TEST_SID, userId: 'owner-1' });
+      // Same sid in the token and the row — never two different ids.
+      expect(hoisted.signSession).toHaveBeenCalledWith(expect.objectContaining({ sid: TEST_SID }));
+    });
+
+    it('ordering: the JWT is signed BEFORE the Session row is written (a signing failure causes no DB write)', async () => {
+      hoisted.getByEmail.mockResolvedValue(owner);
+      hoisted.verifyPassword.mockResolvedValue(true);
+      hoisted.signSession.mockRejectedValue(new Error('SESSION_SECRET is not set'));
+
+      await expect(POST(makeRequest())).rejects.toThrow();
+      expect(hoisted.createSession).not.toHaveBeenCalled();
+    });
+
+    it('S11: a Session-create failure aborts the login — no cookie is issued and lastLoginAt is not stamped', async () => {
+      hoisted.getByEmail.mockResolvedValue(owner);
+      hoisted.verifyPassword.mockResolvedValue(true);
+      hoisted.createSession.mockRejectedValue(new Error('insert failed'));
+
+      // The route lets the failure propagate (Next.js turns it into a 500);
+      // the essential property is that nothing after step 3 ran.
+      await expect(POST(makeRequest())).rejects.toThrow('insert failed');
+      expect(hoisted.updateLastLoginAt).not.toHaveBeenCalled();
+    });
+
+    it('failed logins never create a Session (401 and 403 paths)', async () => {
+      // 401 — bad credentials
+      hoisted.getByEmail.mockResolvedValue(null);
+      hoisted.verifyPassword.mockResolvedValue(false);
+      await POST(makeRequest());
+      expect(hoisted.createSession).not.toHaveBeenCalled();
+
+      // 403 — deactivated account
+      hoisted.getByEmail.mockResolvedValue({ ...owner, isActive: false });
+      hoisted.verifyPassword.mockResolvedValue(true);
+      await POST(makeRequest());
+      expect(hoisted.createSession).not.toHaveBeenCalled();
+    });
   });
 });

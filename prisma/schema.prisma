@@ -244,7 +244,40 @@ model User {
   auditLogsRejected AuditLog[] @relation("AuditRejectedBy")
   auditLogsDeleted  AuditLog[] @relation("AuditDeletedBy")
 
+  // Sprint 3a (Session Security Foundation) — back-relation only; no column
+  // change to users. See the Session model below.
+  sessions Session[]
+
   @@map("users")
+}
+
+/// Sprint 3a (Session Security Foundation) — server-side session record
+/// backing revocable admin logins. One row per issued JWT; the JWT's `sid`
+/// claim IS this row's id. Deliberate decisions (SPRINT_3A_SESSION_SECURITY_PLAN.md
+/// Section B):
+///
+///   - `id` has NO @default(cuid()): cuid v1 is partially predictable, and
+///     sid generation must stay service-owned — lib/admin/auth/sessionService.js
+///     generates it via crypto.randomUUID() (128-bit CSPRNG, non-guessable).
+///   - The raw JWT is NEVER stored anywhere; the DB holds only this random
+///     sid that the signed token references.
+///   - `revokedAt` is set-once and never un-set: reactivating a user does
+///     not resurrect previously revoked sessions.
+///   - `expiresAt` is written from the same SESSION_MAX_AGE_SECONDS value
+///     used for the JWT `exp`, so DB and token expiry never diverge.
+///   - Deliberately absent (out of scope this sprint): device/UA fields,
+///     IP, location, lastSeenAt.
+model Session {
+  id     String @id
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId, revokedAt])
+  @@map("sessions")
 }
 
 // ─────────────────────────────────────────────────────────────────────────
