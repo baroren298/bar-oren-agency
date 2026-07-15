@@ -117,3 +117,9 @@
   justify-content: flex-start;
   gap: 0.6rem;
 }
+
+/* Extra breathing room between the profile info rows and the
+   "ערוך פרופיל" trigger in view mode (Profile tab). */
+.profileViewActions {
+  margin-top: 1.25rem;
+}

@@ -253,7 +253,7 @@ export default function UserDetailClient({ user }) {
               <span className={styles.fieldValue}>{formatDateTime(user.createdAt)}</span>
             </div>
 
-            <div className={styles.formActions}>
+            <div className={`${styles.formActions} ${styles.profileViewActions}`}>
               <SecondaryButton type="button" onClick={startEditingProfile}>
                 {COPY.editProfile.trigger}
               </SecondaryButton>
