@@ -110,9 +110,17 @@ describe('POST /api/admin/users', () => {
 
     expect(response.status).toBe(201);
     expect(body).toEqual({ user: { id: 'new-user', role: 'EMPLOYEE' } });
+    // Sprint 2b — actor identity, per-request correlationId, and
+    // request-only metadata are threaded through for event emission
+    // (makeRequest has no headers, so ip/userAgent fall back).
     expect(hoisted.createEmployee).toHaveBeenCalledWith(
       { email: 'new@example.com', displayName: 'Noa', temporaryPassword: 'temp12345' },
-      { actorRole: 'OWNER' }
+      expect.objectContaining({
+        actorId: 'owner-1',
+        actorRole: 'OWNER',
+        correlationId: expect.any(String),
+        requestMetadata: { ipAddress: 'unknown', userAgent: null },
+      })
     );
   });
 

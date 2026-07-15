@@ -39,6 +39,21 @@ function makeParams(id) {
   return { params: Promise.resolve({ id }) };
 }
 
+/*
+ * Sprint 2b — every mutating userService call now receives the full audit
+ * context: actor identity, one per-request correlationId, and request-only
+ * technical metadata (makeRequest has no headers, so ip falls back to
+ * "unknown" and userAgent to null — proving nothing else leaks in).
+ */
+function expectedAuditContext() {
+  return expect.objectContaining({
+    actorId: 'owner-1',
+    actorRole: 'OWNER',
+    correlationId: expect.any(String),
+    requestMetadata: { ipAddress: 'unknown', userAgent: null },
+  });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -92,7 +107,7 @@ describe('PATCH /api/admin/users/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ user: { id: 'user-1', displayName: 'New Name' } });
-    expect(hoisted.updateDisplayName).toHaveBeenCalledWith('user-1', 'New Name', { actorRole: 'OWNER' });
+    expect(hoisted.updateDisplayName).toHaveBeenCalledWith('user-1', 'New Name', expectedAuditContext());
   });
 
   it('updates email and returns the updated user', async () => {
@@ -104,7 +119,7 @@ describe('PATCH /api/admin/users/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ user: { id: 'user-1', email: 'new@example.com' } });
-    expect(hoisted.updateEmail).toHaveBeenCalledWith('user-1', 'new@example.com', { actorRole: 'OWNER' });
+    expect(hoisted.updateEmail).toHaveBeenCalledWith('user-1', 'new@example.com', expectedAuditContext());
     expect(hoisted.updateDisplayName).not.toHaveBeenCalled();
   });
 
@@ -121,12 +136,18 @@ describe('PATCH /api/admin/users/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ user: { id: 'user-1', displayName: 'New Name', email: 'new@example.com' } });
-    expect(hoisted.updateDisplayName).toHaveBeenCalledWith('user-1', 'New Name', { actorRole: 'OWNER' });
-    expect(hoisted.updateEmail).toHaveBeenCalledWith('user-1', 'new@example.com', { actorRole: 'OWNER' });
+    expect(hoisted.updateDisplayName).toHaveBeenCalledWith('user-1', 'New Name', expectedAuditContext());
+    expect(hoisted.updateEmail).toHaveBeenCalledWith('user-1', 'new@example.com', expectedAuditContext());
 
     const displayNameOrder = hoisted.updateDisplayName.mock.invocationCallOrder[0];
     const emailOrder = hoisted.updateEmail.mock.invocationCallOrder[0];
     expect(displayNameOrder).toBeLessThan(emailOrder);
+
+    // Sprint 2b — one correlationId per request: both mutations in this
+    // single PATCH must share the exact same id.
+    const displayNameContext = hoisted.updateDisplayName.mock.calls[0][2];
+    const emailContext = hoisted.updateEmail.mock.calls[0][2];
+    expect(displayNameContext.correlationId).toBe(emailContext.correlationId);
   });
 
   it('maps a duplicate-email VALIDATION_ERROR from userService.updateEmail to a 400 with fieldErrors.email', async () => {
@@ -155,10 +176,7 @@ describe('PATCH /api/admin/users/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ user: { id: 'employee-1', isActive: false } });
-    expect(hoisted.setActive).toHaveBeenCalledWith('employee-1', false, {
-      actorId: 'owner-1',
-      actorRole: 'OWNER',
-    });
+    expect(hoisted.setActive).toHaveBeenCalledWith('employee-1', false, expectedAuditContext());
   });
 
   it('maps CANNOT_DISABLE_SELF to a 409 with the service error message', async () => {

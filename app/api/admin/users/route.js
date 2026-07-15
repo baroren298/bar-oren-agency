@@ -20,6 +20,7 @@
 import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { userService } from '@/lib/admin/userService';
+import { buildRequestAuditContext } from '@/lib/admin/requestAuditContext';
 
 function authErrorResponse(error) {
   return NextResponse.json(
@@ -70,6 +71,10 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
 
+  // Sprint 2b — actor identity + one correlationId + request-only metadata
+  // threaded through to userService's event emission. Response unchanged.
+  const { correlationId, requestMetadata } = buildRequestAuditContext(request);
+
   try {
     const user = await userService.createEmployee(
       {
@@ -77,7 +82,7 @@ export async function POST(request) {
         displayName: body.displayName,
         temporaryPassword: body.temporaryPassword,
       },
-      { actorRole: session.role }
+      { actorId: session.userId, actorRole: session.role, correlationId, requestMetadata }
     );
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {

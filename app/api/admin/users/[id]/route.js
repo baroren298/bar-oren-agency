@@ -33,6 +33,7 @@
 import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { userService } from '@/lib/admin/userService';
+import { buildRequestAuditContext } from '@/lib/admin/requestAuditContext';
 
 function authErrorResponse(error) {
   return NextResponse.json(
@@ -87,19 +88,29 @@ export async function PATCH(request, { params }) {
     );
   }
 
+  // Sprint 2b — ONE correlationId for the whole request: a multi-field
+  // PATCH is still multiple independent mutations (the documented
+  // non-atomic tradeoff above), each emitting its own event, but they all
+  // group under this single id. On partial failure the emitted events
+  // reflect exactly what committed, nothing more.
+  const { correlationId, requestMetadata } = buildRequestAuditContext(request);
+  const actorContext = {
+    actorId: session.userId,
+    actorRole: session.role,
+    correlationId,
+    requestMetadata,
+  };
+
   try {
     let user;
     if (hasDisplayName) {
-      user = await userService.updateDisplayName(id, body.displayName, { actorRole: session.role });
+      user = await userService.updateDisplayName(id, body.displayName, actorContext);
     }
     if (hasEmail) {
-      user = await userService.updateEmail(id, body.email, { actorRole: session.role });
+      user = await userService.updateEmail(id, body.email, actorContext);
     }
     if (hasIsActive) {
-      user = await userService.setActive(id, body.isActive, {
-        actorId: session.userId,
-        actorRole: session.role,
-      });
+      user = await userService.setActive(id, body.isActive, actorContext);
     }
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {

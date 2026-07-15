@@ -23,6 +23,7 @@
 import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { userService } from '@/lib/admin/userService';
+import { buildRequestAuditContext } from '@/lib/admin/requestAuditContext';
 
 function authErrorResponse(error) {
   return NextResponse.json(
@@ -62,8 +63,18 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
 
+  // Sprint 2b — actor identity + correlationId + request-only metadata for
+  // the UserPasswordReset event. The event payload itself is empty (see
+  // userService.resetPassword): no credential material ever leaves here.
+  const { correlationId, requestMetadata } = buildRequestAuditContext(request);
+
   try {
-    const user = await userService.resetPassword(id, body?.temporaryPassword, { actorRole: session.role });
+    const user = await userService.resetPassword(id, body?.temporaryPassword, {
+      actorId: session.userId,
+      actorRole: session.role,
+      correlationId,
+      requestMetadata,
+    });
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
     return serviceErrorResponse(error, 'Failed to reset password.');

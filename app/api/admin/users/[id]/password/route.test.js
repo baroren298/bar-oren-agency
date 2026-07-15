@@ -111,6 +111,18 @@ describe('POST /api/admin/users/[id]/password', () => {
     expect(response.status).toBe(200);
     expect(body).toEqual({ user: { id: 'user-1', email: 'user@example.com' } });
     expect(body.user.passwordHash).toBeUndefined();
-    expect(hoisted.resetPassword).toHaveBeenCalledWith('user-1', 'temp12345', { actorRole: 'OWNER' });
+    // Sprint 2b — actor identity, per-request correlationId, and
+    // request-only metadata are threaded through for the UserPasswordReset
+    // event (makeRequest has no headers, so ip/userAgent fall back).
+    expect(hoisted.resetPassword).toHaveBeenCalledWith(
+      'user-1',
+      'temp12345',
+      expect.objectContaining({
+        actorId: 'owner-1',
+        actorRole: 'OWNER',
+        correlationId: expect.any(String),
+        requestMetadata: { ipAddress: 'unknown', userAgent: null },
+      })
+    );
   });
 });
