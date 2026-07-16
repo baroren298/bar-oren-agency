@@ -1,0 +1,103 @@
+/*
+ * SessionsPanel styles — Sprint 3c (Session Management UI).
+ *
+ * Composes the shared admin-tokens palette, same convention as
+ * app/admin/users/[id]/user-detail.module.css (whose fieldRow/mutedNote/
+ * formActions/formError rules this borrows the sizing/color language
+ * from) — logical properties throughout so the RTL admin shell keeps
+ * working without any direction-specific overrides.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.description {
+  composes: tokens;
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+}
+
+.statusText {
+  composes: tokens;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--admin-text-secondary);
+}
+
+.formError {
+  composes: tokens;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #9c4a3a;
+}
+
+.list {
+  composes: tokens;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-block-end: 1px solid var(--admin-border);
+  flex-wrap: wrap;
+}
+
+.row:last-child {
+  border-block-end: none;
+}
+
+.rowInfo {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.rowField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.rowFieldLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  white-space: nowrap;
+}
+
+.rowFieldValue {
+  font-size: 0.88rem;
+  color: var(--admin-text-primary);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-inline-size: 10rem;
+}
+
+.mutedNote {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--admin-text-muted);
+  text-align: end;
+}
+
+.formActions {
+  composes: tokens;
+  display: flex;
+  justify-content: flex-start;
+  margin-block-start: 1rem;
+}

@@ -100,7 +100,13 @@ export default async function AdminUserDetailPage({ params }) {
           title). */}
       <PageHeader title={user.displayName || user.email} description={user.displayName ? user.email : undefined} />
 
-      <UserDetailClient user={user} />
+      {/* Sprint 3c: Session Management UI needs to know whether the acting
+          Owner is looking at their own user record, purely to choose the
+          SessionsSection revoke-all copy variant ("...כל שאר..." vs
+          "...כל..."). session.userId already comes from the same
+          getSessionUser() call above — no new auth surface, no extra DB
+          read. */}
+      <UserDetailClient user={user} isSelfView={session?.userId === user.id} />
     </AdminShell>
   );
 }

@@ -50,6 +50,13 @@
  *   - user (object, required) — from userService.getUserDetail(), see
  *     page.jsx. { id, email, role, displayName, isActive, lastLoginAt,
  *     createdAt }
+ *   - isSelfView (boolean, required) — Sprint 3c: is the acting Owner
+ *     viewing their own user record (session.userId === user.id,
+ *     computed server-side in page.jsx)? Forwarded only to
+ *     SessionsSection, which uses it to pick the revoke-all copy variant
+ *     ("נתק את כל שאר ההתחברויות" vs "נתק את כל ההתחברויות") — it plays
+ *     no role in authorization; the API independently enforces which
+ *     session, if any, is spared.
  *
  * No currentUserId prop: unlike UsersPageClient.jsx (which shows a "(you)"
  * tag on the acting Owner's own row in a list of many), isOwnerRow alone
@@ -65,6 +72,7 @@ import PrimaryButton from "@/components/admin/PrimaryButton";
 import SecondaryButton from "@/components/admin/SecondaryButton";
 import ConfirmDialog from "@/components/admin/ConfirmDialog";
 import StatusBadge from "@/components/admin/StatusBadge";
+import SessionsSection from "@/components/admin/SessionsSection";
 import { he } from "@/lib/admin/i18n/he";
 import { ROLE } from "@/lib/admin/constants/enums";
 import styles from "./user-detail.module.css";
@@ -80,7 +88,7 @@ function formatDateTime(value) {
   }
 }
 
-export default function UserDetailClient({ user }) {
+export default function UserDetailClient({ user, isSelfView }) {
   const router = useRouter();
   const isOwnerRow = user.role === ROLE.OWNER;
 
@@ -389,6 +397,12 @@ export default function UserDetailClient({ user }) {
           </div>
         )}
       </Card>
+
+      {/* Sessions — Sprint 3c: Session Management UI. Its own Card, its
+          own client sub-component (SessionsSection) with its own
+          fetch/dialog state, entirely separate from the Status card above
+          — revoking a session never changes user.isActive and vice versa. */}
+      <SessionsSection userId={user.id} isSelfView={isSelfView} />
 
       <ConfirmDialog
         open={dialogOpen}
