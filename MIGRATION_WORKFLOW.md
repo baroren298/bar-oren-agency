@@ -26,6 +26,14 @@ Locally, both URLs must target the **Development** branch, and only then may `DA
 
 All three guarded commands refuse (exit code 2, no values printed) when `DATABASE_ENV` is missing or not `development`. There is deliberately **no** npm alias for `migrate deploy`.
 
+### Automatic client generation (Infrastructure Cleanup follow-up)
+
+`npm run dev` and `npm run build` now run `prisma generate` first via the standard `predev`/`prebuild` lifecycle scripts (CI also runs it explicitly). Generation reads only the schema — no database connection. This prevents the stale-generated-client failures seen after schema changes (Clients & Brands sprint). There is deliberately no `postinstall` hook, to avoid regenerating on every dependency install.
+
+### Development data scripts
+
+`npm run admin:seed-dev-talent` and `npm run admin:migrate-day-import` now apply the same rule as the migration guard: they refuse (exit code 2, before any Prisma client is constructed, no values printed) unless `DATABASE_ENV` is exactly `development`. The label is never inferred from a hostname. `npm run admin:create-owner` is intentionally **not** restricted — it is the only way an Owner account is created and is documented for use on the production host; a Production-safe confirmation design for it is deferred to a later sprint.
+
 ## Development setup (once per machine)
 
 1. In the Neon console, confirm which endpoints belong to the Development branch.

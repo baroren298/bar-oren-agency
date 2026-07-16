@@ -931,6 +931,23 @@ async function main() {
     process.exit(1);
   }
 
+  // Same rule as the migration guard (scripts/prisma-guard-core.mjs):
+  // authorization comes ONLY from the explicit, non-secret DATABASE_ENV
+  // label — never inferred from a hostname or URL, and no env value is
+  // ever printed. Checked BEFORE any PrismaClient is constructed; this
+  // intentionally applies to every mode (even dry-run reads the database)
+  // and is NOT bypassed by --confirm-production.
+  if ((process.env.DATABASE_ENV ?? '').trim() !== 'development') {
+    console.error(
+      "[migrate-day-import] DATABASE_ENV is not 'development'. This script " +
+        'only ever runs against the Development database. Set ' +
+        'DATABASE_ENV=development in the root .env once you have confirmed ' +
+        'the URLs target the Development branch (see MIGRATION_WORKFLOW.md). ' +
+        'Refusing to run.'
+    );
+    process.exit(2);
+  }
+
   if (mode === 'reset') {
     if (process.env.NODE_ENV === 'production') {
       console.error('[migrate-day-import] --mode=reset is blocked outright when NODE_ENV=production. No flag overrides this.');

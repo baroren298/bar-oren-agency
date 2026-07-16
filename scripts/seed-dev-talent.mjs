@@ -113,6 +113,21 @@ async function main() {
     process.exit(1);
   }
 
+  // Same rule as the migration guard (scripts/prisma-guard-core.mjs):
+  // authorization comes ONLY from the explicit, non-secret DATABASE_ENV
+  // label — never inferred from a hostname or URL, and no env value is
+  // ever printed. Checked BEFORE any PrismaClient is constructed.
+  if ((process.env.DATABASE_ENV ?? '').trim() !== 'development') {
+    console.error(
+      "[seed-dev-talent] DATABASE_ENV is not 'development'. This script " +
+        'writes test data and only ever runs against the Development ' +
+        'database. Set DATABASE_ENV=development in the root .env once you ' +
+        'have confirmed the URLs target the Development branch ' +
+        '(see MIGRATION_WORKFLOW.md). Refusing to run.'
+    );
+    process.exit(2);
+  }
+
   const prisma = new PrismaClient();
 
   try {

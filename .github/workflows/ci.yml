@@ -25,6 +25,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Explicit client generation (Infrastructure Cleanup follow-up):
+      # previously CI relied on @prisma/client's implicit postinstall hook,
+      # which Prisma has signaled changing in v7. `prisma generate` reads
+      # only the schema — no database connection and no env vars needed.
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Run tests
         run: npm test
 
