@@ -39,6 +39,15 @@
  * Recent Activity, the Employee Dashboard, mobile-specific polish,
  * skeleton loading states, and empty-state illustrations. Empty sections
  * keep Sprint 1's single quiet line.
+ *
+ * Sprint 5a adds two things on top of the above, without touching any of
+ * it: a fourth queue section, "Recent Publishes" (same QueueSection shell,
+ * neutral tone, fed by dashboard.recentPublishes — see dashboardService's
+ * publishTimestamp() for the approvedAt-as-publish-time-proxy assumption
+ * this section rests on), and a static "Quick Actions" block of four fixed
+ * links (Add Represented Talent / Represented Talents / Users / Audit Log)
+ * that reads no dashboard data at all — it's rendered directly here, not
+ * part of OwnerDashboardDto, since there's no query behind it.
  */
 
 import { cookies } from "next/headers";
@@ -193,6 +202,36 @@ export default async function OwnerDashboardPage() {
         </p>
       </div>
 
+      {/* Quick Actions (Sprint 5a) — static links only, no dashboard data
+          behind them; deliberately placed once, near the top, rather than
+          folded into the queue sections below. */}
+      <div className={styles.quickActionsWrapper}>
+        <Card title={t.quickActions.title} as="section">
+          <ul className={styles.quickActionsList}>
+            <li>
+              <Link href="/admin/talent/new" className={styles.quickActionLink}>
+                {t.quickActions.addTalent}
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/talent" className={styles.quickActionLink}>
+                {t.quickActions.talents}
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/users" className={styles.quickActionLink}>
+                {t.quickActions.users}
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/audit-log" className={styles.quickActionLink}>
+                {t.quickActions.auditLog}
+              </Link>
+            </li>
+          </ul>
+        </Card>
+      </div>
+
       <div className={styles.sectionStack}>
         {/* 2 — Pending Approvals: the dominant section (spec §2) — the only
             accent-surface Card and the only accent-colored CTA. Rows
@@ -291,6 +330,41 @@ export default async function OwnerDashboardPage() {
                     ].join(" · ")}
                   </p>
                 </div>
+              </li>
+            ))}
+          </ul>
+        </QueueSection>
+
+        {/* 5 — Recent Publishes (Sprint 5a): what most recently went live,
+            newest first. Neutral card, same shell as Rejected Items/
+            Employee Drafts — no accent, no special warning treatment. Rows
+            deep-link like Pending Approvals/Rejected Items. */}
+        <QueueSection
+          title={`${t.sections.recentPublishes} · ${dashboard.recentPublishes.totalCount}`}
+          emptyText={t.empty.recentPublishes}
+          cta={{ href: "/admin/talent", label: t.cta.recentPublishes }}
+          hasItems={dashboard.recentPublishes.items.length > 0}
+        >
+          <ul className={styles.queueList}>
+            {dashboard.recentPublishes.items.map((item) => (
+              <li key={item.key}>
+                <Link href={item.href} className={styles.queueRow}>
+                  <div className={styles.queueRowText}>
+                    <p className={styles.queueRowTitle}>{itemTitle(item)}</p>
+                    <p className={styles.queueRowMeta}>
+                      {[
+                        t.publishedBy(actorName(item.publishedBy)),
+                        formatWhen(item.publishedAt),
+                        item.itemCount > 1 ? t.itemCount(item.itemCount) : null,
+                      ]
+                        .filter((part) => part !== null)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  <span className={styles.chevron} aria-hidden="true">
+                    ‹
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>

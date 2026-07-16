@@ -149,6 +149,48 @@ a.queueRow:hover .chevron {
   color: var(--admin-text-secondary);
 }
 
+/* ── Quick Actions (Sprint 5a) ────────────────────────────────────────── */
+/* Static links, not queue rows: a compact wrapping row of buttons rather
+   than the queue sections' stacked list — there's no metadata/timestamp to
+   show, just a destination. */
+
+/* Card has no built-in bottom margin (it's meant to sit inside .sectionStack,
+   which supplies gap via flex); Quick Actions sits outside that stack, so
+   its own wrapper supplies the same rhythm explicitly. */
+.quickActionsWrapper {
+  margin: 0 0 1.5rem;
+}
+
+.quickActionsList {
+  composes: tokens;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.quickActionLink {
+  composes: tokens;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface);
+  color: var(--admin-text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.quickActionLink:hover {
+  background: var(--admin-accent-subtle);
+  border-color: var(--admin-accent);
+}
+
 @media (max-width: 640px) {
   .queueRow {
     align-items: flex-start;
