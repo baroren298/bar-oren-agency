@@ -21,6 +21,23 @@
   font-size: 0.95rem;
 }
 
+/* Sprint 7B.1 (Clients UX polish) — title row with a far-side action.
+   Same spacing as .title so cards with/without an action align. */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
 /*
  * Owner Dashboard Sprint 2 — the one accent-surface variant permitted by
  * OWNER_DASHBOARD_UX_SPEC.md §2 (Pending Approvals only). Slightly more

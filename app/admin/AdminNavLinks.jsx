@@ -38,6 +38,11 @@ const BASE_NAV_ITEMS = [
   { href: "/admin", label: he.nav.dashboard },
   { href: "/admin/my-work", label: he.nav.myWork },
   { href: "/admin/talent", label: he.nav.talent },
+  // Sprint 7B (Clients & Brands Foundation) — visible to both roles:
+  // OWNER and EMPLOYEE may view/create/edit Clients and Brands. Archive is
+  // Owner-only, but that's enforced by the routes/service (and hidden per
+  // action inside the pages) — not by hiding this nav item.
+  { href: "/admin/clients", label: he.nav.clients },
 ];
 
 // Owner-only "Administration" section (frozen architecture). Sessions will

@@ -1,0 +1,271 @@
+/*
+ * /admin/clients styles — Sprint 7B (Clients & Brands Foundation).
+ *
+ * Composes the shared components/admin/admin-tokens.module.css palette,
+ * mirroring app/admin/users/users.module.css so the Clients module reads
+ * as part of the same design system. Card/PrimaryButton/SecondaryButton/
+ * StatusBadge/ConfirmDialog supply surfaces/colors; this file only adds
+ * the table, forms, and the search/toggle toolbar.
+ */
+
+.tokens {
+  composes: tokens from "../../../components/admin/admin-tokens.module.css";
+}
+
+.actionsRow {
+  composes: tokens;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.45rem 0.7rem;
+  min-width: 16rem;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Create/edit forms — same field styling as users.module.css. */
+.createForm {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.fieldGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: #9c4a3a;
+}
+
+.formError {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #9c4a3a;
+}
+
+.input {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.55rem 0.75rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.textarea {
+  composes: input;
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+/* Clients/Brands tables */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th {
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  padding: 0 0.6rem 0.6rem;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.7rem 0.6rem;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text-primary);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.nameCell {
+  font-weight: 600;
+}
+
+.mutedNote {
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+/* Detail page */
+.detailHeaderRow {
+  composes: tokens;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.backLink {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-accent-strong);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.detailStack {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.detailRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detailRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.detailLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  min-width: 9rem;
+}
+
+.detailValue {
+  font-size: 0.95rem;
+  color: var(--admin-text-primary);
+  white-space: pre-wrap;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.sectionActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.rowActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.inlineInput {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.3rem 0.55rem;
+  min-width: 10rem;
+}
+
+.linkButton {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-accent-strong);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.linkButton:disabled {
+  color: var(--admin-text-muted);
+  cursor: default;
+  text-decoration: none;
+}

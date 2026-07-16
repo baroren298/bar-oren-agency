@@ -149,6 +149,11 @@ enum ActionType {
 /// for user-management events/audit rows (Event.entityId / AuditLog.
 /// entityId then hold the TARGET user's id; the acting Owner is the
 /// actor). Same additive migration as the ActionType additions above.
+///
+/// CLIENT / BRAND — Sprint 7B (Clients & Brands Foundation): target
+/// discriminators for client/brand events and audit rows. Additive
+/// `ALTER TYPE ... ADD VALUE` migration
+/// (20260717120000_add_clients_and_brands); no existing row affected.
 enum EntityType {
   TALENT
   SITE_CONTENT
@@ -158,6 +163,8 @@ enum EntityType {
   AGENCY_SOCIAL
   IMAGE_ASSET
   USER
+  CLIENT
+  BRAND
 }
 
 /// Talent social platforms. Originally matched only the fixed set used in
@@ -786,6 +793,72 @@ model EntityVersion {
   entityCurrentPublishedOf Entity? @relation("EntityCurrentPublished")
 
   @@map("entity_versions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Clients & Brands — Sprint 7B (Clients & Brands Foundation). Internal
+// operational records, like User: deliberately OUTSIDE the Draft →
+// Proposed → Published content workflow (no VersionStatus, no
+// basedOnVersionId, no approval columns). Lifecycle is LifecycleStatus +
+// archive-only — nothing here is ever hard-deleted, and this sprint adds
+// no unarchive flow.
+//
+// Uniqueness: `normalizedName` (trim / collapse-whitespace / lowercase —
+// lib/admin/normalize-name.js, NOT normalizeSlug, which strips
+// Hebrew) carries the duplicate-prevention constraints. FULL unique
+// constraints, deliberately including archived rows: confirmed product
+// rule — an archived Client/Brand keeps its name reserved. The service
+// layer does a friendly transactional pre-check; the DB constraint is the
+// race-proof backstop (P2002 → same friendly Hebrew error).
+//
+// Deliberately absent (Sprint 7A freeze): Campaign relations, financial
+// fields, pricing, commission — the smallest valid schema for this sprint.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Client {
+  id             String @id @default(cuid())
+  name           String
+  normalizedName String @unique
+
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  notes        String?
+
+  status LifecycleStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  brands Brand[]
+
+  @@map("clients")
+}
+
+model Brand {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  name           String
+  normalizedName String
+
+  notes String?
+
+  status LifecycleStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  // Same Brand name may exist under different Clients; never twice under
+  // the same Client (after normalization), archived rows included.
+  @@unique([clientId, normalizedName])
+  @@index([clientId])
+  @@map("brands")
 }
 
 // ─────────────────────────────────────────────────────────────────────────
