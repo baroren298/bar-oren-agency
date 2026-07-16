@@ -15,8 +15,19 @@
  * touch or duplicate that logic.
  *
  * Server Component. The only client pieces are AdminNavLinks (needs
- * usePathname() for the active-link highlight) and AdminLogoutButton
- * (needs an onClick handler) — both imported in, not inlined here.
+ * usePathname() for the active-link highlight), AdminLogoutButton
+ * (needs an onClick handler), and AdminIdleTimeoutManager (needs timers/
+ * DOM listeners) — all imported in, not inlined here.
+ *
+ * Sprint 4 (Admin Idle Timeout & Automatic Logout): AdminIdleTimeoutManager
+ * is mounted once here, alongside AdminLogoutButton, so every page that
+ * renders this shell gets the 3-minute idle-timeout/warning/auto-logout
+ * behavior with no per-page wiring. Since /admin/login (see file header
+ * above) never renders <AdminShell>, it never mounts the idle manager
+ * either — the same "shell-less" property that already keeps admin nav off
+ * the login page keeps the idle timer off it too, with no extra check
+ * needed. Renders nothing itself unless the 2-minute warning threshold is
+ * reached (see components/admin/AdminIdleTimeoutManager.jsx).
  *
  * Sprint 3 (Users UI): this is now an async Server Component so it can
  * derive the current session's role once, here, and pass it down to
@@ -36,6 +47,7 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/admin/auth/authorize";
 import AdminNavLinks from "./AdminNavLinks";
 import AdminLogoutButton from "./AdminLogoutButton";
+import AdminIdleTimeoutManager from "@/components/admin/AdminIdleTimeoutManager";
 import styles from "./admin-shell.module.css";
 import { he } from "@/lib/admin/i18n/he";
 
@@ -70,6 +82,8 @@ export default async function AdminShell({ children }) {
 
         <main className={styles.content}>{children}</main>
       </div>
+
+      <AdminIdleTimeoutManager />
     </div>
   );
 }
