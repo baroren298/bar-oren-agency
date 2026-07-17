@@ -15,6 +15,7 @@ import {
   getPublicTalentBySlug,
   getPublicTalentSlugs,
 } from '@/lib/public/talent';
+import { buildTalentSeoMetadata } from '@/lib/public/seo';
 
 /*
  * Phase 1 of the CMS connection (read-only): this page now reads talent
@@ -56,46 +57,25 @@ export async function generateStaticParams() {
  * until then — not blocking the current i18n translation work.
  */
 
-/* Per-profile SEO metadata */
+/*
+ * Per-profile SEO metadata — Talent SEO + Slug Management sprint: the
+ * inline logic moved verbatim into lib/public/seo.js's
+ * buildTalentSeoMetadata (pure, unit-tested), now extended to prefer the
+ * talent's PUBLISHED seo* fields with the previous behavior as the smart
+ * default for every empty field. Only published data ever reaches this
+ * page (getPublicTalentBySlug reads currentPublishedVersion only), so
+ * drafts/proposals can never change public metadata before Publish.
+ */
 export async function generateMetadata({ params }) {
   const { slug, locale } = await params;
   const talent = await getPublicTalentBySlug(slug);
   if (!talent) return {};
 
-  const isEnglish = locale === 'en';
-  /* English name/bio fall back to the Hebrew field when missing for a
-     given talent, so the page never renders blank metadata. */
-  const name        = isEnglish ? (talent.nameEn || talent.name) : talent.name;
-  const description = isEnglish
-    ? (talent.bioEn || talent.bioHe || '')
-    : (talent.bioHe || talent.bioEn || '');
-  const canonical   = localizeHref(`/talent/${slug}`, locale);
-
-  /* Use profile image when available; fall back to the branded OG image.
-   * Profile images are portrait — omit explicit dimensions so crawlers
-   * measure the real size. Fallback og-image.jpg is known 1200×630. */
-  const ogImage = talent.profileImage
-    ? { url: talent.profileImage, alt: name }
-    : { url: '/og-image.jpg', width: 1200, height: 630, alt: name };
-
-  return {
-    title: name,
-    description,
-    alternates: { canonical },
-    openGraph: {
-      type:        'profile',
-      title:       `${name} | Bar Oren`,
-      description,
-      url:          canonical,
-      images:      [ogImage],
-    },
-    twitter: {
-      card:        'summary_large_image',
-      title:       `${name} | Bar Oren`,
-      description,
-      images:      [ogImage],
-    },
-  };
+  return buildTalentSeoMetadata({
+    talent,
+    locale,
+    canonicalPath: localizeHref(`/talent/${slug}`, locale),
+  });
 }
 
 /* Person + BreadcrumbList structured data */

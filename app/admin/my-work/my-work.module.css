@@ -57,6 +57,21 @@
   gap: 1rem;
 }
 
+/* My Work — real data sprint: a linked item wraps its Card in an anchor.
+   Neutralize link styling so the card looks identical to a non-linked one;
+   the focus ring is the standard admin outline. */
+.cardLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--admin-radius-lg);
+}
+
+.cardLink:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
 .itemHeader {
   display: flex;
   align-items: flex-start;

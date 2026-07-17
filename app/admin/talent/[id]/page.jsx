@@ -54,10 +54,12 @@
  * Still zero writes, still `force-dynamic`.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { versionService } from '@/lib/admin/engine/versionService';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
+import { eventRepository } from '@/lib/admin/repository/eventRepository';
+import { userRepository } from '@/lib/admin/repository/userRepository';
 import { isDatabaseConfigured } from '@/lib/admin/db';
 import { isUploadAvailable } from '@/lib/storage/availability';
 import { getSessionUser } from '@/lib/admin/auth/authorize';
@@ -77,20 +79,33 @@ import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import SocialLinksOwnerReview from '@/components/admin/SocialLinksOwnerReview';
 import SeoEditor from '@/components/admin/SeoEditor';
 import Timeline from '@/components/admin/Timeline';
+// Website CMS Focus Cleanup — the Campaigns tab import (TalentCampaignsTab)
+// was removed here, along with its workspace section entry and the
+// conditional render below: Campaigns is a My Agency business module, not
+// Website CMS content. The prototype component file
+// (app/admin/campaigns/TalentCampaignsTab.jsx) is intentionally left in
+// place, just no longer imported or rendered.
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import {
   TALENT_WORKSPACE_SECTIONS,
   deriveDetailWorkflowStatus,
   deriveLastUpdated,
   formatHebrewDate,
-  buildVersionHistoryTimelineItems,
   calculateAge,
   deriveCurrentRejectionNote,
   deriveCurrentVisibility,
   selectDetailBadge,
 } from '@/lib/admin/talent-workspace';
+import {
+  buildTalentHistoryTimelineItems,
+  collectEventActorIds,
+  buildActorDisplayMap,
+} from '@/lib/admin/talent-history';
 import { he } from '@/lib/admin/i18n/he';
-import { VERSION_STATUS, TALENT_VISIBILITY } from '@/lib/admin/constants/enums';
+import { resolveAdminTalentRoute } from '@/lib/admin/talent-route';
+import { buildGalleryImages } from '@/lib/admin/gallery-images';
+import { isGlobalEditingStatus } from '@/lib/admin/edit-mode';
+import { VERSION_STATUS, TALENT_VISIBILITY, ENTITY_TYPE } from '@/lib/admin/constants/enums';
 import styles from './talent-detail.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -383,39 +398,16 @@ function PlaceholderSectionContent({ label }) {
 
 /*
  * Talent Detail DB Read Integration sprint — replaces the previous
- * data/talent/index.js read with the real published gallery rows
- * (talentAdapter.getGalleryImages, already filtered to
- * versionStatus=PUBLISHED + lifecycleStatus=ACTIVE by the repository), and
- * normalizes them into a flat row shape MediaGalleryEditor/
- * PublishedMediaGrid/GalleryImageCard/GalleryOwnerReview already expect —
- * `src`/`alt` for display, plus every editable field (`altHe`, `altEn`,
- * `position`, `scale`, `mobileOrder`) and lifecycle metadata
- * (`versionStatus`, `basedOnVersionId`, `rejectionNote`, `createdBy`,
- * `createdAt`) the new persistence-aware editor and Owner Review panel
- * need. `altHe` is used for display when present (DB-authored alt text);
- * falls back to the same generated "<name> — תמונה N" label the mock data
- * path used, so a row with no alt text yet still renders identically to
- * before. Read-only — this function never writes anything.
+ * data/talent/index.js read with the real published gallery rows,
+ * normalized into the flat row shape the gallery components expect.
+ *
+ * Gallery UX Completion sprint — the buildGalleryImages normalizer that
+ * lived right here moved verbatim to lib/admin/gallery-images.js (imported
+ * above), because MediaGalleryEditor.handleSaveDraft now needs the exact
+ * same normalization for the gallery PATCH response — see that module's
+ * header for the shape-divergence bug this closes. This page's usage is
+ * unchanged: same calls, same arguments, same output.
  */
-function buildGalleryImages(galleryImages, displayName) {
-  return (galleryImages || []).map((row, index) => ({
-    id: row.id,
-    imageAssetId: row.imageAssetId,
-    src: row.imageAsset?.blobUrl ?? null,
-    alt: row.altHe || he.gallery.imageAlt(displayName, index),
-    altHe: row.altHe ?? null,
-    altEn: row.altEn ?? null,
-    order: row.order,
-    position: row.position ?? null,
-    scale: row.scale ?? null,
-    mobileOrder: row.mobileOrder ?? null,
-    versionStatus: row.versionStatus,
-    basedOnVersionId: row.basedOnVersionId ?? null,
-    rejectionNote: row.rejectionNote ?? null,
-    createdBy: row.createdBy ?? null,
-    createdAt: row.createdAt ?? null,
-  }));
-}
 
 /*
  * Gallery Sprint 1 — mirrors SocialsSectionContent exactly: a read-only
@@ -427,6 +419,16 @@ function buildGalleryImages(galleryImages, displayName) {
  * effect of viewing this page" guarantee every other read on this page
  * already has).
  */
+/*
+ * Global Edit Mode UX sprint — `globalEditing` now also flows through (here
+ * and in SocialsSectionContent/SeoSectionContent below): one derived boolean
+ * from the same `pendingVersion` this page already reads (see
+ * isGlobalEditingStatus in lib/admin/edit-mode.js — the exact rule
+ * DetailsSectionContent's isEditablePending already applies). Purely a UX
+ * signal: it opens each tab's editable surface immediately and removes the
+ * duplicate local "התחל בעריכה" CTA, while every module keeps its own draft
+ * store and Save/Submit/Publish flows untouched.
+ */
 function GallerySectionContent({
   talentId,
   galleryImages,
@@ -436,6 +438,7 @@ function GallerySectionContent({
   displayName,
   role,
   uploadsEnabled,
+  globalEditing,
 }) {
   const publishedImages = buildGalleryImages(galleryImages, displayName);
   const draftImages = buildGalleryImages(draftGalleryImages, displayName);
@@ -447,11 +450,13 @@ function GallerySectionContent({
       <GalleryOwnerReview talentId={talentId} publishedImages={publishedImages} proposedImages={proposedImages} />
       <MediaGalleryEditor
         talentId={talentId}
+        displayName={displayName}
         publishedImages={publishedImages}
         draftImages={draftImages}
         rejectedImages={rejectedImages}
         role={role}
         uploadsEnabled={uploadsEnabled}
+        globalEditing={globalEditing}
       />
     </>
   );
@@ -500,7 +505,7 @@ function GallerySectionContent({
  * so a rejected account's Owner note renders right above the editor instead
  * of only being visible in the History tab.
  */
-function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials, rejectedSocials, role }) {
+function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocials, rejectedSocials, role, globalEditing }) {
   return (
     <>
       <SocialLinksOwnerReview
@@ -514,6 +519,7 @@ function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocial
         draftSocials={draftSocials || []}
         rejectedSocials={rejectedSocials || []}
         role={role}
+        globalEditing={globalEditing}
       />
     </>
   );
@@ -524,10 +530,10 @@ function SocialsSectionContent({ talentId, socials, draftSocials, proposedSocial
  * group, same shape buildDetailsGroups above already produces for the
  * פרטים tab. Deliberately a single unlabeled group (no sub-groups needed for
  * just four fields) and deliberately only these four: podcastImageAssetId
- * is not included here because there is no safe existing upload/picker flow
- * to route an image-replace edit through yet (sprint rule #2/#6) — the
- * image stays a read-only preview with a disabled "החלף תמונה" placeholder
- * in <PodcastTab>.
+ * is still not a ComparisonView field — since the Podcast Image Upload
+ * sprint it's edited through <PodcastTab>'s own "החלף תמונה" upload control
+ * (an id-typed column has nothing meaningful to show in a text comparison
+ * row), which PATCHes it through the same proposals/[versionId] route.
  */
 function buildPodcastGroups(publishedVersion, pendingVersion) {
   const published = publishedVersion || {};
@@ -584,7 +590,15 @@ function buildPodcastGroups(publishedVersion, pendingVersion) {
  * version yet — <PodcastTab> itself renders a clear empty state when every
  * field is empty.
  */
-function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role }) {
+/*
+ * Podcast Image Upload sprint — `uploadsEnabled` (the same server-computed
+ * gate DetailsSectionContent/GallerySectionContent already receive) and
+ * `pendingPodcastImageUrl` now flow through too. The pending URL comes off
+ * the same `pendingVersion` this page already reads (loadPendingVersion →
+ * listVersionsForParent, whose repository query now includes the
+ * podcastImageAsset relation) — no extra database read is made for it.
+ */
+function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role, uploadsEnabled }) {
   const isEditablePending =
     pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
   const editableVersionId = isEditablePending ? pendingVersion.id : null;
@@ -596,6 +610,8 @@ function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, dis
       versionStatus={isEditablePending ? pendingVersion.status : null}
       groups={buildPodcastGroups(publishedVersion, pendingVersion)}
       podcastImageUrl={publishedVersion?.podcastImageAsset?.blobUrl ?? null}
+      pendingPodcastImageUrl={isEditablePending ? pendingVersion?.podcastImageAsset?.blobUrl ?? null : null}
+      uploadsEnabled={uploadsEnabled}
       podcastVideoEmbedUrl={publishedVersion?.podcastVideoEmbedUrl ?? null}
       hasPodcastData={Boolean(
         publishedVersion?.podcastTitle ||
@@ -611,46 +627,124 @@ function PodcastSectionContent({ talentId, publishedVersion, pendingVersion, dis
 }
 
 /*
- * SEO Editor Foundation sprint — same reasoning as buildSocialLinks above:
- * no seo query exists yet on talentAdapter/versionService (and adding one
- * is out of scope for a UI-only sprint), and data/talent/index.js doesn't
- * model SEO fields at all today. So every field is surfaced as `null` —
- * SeoFieldRow already renders `null` as a calm "לא קיים" placeholder,
- * exactly like a talent that genuinely has no SEO metadata set yet.
- * Wiring this up to a real "page SEO" record is later work; this sprint
- * only prepares the layout and the editing surface.
+ * Talent SEO + Slug Management sprint — the SEO tab now reads and writes
+ * real, versioned data. The SEO block (and the proposed slug) live as
+ * normal columns on the same TalentVersion rows this page already loads
+ * (publishedVersion / pendingVersion) — no extra query. Field keys match
+ * the column names, so this mapping is a plain pick.
  */
-function buildSeoFields() {
+function buildSeoValues(version) {
+  if (!version) return {};
   return {
-    title: null,
-    description: null,
-    keywords: [],
-    ogTitle: null,
-    ogDescription: null,
+    seoTitle: version.seoTitle ?? null,
+    seoDescription: version.seoDescription ?? null,
+    seoCanonicalUrl: version.seoCanonicalUrl ?? null,
+    seoOgTitle: version.seoOgTitle ?? null,
+    seoOgDescription: version.seoOgDescription ?? null,
+    seoOgImageUrl: version.seoOgImageUrl ?? null,
+    seoNoindex: version.seoNoindex ?? false,
   };
 }
 
-function SeoSectionContent() {
-  const publishedSeo = buildSeoFields();
-  return <SeoEditor publishedSeo={publishedSeo} />;
+/*
+ * Talent SEO + Slug Management sprint — mirrors DetailsSectionContent/
+ * PodcastSectionContent's wiring exactly: `versionId`/`versionStatus` only
+ * ever point at an editable DRAFT/PROPOSED version, `role` gates the
+ * Owner-only Publish Now button, and the same proposals API routes carry
+ * Save Draft / Submit / Publish. `defaults` feeds the sprint's smart
+ * defaults (empty SEO title → talent name, empty description → bio, empty
+ * OG image → profile image, empty canonical → the public URL) into the
+ * live Google/Open Graph previews, matching what lib/public/seo.js applies
+ * on the live page. `publishedSlug` is the parent Talent.slug — the live
+ * public URL, which only ever changes when a version proposing a new slug
+ * is actually published.
+ */
+function SeoSectionContent({ talent, publishedVersion, pendingVersion, role, globalEditing }) {
+  const isEditablePending =
+    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
+
+  return (
+    <SeoEditor
+      talentId={talent.id}
+      versionId={isEditablePending ? pendingVersion.id : null}
+      versionStatus={isEditablePending ? pendingVersion.status : null}
+      role={role}
+      globalEditing={globalEditing}
+      publishedSlug={talent.slug}
+      publishedSeo={buildSeoValues(publishedVersion)}
+      draftSeo={isEditablePending ? buildSeoValues(pendingVersion) : null}
+      draftSlug={isEditablePending ? pendingVersion.slug ?? talent.slug : null}
+      defaults={{
+        name: publishedVersion?.name ?? pendingVersion?.name ?? null,
+        nameEn: publishedVersion?.nameEn ?? pendingVersion?.nameEn ?? null,
+        bio: publishedVersion?.bioHe ?? publishedVersion?.bioEn ?? null,
+        profileImage: publishedVersion?.profileImageAsset?.blobUrl ?? null,
+      }}
+    />
+  );
 }
 
 /*
- * History Tab Real Data sprint — renders <Timeline> from the real
- * version-history rows already fetched on this page
- * (versionService.listVersionHistory(talentAdapter, id), passed in as
- * `versions`), instead of lib/admin/mock-history.js's getTalentHistory().
- * All the row -> { action, date, user, summary, tone } mapping logic lives
- * in lib/admin/talent-workspace.js's buildVersionHistoryTimelineItems,
- * which reuses the same workflowStatusLabel/workflowStatusTone helpers
- * <StatusBadge> uses elsewhere on this page, per that sprint's requirement
- * to reuse existing label/tone vocabulary rather than inventing a new one.
- * <Timeline> itself is unchanged — it already renders an EmptyState when
- * `items` is empty (a brand-new talent with no versions yet).
+ * Sprint 2: Real Event-Based History Timeline — the History tab now renders
+ * from the stored, append-only Event log instead of one item per
+ * TalentVersion row (whose current-status projection collapsed a
+ * DRAFT → PROPOSED → PUBLISHED journey into a single "Published" item).
+ *
+ * Flow (all pure reads, all upstream of this component):
+ *   1. loadTalentEvents(id) below — eventRepository.listForEntity(
+ *      ENTITY_TYPE.TALENT, id), the existing read path, newest first.
+ *   2. Distinct non-null actorIds are collected off those rows and resolved
+ *      in ONE batched userRepository.getSafeByIds() call — no N+1. A null
+ *      actorId or a user that no longer resolves displays as "—".
+ *   3. buildTalentHistoryTimelineItems (lib/admin/talent-history.js)
+ *      projects events → timeline items (Hebrew labels + existing tones),
+ *      hiding ProposalUpdated/AssetUploaded by noise policy and skipping
+ *      unknown types, then falls back to the previous version-row
+ *      projection (buildVersionHistoryTimelineItems) when no visible event
+ *      items exist — so an older/imported talent never shows an empty tab
+ *      while it still has version history.
+ *
+ * <Timeline> itself is unchanged — same component, same RTL styling; it
+ * still renders an EmptyState for a brand-new talent with no history at
+ * all.
  */
-function HistorySectionContent({ versions }) {
-  const items = buildVersionHistoryTimelineItems(versions);
+function HistorySectionContent({ items }) {
   return <Timeline items={items} />;
+}
+
+/*
+ * Sprint 2: Real Event-Based History Timeline — pure read of the talent's
+ * stored Event rows via the existing eventRepository.listForEntity
+ * (newest first, per that method's own contract). Never throws, same
+ * degrade-gracefully pattern as loadPendingVersion above: a transient read
+ * failure falls back to [] — which downstream resolves to the version-row
+ * history projection rather than a broken page.
+ */
+async function loadTalentEvents(talentId) {
+  try {
+    return await eventRepository.listForEntity(ENTITY_TYPE.TALENT, talentId);
+  } catch (error) {
+    console.error('[AdminTalentDetailPage] loadTalentEvents failed, falling back to version-row history:', error);
+    return [];
+  }
+}
+
+/*
+ * Sprint 2: Real Event-Based History Timeline — one batched, safe
+ * (passwordHash never selected) user lookup for the event actors. Never
+ * throws: on failure every actor renders as "—" instead of breaking the
+ * page.
+ */
+async function loadEventActors(events) {
+  try {
+    const actorIds = collectEventActorIds(events);
+    if (actorIds.length === 0) return new Map();
+    const users = await userRepository.getSafeByIds(actorIds);
+    return buildActorDisplayMap(users);
+  } catch (error) {
+    console.error('[AdminTalentDetailPage] loadEventActors failed, actors will display as "—":', error);
+    return new Map();
+  }
 }
 
 /*
@@ -691,12 +785,31 @@ export default async function AdminTalentDetailPage({ params }) {
     );
   }
 
-  const { id } = await params;
+  /*
+   * Clean Admin Talent URL sprint — the dynamic segment now accepts either
+   * the internal database ID (legacy links, backwards-compatible) or the
+   * current published slug (the canonical form). Resolution is exact-ID
+   * first, then slug (see lib/admin/talent-route.js); a legacy ID URL is
+   * redirected to /admin/talent/<current-published-slug> before any data
+   * loading. The folder deliberately stays [id] — only interpretation of
+   * the parameter widened. Everything below keeps using `talent.id`
+   * (`id` alias) for data reads and component props, so every API call and
+   * authorization check is unchanged.
+   */
+  const { id: routeParam } = await params;
 
-  const talent = await talentAdapter.getParent(id);
+  const { talent, redirectTo } = await resolveAdminTalentRoute(routeParam, {
+    getParent: (value) => talentAdapter.getParent(value),
+    getParentBySlug: (value) => talentAdapter.getParentBySlug(value),
+  });
   if (!talent) {
     notFound();
   }
+  if (redirectTo) {
+    redirect(redirectTo);
+  }
+
+  const id = talent.id;
 
   // Owner Direct Publish UX sprint — the one place this page reads the
   // session, mirroring every other read here ("pure read, nothing written").
@@ -742,6 +855,7 @@ export default async function AdminTalentDetailPage({ params }) {
     draftGalleryImages,
     proposedGalleryImages,
     rejectedGalleryImages,
+    events,
   ] = await Promise.all([
       versionService.getCurrentPublished(talentAdapter, id),
       loadPendingVersion(talent),
@@ -754,12 +868,33 @@ export default async function AdminTalentDetailPage({ params }) {
       talentAdapter.getDraftOrProposedGalleryImages(talent.id),
       talentAdapter.getProposedGalleryImages(talent.id),
       talentAdapter.getRejectedGalleryImages(talent.id),
+      // Sprint 2: Real Event-Based History Timeline — pure read of the
+      // stored Event rows for this talent (see loadTalentEvents above).
+      loadTalentEvents(talent.id),
     ]);
+
+  // Sprint 2: Real Event-Based History Timeline — resolve actor identities
+  // in one batched query (must run after `events` resolves, hence not part
+  // of the Promise.all above), then project events → timeline items with
+  // the version-row fallback for talents that predate event emission.
+  const eventActorsById = await loadEventActors(events);
+  const historyItems = buildTalentHistoryTimelineItems(events, eventActorsById, versions);
 
   const status = deriveDetailWorkflowStatus(versions);
   const lastUpdated = deriveLastUpdated(versions, talent);
   const displayName = publishedVersion?.name || talent.slug;
   const rejectionNote = deriveCurrentRejectionNote(versions);
+
+  // Global Edit Mode UX sprint — the page's single edit-activation signal,
+  // derived (never stored) from the same `pendingVersion` loadPendingVersion
+  // already read above for the header's StartEditingButton and the Details/
+  // Podcast tabs. True exactly when a DRAFT or PROPOSED TalentVersion
+  // exists — i.e. the page-level "Start Editing" flow is active. Passed to
+  // the Gallery/Socials/SEO sections so their editable surfaces open
+  // immediately instead of showing a second "התחל בעריכה" button. Pure
+  // derivation of an existing read: no new query, no write, no draft is
+  // ever created by rendering this page.
+  const globalEditing = isGlobalEditingStatus(pendingVersion?.status ?? null);
 
   const sections = TALENT_WORKSPACE_SECTIONS.map((section) => {
     if (section.key === 'details') {
@@ -777,6 +912,10 @@ export default async function AdminTalentDetailPage({ params }) {
         ),
       };
     }
+    // Website CMS Focus Cleanup — the `campaigns` section render was removed
+    // here (My Agency business module, not Website CMS content). The section
+    // is also no longer present in TALENT_WORKSPACE_SECTIONS, so this branch
+    // is unnecessary; the prototype component stays on disk, just unused.
     if (section.key === 'gallery') {
       return {
         ...section,
@@ -790,6 +929,7 @@ export default async function AdminTalentDetailPage({ params }) {
             displayName={displayName}
             role={role}
             uploadsEnabled={uploadsEnabled}
+            globalEditing={globalEditing}
           />
         ),
       };
@@ -805,12 +945,24 @@ export default async function AdminTalentDetailPage({ params }) {
             proposedSocials={proposedSocials}
             rejectedSocials={rejectedSocials}
             role={role}
+            globalEditing={globalEditing}
           />
         ),
       };
     }
     if (section.key === 'seo') {
-      return { ...section, content: <SeoSectionContent /> };
+      return {
+        ...section,
+        content: (
+          <SeoSectionContent
+            talent={talent}
+            publishedVersion={publishedVersion}
+            pendingVersion={pendingVersion}
+            role={role}
+            globalEditing={globalEditing}
+          />
+        ),
+      };
     }
     if (section.key === 'podcast') {
       return {
@@ -822,12 +974,13 @@ export default async function AdminTalentDetailPage({ params }) {
             pendingVersion={pendingVersion}
             displayName={displayName}
             role={role}
+            uploadsEnabled={uploadsEnabled}
           />
         ),
       };
     }
     if (section.key === 'history') {
-      return { ...section, content: <HistorySectionContent versions={versions} /> };
+      return { ...section, content: <HistorySectionContent items={historyItems} /> };
     }
     return { ...section, content: <PlaceholderSectionContent label={section.label} /> };
   });

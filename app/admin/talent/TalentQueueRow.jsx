@@ -50,6 +50,7 @@ import Card from '@/components/admin/Card';
 import StatusBadge from '@/components/admin/StatusBadge';
 import TalentImage from '@/components/ui/TalentImage';
 import { deriveListSocialPreview, selectListBadge } from '@/lib/admin/talent-workspace';
+import { adminTalentPath } from '@/lib/admin/talent-route';
 import { he } from '@/lib/admin/i18n/he';
 import styles from './talent.module.css';
 
@@ -60,7 +61,10 @@ export default function TalentQueueRow({ talent }) {
   const social = deriveListSocialPreview(talent.socialPreview);
 
   return (
-    <Link href={`/admin/talent/${talent.id}`} className={styles.rowLink} aria-label={`${he.talent.list.openFolder}: ${displayName}`}>
+    // Clean Admin Talent URL sprint — link by the current published slug
+    // (adminTalentPath prefers talent.slug, already selected by
+    // talentRepository.listTalents; internal id only as a fallback).
+    <Link href={adminTalentPath(talent)} className={styles.rowLink} aria-label={`${he.talent.list.openFolder}: ${displayName}`}>
       <Card as="article">
         <div className={styles.rowMain}>
           <div className={styles.rowThumb}>

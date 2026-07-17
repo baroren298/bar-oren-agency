@@ -1,0 +1,77 @@
+/*
+ * IdleWarningDialog — Sprint 4 (Admin Idle Timeout & Automatic Logout).
+ * Same overlay/panel shape as ConfirmDialog.module.css (shared admin-tokens
+ * palette), kept as its own file since this dialog has no "cancel" affordance
+ * and an always-visible countdown instead of an optional error line.
+ */
+
+.tokens {
+  composes: tokens from "./admin-tokens.module.css";
+}
+
+.overlay {
+  composes: tokens;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(31, 28, 23, 0.45);
+}
+
+.panel {
+  composes: tokens;
+  max-width: 26rem;
+  width: 100%;
+  background: var(--admin-surface);
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid var(--admin-border);
+  padding: 1.5rem;
+  box-shadow: 0 12px 32px rgba(31, 28, 23, 0.18);
+}
+
+.title {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+}
+
+.body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--admin-text-secondary);
+}
+
+.countdown {
+  margin: 0.75rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--admin-status-warning-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdownUnit {
+  margin-inline-start: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--admin-text-secondary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+/* Visible focus states for both actions (policy §8) — a clear ring in
+   addition to whatever the browser default already draws, so it survives
+   any future reset in admin-tokens/global styles. */
+.actions :global(button:focus-visible) {
+  outline: 2px solid var(--admin-accent-strong);
+  outline-offset: 2px;
+}

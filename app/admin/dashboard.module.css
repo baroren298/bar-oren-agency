@@ -1,62 +1,202 @@
 /*
- * /admin dashboard page styles — Admin Hebrew + Friendly Home sprint.
+ * /admin dashboard page styles — Owner Dashboard Sprint 2 (first real UI).
  *
  * Composes the shared components/admin/admin-tokens.module.css palette,
- * same as every other admin page, so this can't drift from the existing
- * look. Only new layout here is the greeting block and the summary grid —
- * everything else (card surface, badge colors) comes from Card/StatusBadge
- * directly.
+ * same as every other admin page. This sprint implements
+ * OWNER_DASHBOARD_UX_SPEC.md §2's visual hierarchy on top of Sprint 1's
+ * architecture (page → dashboardService → dashboardDto):
+ *
+ *   Tier 1 — Greeting: plain text on the page background, no card chrome,
+ *     the only element allowed personality (the 👋).
+ *   Tier 2 — Pending Approvals / Rejected Items / Employee Drafts: card
+ *     sections, row-dense lists, one CTA each. Pending Approvals is the
+ *     only section with the accent treatment (Card's `tone="accent"`);
+ *     Rejected Items gets a restrained warning tint on its row metadata
+ *     only, never a colored card; Employee Drafts is neutral.
+ *   Whitespace signals rank: more gap between Approvals rows than the
+ *     other two sections.
+ *
+ * The old .summaryGrid/.summaryTile/.talentCardText rules from the Admin
+ * Hebrew + Friendly Home sprint were unused (no component referenced
+ * them) and are removed rather than carried forward.
  */
 
 .tokens {
   composes: tokens from "../../components/admin/admin-tokens.module.css";
 }
 
-.greeting {
+/* ── Tier 1 — Greeting ────────────────────────────────────────────────── */
+
+.greetingBlock {
   composes: tokens;
-  margin: 0 0 0.4rem;
-  font-size: 1.25rem;
-  font-weight: 600;
+  margin: 0 0 2rem;
+}
+
+.greeting {
+  margin: 0 0 0.5rem;
+  font-size: 1.65rem;
+  font-weight: 700;
   color: var(--admin-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .subline {
-  composes: tokens;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1.02rem;
   color: var(--admin-text-secondary);
 }
 
-.summaryGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-  margin: 1.25rem 0;
-}
+/* ── Tier 2 — Queue sections ─────────────────────────────────────────── */
 
-.summaryTile {
-  composes: tokens;
+.sectionStack {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.sectionTitle {
+  composes: tokens;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.queueList {
+  composes: tokens;
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
   gap: 0.6rem;
 }
 
-.summaryCount {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--admin-text-primary);
-  line-height: 1;
+/* Pending Approvals gets a touch more room between rows — whitespace
+   signals rank (spec §2). */
+.queueListApprovals {
+  gap: 0.75rem;
 }
 
-.talentCardText {
+.queueRow {
   composes: tokens;
-  margin: 0 0 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  text-decoration: none;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+a.queueRow:hover {
+  background: var(--admin-accent-subtle);
+  border-color: var(--admin-accent);
+}
+
+a.queueRow:hover .chevron {
+  color: var(--admin-accent-strong);
+  transform: translateX(-2px);
+}
+
+.queueRowText {
+  min-width: 0;
+}
+
+.queueRowTitle {
+  margin: 0 0 0.2rem;
+  font-weight: 600;
+  font-size: 0.96rem;
+}
+
+.queueRowMeta {
+  margin: 0;
+  font-size: 0.85rem;
   color: var(--admin-text-secondary);
 }
 
+/* Rejected Items: the one restrained warning tint permitted by spec §2 —
+   applied to the row's status text only, never the row/card background. */
+.rejectedMeta {
+  composes: queueRowMeta;
+  color: var(--admin-status-warning-text);
+  font-weight: 600;
+}
+
+/* Aging flag on a long-waiting approval — text emphasis only, no alarm
+   color (spec §7/§11: color is never the only signal). */
+.agingFlag {
+  font-weight: 700;
+}
+
+/* Doorway affordance (spec §9): a left-pointing chevron for RTL "forward".
+   Present but muted by default, sharpens on row hover. */
+.chevron {
+  flex-shrink: 0;
+  color: var(--admin-text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: color 120ms ease, transform 120ms ease;
+}
+
+.queueEmpty {
+  composes: tokens;
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--admin-text-secondary);
+}
+
+/* ── Quick Actions (Sprint 5a) ────────────────────────────────────────── */
+/* Static links, not queue rows: a compact wrapping row of buttons rather
+   than the queue sections' stacked list — there's no metadata/timestamp to
+   show, just a destination. */
+
+/* Card has no built-in bottom margin (it's meant to sit inside .sectionStack,
+   which supplies gap via flex); Quick Actions sits outside that stack, so
+   its own wrapper supplies the same rhythm explicitly. */
+.quickActionsWrapper {
+  margin: 0 0 1.5rem;
+}
+
+.quickActionsList {
+  composes: tokens;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.quickActionLink {
+  composes: tokens;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface);
+  color: var(--admin-text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.quickActionLink:hover {
+  background: var(--admin-accent-subtle);
+  border-color: var(--admin-accent);
+}
+
 @media (max-width: 640px) {
-  .summaryGrid {
-    grid-template-columns: 1fr;
+  .queueRow {
+    align-items: flex-start;
+  }
+
+  .queueRowTitle {
+    font-size: 1rem;
   }
 }

@@ -4,16 +4,16 @@
 // (approval model) + Section 5 (soft delete) + Section 6 (optimistic
 // locking) + Section 4.1 (audit log).
 //
-// PHASE 1 SCOPE: this schema defines the data model only. Nothing in this
-// repo yet connects to a real database, runs a migration, or is wired into
-// any route. The public site (`data/*.js`, app/[locale]/**) is completely
-// unaffected by this file's existence — see ADMIN_PANEL_PLAN.md Section 1.
+// STATUS (updated, Infrastructure Cleanup sprint): the database phase is
+// live — a Neon Postgres instance (separate development and production
+// branches) backs this schema, migrations exist under prisma/migrations/,
+// and the admin routes use the client via lib/admin/db.js. The public site
+// (`data/*.js`, app/[locale]/**) still does not read from the database.
 //
-// To actually use this schema later (not part of Phase 1):
-//   1. `npm install` (adds prisma + @prisma/client — already declared in
-//      package.json, not yet installed in this environment).
-//   2. Set a real DATABASE_URL in .env.local (see .env.local.example).
-//   3. `npm run prisma:migrate:dev` to create the first migration.
+// CLI configuration lives in prisma.config.ts (replaces the deprecated
+// package.json#prisma block). Connection env vars (DATABASE_URL pooled,
+// DIRECT_URL direct — see the datasource block below) are documented in
+// .env.local.example and read by the CLI from ./.env.
 // ─────────────────────────────────────────────────────────────────────────
 
 generator client {
@@ -22,7 +22,21 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+
+  // Neon connection architecture (Infrastructure Cleanup sprint):
+  //   - DATABASE_URL — the POOLED endpoint (host contains "-pooler").
+  //     Used by the generated @prisma/client at runtime (lib/admin/db.js),
+  //     where serverless-friendly pooling is what we want.
+  //   - DIRECT_URL — the DIRECT (non-pooled) endpoint for the SAME Neon
+  //     branch. Used exclusively by Prisma CLI commands (migrate dev /
+  //     deploy / status, db pull, etc.), which require a direct connection —
+  //     schema changes and advisory locks misbehave through a pooler.
+  // `directUrl` is CLI-only: the runtime client never reads DIRECT_URL, so
+  // production runtime behavior is unchanged by its addition. Both vars are
+  // documented in .env.local.example; the CLI reads them from ./.env (see
+  // prisma.config.ts).
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -95,6 +109,19 @@ enum TalentVisibility {
 /// Audit log action types (Section 4.1). LOGIN/LOGIN_FAILED are included
 /// now even though auth itself ships in Phase 2, so the AuditLog shape
 /// doesn't need to change when auth lands.
+///
+/// ACTIVATED / DEACTIVATED / PASSWORD_RESET — Administration Sprint 2a
+/// (Audit Log): action semantics for user-management audit rows.
+/// RESTORED/ARCHIVED are entity-lifecycle concepts and are deliberately
+/// not reused for account enable/disable. Additive `ALTER TYPE ... ADD
+/// VALUE` migration (20260714120000_audit_user_entity_and_action_types);
+/// no existing row is affected. Nothing emits these yet — user-mutation
+/// event emission is Sprint 2b.
+///
+/// SESSION_REVOKED / SESSIONS_REVOKED — Sprint 3b (Session Management API):
+/// Owner-initiated revocation of one / all of a user's sessions. Same
+/// honest-narrative rationale and same additive migration pattern
+/// (20260716140000_session_management_action_types).
 enum ActionType {
   CREATED
   UPDATED
@@ -106,12 +133,27 @@ enum ActionType {
   ARCHIVED
   LOGIN
   LOGIN_FAILED
+  ACTIVATED
+  DEACTIVATED
+  PASSWORD_RESET
+  SESSION_REVOKED
+  SESSIONS_REVOKED
 }
 
 /// Polymorphic discriminator used by AuditLog, SEO, and the generic
 /// Entity/EntityVersion pair to identify what kind of content a row is
 /// about without a hard foreign key (some of these — e.g. static pages —
 /// have no dedicated table of their own).
+///
+/// USER — Administration Sprint 2a (Audit Log): the target discriminator
+/// for user-management events/audit rows (Event.entityId / AuditLog.
+/// entityId then hold the TARGET user's id; the acting Owner is the
+/// actor). Same additive migration as the ActionType additions above.
+///
+/// CLIENT / BRAND — Sprint 7B (Clients & Brands Foundation): target
+/// discriminators for client/brand events and audit rows. Additive
+/// `ALTER TYPE ... ADD VALUE` migration
+/// (20260717120000_add_clients_and_brands); no existing row affected.
 enum EntityType {
   TALENT
   SITE_CONTENT
@@ -120,6 +162,9 @@ enum EntityType {
   COLLABORATIONS
   AGENCY_SOCIAL
   IMAGE_ASSET
+  USER
+  CLIENT
+  BRAND
 }
 
 /// Talent social platforms. Originally matched only the fixed set used in
@@ -169,6 +214,22 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role     @default(OWNER)
+
+  // User Model Completion sprint — profile/management fields (additive,
+  // no capability/permission-table changes). `displayName` is optional
+  // since the existing Owner row(s) predate this field and have no value
+  // to backfill; new Employee accounts are expected to always set it via
+  // userRepository.createEmployee(), but nothing enforces that at the DB
+  // level yet. `isActive` defaults to true so every pre-existing user
+  // (including the current Owner) keeps logging in exactly as before this
+  // migration runs. `lastLoginAt` is null until the first successful
+  // login after this field existed; the login route
+  // (app/api/admin/auth/login/route.js) sets it on every successful
+  // login going forward.
+  displayName String?
+  isActive    Boolean  @default(true)
+  lastLoginAt DateTime?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -197,7 +258,40 @@ model User {
   auditLogsRejected AuditLog[] @relation("AuditRejectedBy")
   auditLogsDeleted  AuditLog[] @relation("AuditDeletedBy")
 
+  // Sprint 3a (Session Security Foundation) — back-relation only; no column
+  // change to users. See the Session model below.
+  sessions Session[]
+
   @@map("users")
+}
+
+/// Sprint 3a (Session Security Foundation) — server-side session record
+/// backing revocable admin logins. One row per issued JWT; the JWT's `sid`
+/// claim IS this row's id. Deliberate decisions (SPRINT_3A_SESSION_SECURITY_PLAN.md
+/// Section B):
+///
+///   - `id` has NO @default(cuid()): cuid v1 is partially predictable, and
+///     sid generation must stay service-owned — lib/admin/auth/sessionService.js
+///     generates it via crypto.randomUUID() (128-bit CSPRNG, non-guessable).
+///   - The raw JWT is NEVER stored anywhere; the DB holds only this random
+///     sid that the signed token references.
+///   - `revokedAt` is set-once and never un-set: reactivating a user does
+///     not resurrect previously revoked sessions.
+///   - `expiresAt` is written from the same SESSION_MAX_AGE_SECONDS value
+///     used for the JWT `exp`, so DB and token expiry never diverge.
+///   - Deliberately absent (out of scope this sprint): device/UA fields,
+///     IP, location, lastSeenAt.
+model Session {
+  id     String @id
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId, revokedAt])
+  @@map("sessions")
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -288,6 +382,40 @@ model TalentVersion {
   podcastImageAssetId  String?
   podcastImageAsset    Asset? @relation("TalentVersionPodcastImage", fields: [podcastImageAssetId], references: [id])
   podcastVideoEmbedUrl String?
+
+  // Talent SEO + Slug Management sprint — slug and SEO become normal
+  // versioned fields on TalentVersion, exactly like `visibility` and the
+  // podcast block above, so they ride the existing Draft → Proposed →
+  // Published workflow with no parallel approval engine.
+  //
+  // `slug` is the PROPOSED slug for this version. The authoritative public
+  // slug remains Talent.slug (stable identity, @unique) — it is only ever
+  // rewritten by talentRepository.publishTalentVersion's transaction when a
+  // version whose `slug` differs is published, after an in-transaction
+  // duplicate check against every other Talent row. Nullable so every
+  // pre-existing version row means "no slug change" and falls back to the
+  // parent Talent.slug; the public URL therefore never changes before a
+  // Publish.
+  //
+  // The dedicated `Seo` model below is deliberately NOT used for talent
+  // pages: it versions each SEO row independently of TalentVersion, which
+  // would create a second, parallel Draft/Approve lifecycle for the same
+  // talent — the exact thing this sprint must avoid. It remains reserved
+  // for site-level pages (about/contact/legal) in the Production SEO phase.
+  //
+  // seoOgImageUrl is a plain URL (not an Asset FK): the Open Graph image
+  // may legitimately be an external URL, and when empty the public page
+  // falls back to the profile image asset — so no upload/asset plumbing is
+  // required for the common case. seoNoindex defaults to false so every
+  // existing row keeps today's indexable behavior with no data migration.
+  slug             String?
+  seoTitle         String?
+  seoDescription   String?
+  seoCanonicalUrl  String?
+  seoOgTitle       String?
+  seoOgDescription String?
+  seoOgImageUrl    String?
+  seoNoindex       Boolean @default(false)
 
   createdById String
   createdBy   User     @relation("TalentVersionCreatedBy", fields: [createdById], references: [id])
@@ -665,6 +793,72 @@ model EntityVersion {
   entityCurrentPublishedOf Entity? @relation("EntityCurrentPublished")
 
   @@map("entity_versions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Clients & Brands — Sprint 7B (Clients & Brands Foundation). Internal
+// operational records, like User: deliberately OUTSIDE the Draft →
+// Proposed → Published content workflow (no VersionStatus, no
+// basedOnVersionId, no approval columns). Lifecycle is LifecycleStatus +
+// archive-only — nothing here is ever hard-deleted, and this sprint adds
+// no unarchive flow.
+//
+// Uniqueness: `normalizedName` (trim / collapse-whitespace / lowercase —
+// lib/admin/normalize-name.js, NOT normalizeSlug, which strips
+// Hebrew) carries the duplicate-prevention constraints. FULL unique
+// constraints, deliberately including archived rows: confirmed product
+// rule — an archived Client/Brand keeps its name reserved. The service
+// layer does a friendly transactional pre-check; the DB constraint is the
+// race-proof backstop (P2002 → same friendly Hebrew error).
+//
+// Deliberately absent (Sprint 7A freeze): Campaign relations, financial
+// fields, pricing, commission — the smallest valid schema for this sprint.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Client {
+  id             String @id @default(cuid())
+  name           String
+  normalizedName String @unique
+
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  notes        String?
+
+  status LifecycleStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  brands Brand[]
+
+  @@map("clients")
+}
+
+model Brand {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  name           String
+  normalizedName String
+
+  notes String?
+
+  status LifecycleStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  deletedBy String?
+
+  // Same Brand name may exist under different Clients; never twice under
+  // the same Client (after normalization), archived rows included.
+  @@unique([clientId, normalizedName])
+  @@index([clientId])
+  @@map("brands")
 }
 
 // ─────────────────────────────────────────────────────────────────────────

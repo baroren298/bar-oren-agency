@@ -1,0 +1,51 @@
+name: CI
+
+# Sprint 6B: minimal CI pipeline. Verifies the project stays healthy on every
+# push and pull request — no database connection, no secrets, no migrations.
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Node 22 matches this repo's local development runtime (v22.x) and is
+      # an active LTS release compatible with Next.js 16 and Prisma 6.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Explicit client generation (Infrastructure Cleanup follow-up):
+      # previously CI relied on @prisma/client's implicit postinstall hook,
+      # which Prisma has signaled changing in v7. `prisma generate` reads
+      # only the schema — no database connection and no env vars needed.
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Validates prisma/schema.prisma syntax only — does not connect to any
+      # database, run migrations, or require DATABASE_URL/DIRECT_URL to be
+      # set to a real value. `prisma validate` only needs these env vars to
+      # be *present* (non-empty, well-formed) so it can parse the datasource
+      # block; it never opens a connection. Values below are synthetic
+      # placeholders scoped to this step only — not real credentials.
+      - name: Validate Prisma schema
+        env:
+          DATABASE_URL: 'postgresql://ci_placeholder_user:ci_placeholder_pass@localhost:5432/ci_placeholder_db?schema=public'
+          DIRECT_URL: 'postgresql://ci_placeholder_user:ci_placeholder_pass@localhost:5432/ci_placeholder_db?schema=public'
+        run: npx prisma validate

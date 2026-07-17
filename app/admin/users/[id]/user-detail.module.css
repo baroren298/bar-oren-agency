@@ -1,0 +1,125 @@
+/*
+ * /admin/users/[id] styles — Sprint 3.1: User Details Page.
+ *
+ * Composes the shared components/admin/admin-tokens.module.css palette,
+ * same as every other admin page module (e.g. app/admin/users/
+ * users.module.css, which this borrows its field/input/button styling
+ * conventions from) so this page reads as part of the same design system.
+ */
+
+.tokens {
+  composes: tokens from "../../../../components/admin/admin-tokens.module.css";
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.backLink {
+  composes: tokens;
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  color: var(--admin-text-secondary);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--admin-accent-strong);
+}
+
+.sectionDescription {
+  composes: tokens;
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--admin-border);
+  flex-wrap: wrap;
+}
+
+.fieldRow:last-child {
+  border-bottom: none;
+}
+
+.fieldLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  white-space: nowrap;
+}
+
+.fieldValue {
+  font-size: 0.92rem;
+  color: var(--admin-text-primary);
+}
+
+.mutedNote {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--admin-text-muted);
+}
+
+.resetForm {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.input {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.55rem 0.75rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: #9c4a3a;
+}
+
+.formError {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #9c4a3a;
+}
+
+.formSuccess {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.6rem;
+}
+
+/* Extra breathing room between the profile info rows and the
+   "ערוך פרופיל" trigger in view mode (Profile tab). */
+.profileViewActions {
+  margin-top: 1.25rem;
+}

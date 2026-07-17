@@ -75,7 +75,7 @@ describe('POST .../discard', () => {
     expect(hoisted.discard).not.toHaveBeenCalled();
   });
 
-  it('EMPLOYEE can discard a DRAFT version', async () => {
+  it('EMPLOYEE can discard a DRAFT version (route forwards actorRole for service-level ownership enforcement)', async () => {
     hoisted.requireOwnerOrEmployee.mockResolvedValue({ userId: 'employee-1', role: ROLE.EMPLOYEE });
     hoisted.getVersion.mockResolvedValue({ id: 'version-1', talentId: 'talent-1', status: VERSION_STATUS.DRAFT });
     hoisted.discard.mockResolvedValue({ discarded: true });
@@ -89,11 +89,11 @@ describe('POST .../discard', () => {
     expect(body).toEqual({ discarded: true });
     expect(hoisted.discard).toHaveBeenCalledWith(
       expect.objectContaining({ entityType: 'TALENT' }),
-      { parentId: 'talent-1', versionId: 'version-1', actorId: 'employee-1' }
+      { parentId: 'talent-1', versionId: 'version-1', actorId: 'employee-1', actorRole: ROLE.EMPLOYEE }
     );
   });
 
-  it('OWNER can discard a DRAFT version', async () => {
+  it('OWNER can discard a DRAFT version (route forwards actorRole for service-level ownership enforcement)', async () => {
     hoisted.requireOwnerOrEmployee.mockResolvedValue({ userId: 'owner-1', role: ROLE.OWNER });
     hoisted.getVersion.mockResolvedValue({ id: 'version-1', talentId: 'talent-1', status: VERSION_STATUS.DRAFT });
     hoisted.discard.mockResolvedValue({ discarded: true });
@@ -107,8 +107,24 @@ describe('POST .../discard', () => {
     expect(body).toEqual({ discarded: true });
     expect(hoisted.discard).toHaveBeenCalledWith(
       expect.objectContaining({ entityType: 'TALENT' }),
-      { parentId: 'talent-1', versionId: 'version-1', actorId: 'owner-1' }
+      { parentId: 'talent-1', versionId: 'version-1', actorId: 'owner-1', actorRole: ROLE.OWNER }
     );
+  });
+
+  it('returns 403 with code FORBIDDEN_NOT_DRAFT_OWNER when an EMPLOYEE tries to discard a draft created by a different user (Draft Ownership Sprint 1)', async () => {
+    hoisted.requireOwnerOrEmployee.mockResolvedValue({ userId: 'employee-2', role: ROLE.EMPLOYEE });
+    hoisted.getVersion.mockResolvedValue({ id: 'version-1', talentId: 'talent-1', status: VERSION_STATUS.DRAFT });
+    hoisted.discard.mockRejectedValue(
+      Object.assign(new Error('not permitted'), { statusCode: 403, code: 'FORBIDDEN_NOT_DRAFT_OWNER' })
+    );
+
+    const response = await POST(makeRequest(), {
+      params: Promise.resolve({ id: 'talent-1', versionId: 'version-1' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.code).toBe('FORBIDDEN_NOT_DRAFT_OWNER');
   });
 
   it('returns 409 with code NOT_DISCARDABLE for a PROPOSED version, without calling proposalService.discard', async () => {

@@ -240,7 +240,11 @@ export default function NewTalentForm({ uploadsEnabled = true }) {
       }
 
       setSucceeded(true);
-      router.push(`/admin/talent/${body.talent.id}`);
+      // Clean Admin Talent URL sprint — the create response's talent row
+      // carries the slug just persisted on the parent Talent record; land
+      // on the canonical slug URL (id only as a safety net, where the
+      // workspace page's ID→slug redirect still applies).
+      router.push(`/admin/talent/${body.talent.slug || body.talent.id}`);
     } catch {
       setFormError(COPY.errors.networkError);
       setSubmitting(false);

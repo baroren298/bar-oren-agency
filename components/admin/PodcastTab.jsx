@@ -24,12 +24,25 @@
  * state the פרטים tab already shows; `copy.noEditableVersionHint` below
  * just explains *why* in this tab's own context.
  *
- * Still out of scope, unchanged from the previous sprint:
- *  - "החלף תמונה" (replace image) — disabled placeholder, no upload flow
- *    exists yet, and podcastImageAssetId is deliberately not part of the
- *    writable allowlist this sprint either (sprint rule #2).
- *  - The YouTube link/image preview shown here reflect the *published*
- *    version's current values (read-only) — editing the video URL happens
+ * Podcast Image Upload sprint — "החלף תמונה" is now a real upload flow:
+ * a hidden file input + the existing useImageAssetUpload hook (purpose
+ * "podcast", validated by lib/storage/utils/validationProfiles.js), then
+ * an explicit PATCH of { podcastImageAssetId } onto the current editable
+ * DRAFT/PROPOSED version via the same proposals/[versionId] route every
+ * other editor uses (flow logic in lib/admin/podcast-image.js, extracted
+ * for testability). The action is available only when an editable
+ * versionId exists AND uploadsEnabled (server-computed environment gate)
+ * is true; nothing here runs on render — no draft is created by opening
+ * this tab, and there is no auto-save beyond this one explicit action.
+ * After a successful upload+save the preview swaps to the new image
+ * immediately; on refresh the pending draft's stored image (via
+ * podcastImageAsset on the pending version) keeps showing. Publishing is
+ * never triggered from here — the new image goes live only through the
+ * existing Submit/Approve/Publish lifecycle.
+ *
+ * Still unchanged from previous sprints:
+ *  - The YouTube link and the *fallback* image preview reflect the
+ *    published version's current values — editing the video URL happens
  *    via the proposed-column input in the editor below, not by typing
  *    into this link/preview area.
  *
@@ -60,19 +73,40 @@
  *                           as <TalentDetailsEditor>)
  *   versionStatus         — "DRAFT" | "PROPOSED" | null
  *   groups                — ComparisonView's `groups` prop (buildPodcastGroups)
- *   podcastImageUrl        — ImageAsset.blobUrl, or null
+ *   podcastImageUrl        — published ImageAsset.blobUrl, or null
+ *   pendingPodcastImageUrl — pending DRAFT/PROPOSED version's own
+ *                           podcastImageAsset.blobUrl, or null (Podcast
+ *                           Image Upload sprint — what keeps a saved
+ *                           replacement visible after a refresh)
  *   podcastVideoEmbedUrl  — string | null (published value, for the
  *                           read-only "צפייה ביוטיוב" link)
  *   hasPodcastData        — boolean — whether the published version has any
  *                           podcast field set at all (drives the empty state)
  *   displayName           — talent's display name, for image alt text
+ *   uploadsEnabled        — server-computed environment gate (Podcast Image
+ *                           Upload sprint); false disables only the upload
+ *                           control, with an explanatory hint
  */
 
+import { useRef, useState } from "react";
 import styles from "./PodcastTab.module.css";
 import EmptyState from "./EmptyState";
 import PrimaryButton from "./PrimaryButton";
 import TalentDetailsEditor from "./TalentDetailsEditor";
 import { he } from "@/lib/admin/i18n/he";
+import { toYouTubeWatchUrl } from "@/lib/youtube";
+import { useImageAssetUpload } from "@/lib/admin/hooks/useImageAssetUpload";
+import {
+  canReplacePodcastImage,
+  selectPodcastPreviewUrl,
+  replacePodcastImage,
+} from "@/lib/admin/podcast-image";
+import { getValidationProfile } from "@/lib/storage/utils/validationProfiles";
+
+// Static mirror of the server's podcast validation profile, purely for the
+// file picker's `accept` filter — the hook re-validates on pick and the
+// upload route re-validates authoritatively on the server.
+const PODCAST_ACCEPT = getValidationProfile("podcast").allowedMimeTypes.join(",");
 
 export default function PodcastTab({
   talentId,
@@ -80,12 +114,106 @@ export default function PodcastTab({
   versionStatus = null,
   groups,
   podcastImageUrl,
+  pendingPodcastImageUrl = null,
   podcastVideoEmbedUrl,
   hasPodcastData,
   displayName,
   role = null,
+  uploadsEnabled = true,
 }) {
   const copy = he.talent.detail.podcastTab;
+
+  // The stored value is a YouTube *embed* URL (what the public iframe
+  // needs). Opening an embed URL as a top-level page triggers YouTube
+  // Error 153, so the admin button gets a derived /watch URL instead. The
+  // stored value itself is never touched.
+  const youtubeWatchUrl = toYouTubeWatchUrl(podcastVideoEmbedUrl);
+
+  // Podcast Image Upload sprint — the replace-image flow's state. All of
+  // it is inert until the user explicitly picks a file: nothing below
+  // fires a network call on render, and no draft is ever created here
+  // (replacePodcastImage only PATCHes an already-existing versionId).
+  const fileInputRef = useRef(null);
+  const { status: uploadStatus, error: uploadError, upload } = useImageAssetUpload(
+    "podcast",
+    he.media.errors
+  );
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [savedNow, setSavedNow] = useState(false);
+  // blobUrl of an asset uploaded AND saved to the draft this session —
+  // set only after the PATCH succeeds, so a failed flow never swaps the
+  // preview away from the current image.
+  const [localPreviewUrl, setLocalPreviewUrl] = useState(null);
+
+  const busy = uploadStatus === "uploading" || saving;
+  const canReplace = canReplacePodcastImage({ versionId, uploadsEnabled, busy });
+
+  const previewUrl = selectPodcastPreviewUrl({
+    localPreviewUrl,
+    pendingImageUrl: pendingPodcastImageUrl,
+    publishedImageUrl: podcastImageUrl,
+  });
+  const showingPendingImage = previewUrl !== null && previewUrl !== podcastImageUrl;
+
+  function handleReplaceClick() {
+    if (!canReplace) return;
+    fileInputRef.current?.click();
+  }
+
+  async function handleFileChange(event) {
+    const file = event.target.files?.[0] ?? null;
+    // Reset so picking the same file again re-triggers change.
+    event.target.value = "";
+    if (!file || !canReplace) return;
+
+    setSaveError(null);
+    setSavedNow(false);
+    setSaving(true);
+    try {
+      const result = await replacePodcastImage({
+        talentId,
+        versionId,
+        uploadsEnabled,
+        file,
+        upload,
+        copy: {
+          saveError: he.editor.saveDraft.error,
+          networkError: he.media.errors.networkError,
+        },
+      });
+
+      if (result.ok) {
+        // Swap the preview immediately; the published image stays stored
+        // untouched (fallback until this draft is approved and published).
+        if (result.asset.blobUrl) {
+          setLocalPreviewUrl(result.asset.blobUrl);
+        }
+        setSavedNow(true);
+      } else if (result.reason === "save") {
+        setSaveError(result.error);
+      }
+      // reason === "upload": the hook's own `uploadError` already carries
+      // the user-facing message; reason === "unavailable": nothing to show.
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const replaceDisabledHint = !uploadsEnabled
+    ? he.media.uploadsDisabledHint
+    : !versionId
+      ? copy.replaceImageNoVersionHint
+      : null;
+
+  const replaceStatusMessage = busy
+    ? copy.uploading
+    : uploadError || saveError
+      ? uploadError || saveError
+      : savedNow
+        ? copy.uploadSaved
+        : null;
+  const replaceStatusIsError = !busy && Boolean(uploadError || saveError);
 
   const editorColumn = (
     <div className={styles.editorColumn}>
@@ -120,9 +248,9 @@ export default function PodcastTab({
           <span className={styles.previewLabel}>{copy.imageLabel}</span>
           <div className={styles.previewRowContent}>
             <div className={styles.frame}>
-              {podcastImageUrl ? (
+              {previewUrl ? (
                 <img
-                  src={podcastImageUrl}
+                  src={previewUrl}
                   alt={copy.imageAlt(displayName)}
                   className={styles.image}
                 />
@@ -134,14 +262,46 @@ export default function PodcastTab({
             </div>
 
             <div className={styles.previewActions}>
-              <button type="button" className={styles.imageButton} disabled>
+              {/*
+                Podcast Image Upload sprint — real file picker. The input is
+                hidden (the visible control keeps the exact "החלף תמונה"
+                button this card always had); it never renders as part of a
+                form and only does anything after an explicit click+pick.
+              */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={PODCAST_ACCEPT}
+                onChange={handleFileChange}
+                className={styles.hiddenFileInput}
+                aria-hidden="true"
+                tabIndex={-1}
+              />
+              <button
+                type="button"
+                className={styles.imageButton}
+                onClick={handleReplaceClick}
+                disabled={!canReplace}
+              >
                 {copy.replaceImage}
               </button>
-              <p className={styles.comingSoonHint}>{copy.comingSoonHint}</p>
 
-              {podcastVideoEmbedUrl ? (
+              {replaceDisabledHint ? <p className={styles.hint}>{replaceDisabledHint}</p> : null}
+
+              {replaceStatusMessage ? (
+                <p
+                  className={replaceStatusIsError ? styles.uploadStatusError : styles.uploadStatus}
+                  role={replaceStatusIsError ? "alert" : "status"}
+                >
+                  {replaceStatusMessage}
+                </p>
+              ) : null}
+
+              {showingPendingImage ? <p className={styles.hint}>{copy.pendingImageHint}</p> : null}
+
+              {youtubeWatchUrl ? (
                 <PrimaryButton
-                  href={podcastVideoEmbedUrl}
+                  href={youtubeWatchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.youtubeButton}

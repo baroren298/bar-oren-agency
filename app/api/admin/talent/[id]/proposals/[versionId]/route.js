@@ -5,7 +5,7 @@
  * fields in place. Pattern matches the sibling POST route
  * (app/api/admin/talent/[id]/proposals/route.js) exactly: API Route (not a
  * Server Action), auth via requireUser() as defense in depth alongside
- * middleware.js, route does nothing but param-validate then call the engine
+ * proxy.js, route does nothing but param-validate then call the engine
  * — no repository/Prisma import here.
  *
  * Extended by the "Editable PROPOSED" sprint: this route now also accepts a
@@ -39,6 +39,10 @@
  *   - version exists but isn't DRAFT/PROPOSED -> 409 (server-side authority —
  *     proposalService.update() is what actually enforces this; this status
  *     code just reflects the error it throws)
+ *   - EMPLOYEE editing a version created by a different user -> 403,
+ *     { error, code: 'FORBIDDEN_NOT_DRAFT_OWNER' } (Auth Hardening + Draft
+ *     Ownership Sprint 1 — enforced inside proposalService.update() itself,
+ *     not here; OWNER may edit any version)
  *   - otherwise                           -> 200, { version, conflict, validation }
  *
  * Out of scope (next sprints, not this one): Submit, Approve, Reject,
@@ -114,11 +118,15 @@ export async function PATCH(request, { params }) {
       versionId,
       fields,
       actorId: session.userId,
+      actorRole: session.role,
       basedOnRevisionNumber: talent.revisionNumber,
     });
 
     return NextResponse.json({ version, conflict, validation }, { status: 200 });
   } catch (error) {
+    if (error.code === 'FORBIDDEN_NOT_DRAFT_OWNER') {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 403 });
+    }
     console.error('[PATCH /api/admin/talent/[id]/proposals/[versionId]] failed to save draft:', error);
     return NextResponse.json({ error: 'Failed to save draft.' }, { status: 500 });
   }

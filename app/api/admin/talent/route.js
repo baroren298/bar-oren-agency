@@ -14,7 +14,7 @@
  * Pattern matches the existing proposals route (app/api/admin/talent/[id]/
  * proposals/route.js): an API Route, not a Server Action;
  * requireOwnerOrEmployee() re-derives the session independently as defense
- * in depth even though middleware.js already gates /api/admin/* with the
+ * in depth even though proxy.js already gates /api/admin/* with the
  * same check (Pre-merge blocker fix sprint, QA finding #3: was
  * requireUser — functionally identical today, but every sibling write
  * route is written against the explicit role list so a future third role,

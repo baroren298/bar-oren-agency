@@ -8,7 +8,7 @@
  *
  * Pattern: API Route, not a Server Action — matches the rest of this
  * codebase's admin mutations (app/api/admin/auth/login|logout/route.js),
- * which already documented that choice explicitly. middleware.js already
+ * which already documented that choice explicitly. proxy.js already
  * 401s any unauthenticated request under /api/admin/* before this file
  * runs; requireUser() below re-derives the session from the same cookie
  * independently anyway, as defense in depth (the same pattern
@@ -102,6 +102,16 @@ export async function POST(request, { params }) {
   }
 
   const fields = extractTalentVersionFields(publishedVersion);
+
+  // Talent SEO + Slug Management sprint — a published version created
+  // before the slug column existed carries `slug: null` ("no slug
+  // change"). Seed the new Draft's slug from the parent Talent's live slug
+  // instead, so the Slug editor always starts from the real public slug
+  // rather than an empty field. Purely a seeding default: the Draft's slug
+  // remains fully editable and only ever reaches Talent.slug via Publish.
+  if (fields.slug == null) {
+    fields.slug = talent.slug;
+  }
 
   try {
     const { version } = await proposalService.create(talentAdapter, {

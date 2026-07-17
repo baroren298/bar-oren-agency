@@ -39,7 +39,12 @@ import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { proposalService } from '@/lib/admin/engine/proposalService';
 import { approvalService } from '@/lib/admin/engine/approvalService';
-import { VERSION_STATUS, REVISION_CONFLICT_ERROR_CODE } from '@/lib/admin/constants/enums';
+import {
+  VERSION_STATUS,
+  REVISION_CONFLICT_ERROR_CODE,
+  SLUG_CONFLICT_ERROR_CODE,
+  SLUG_INVALID_ERROR_CODE,
+} from '@/lib/admin/constants/enums';
 
 export async function POST(request, { params }) {
   let session;
@@ -95,6 +100,7 @@ export async function POST(request, { params }) {
         parentId: id,
         versionId,
         actorId: session.userId,
+        actorRole: session.role,
       });
     }
 
@@ -116,6 +122,31 @@ export async function POST(request, { params }) {
           error: 'This talent changed since this proposal was created.',
           code: REVISION_CONFLICT_ERROR_CODE,
           conflict: error.conflict,
+        },
+        { status: 409 }
+      );
+    }
+    // Talent SEO + Slug Management sprint — the publish transaction's
+    // authoritative slug gates (talentRepository.publishTalentVersion).
+    // Publishing is blocked, nothing was written. NOTE: when step 1 above
+    // already flipped a DRAFT to PROPOSED, that flip stands (it is its own
+    // committed transaction) — the version simply awaits a corrected slug.
+    if (error.code === SLUG_CONFLICT_ERROR_CODE) {
+      return NextResponse.json(
+        {
+          error: `The slug "${error.slug}" is already used by another talent. Choose a different slug before publishing.`,
+          code: SLUG_CONFLICT_ERROR_CODE,
+          slug: error.slug,
+        },
+        { status: 409 }
+      );
+    }
+    if (error.code === SLUG_INVALID_ERROR_CODE) {
+      return NextResponse.json(
+        {
+          error: `The proposed slug "${error.slug}" is invalid (allowed: a-z, 0-9, single hyphens). Fix it before publishing.`,
+          code: SLUG_INVALID_ERROR_CODE,
+          slug: error.slug,
         },
         { status: 409 }
       );

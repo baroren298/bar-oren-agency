@@ -77,3 +77,9 @@
   font-size: 0.82rem;
   color: var(--admin-text-secondary);
 }
+
+.toggleRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}

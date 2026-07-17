@@ -15,11 +15,19 @@
  * Save Draft already established which rows are DRAFT; Submit doesn't need
  * the editor to enumerate them again.
  *
+ * Auth Hardening + Draft Ownership Sprint 1: an EMPLOYEE actor here only
+ * ever submits DRAFT rows they themselves created — socialsService.submit()
+ * forces that scoping server-side (see its own header comment) whenever
+ * `actorRole` isn't OWNER, so another author's unfinished drafts are simply
+ * left DRAFT, untouched, rather than swept up. An OWNER actor is unaffected
+ * (still submits every DRAFT row, unchanged behavior).
+ *
  * Behavior:
  *   - no session                  -> 401 (also enforced by middleware)
  *   - missing id                  -> 400
  *   - talent not found            -> 404
- *   - no DRAFT social rows exist  -> 409, { error, code: 'NOTHING_TO_SUBMIT' }
+ *   - no DRAFT social rows exist (none at all, or an EMPLOYEE has none of
+ *     their own) -> 409, { error, code: 'NOTHING_TO_SUBMIT' }
  *   - otherwise                   -> 200, { accounts }
  *
  * Out of scope (not this sprint): Approve/Reject/Publish for social rows —
@@ -58,6 +66,7 @@ export async function POST(request, { params }) {
     const { accounts } = await socialsService.submit(talentAdapter, {
       parentId: id,
       actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ accounts }, { status: 200 });

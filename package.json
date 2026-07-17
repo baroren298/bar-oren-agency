@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "prisma generate",
     "dev": "next dev",
+    "prebuild": "prisma generate",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
-    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:dev": "node scripts/prisma-guard.mjs dev",
+    "prisma:migrate:status": "node scripts/prisma-guard.mjs status",
+    "prisma:verify": "node scripts/prisma-guard.mjs verify",
     "admin:create-owner": "node scripts/create-owner.mjs",
     "admin:seed-dev-talent": "node scripts/seed-dev-talent.mjs",
     "admin:migrate-day-import": "node scripts/migrate-day-import.mjs",
@@ -19,6 +23,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^6.19.3",
+    "@vercel/blob": "^1.1.1",
     "bcryptjs": "^2.4.3",
     "framer-motion": "^11.3.0",
     "jose": "^5.9.6",
@@ -31,8 +36,5 @@
     "eslint-config-next": "^16.2.7",
     "prisma": "^6.19.3",
     "vitest": "^3.0.0"
-  },
-  "prisma": {
-    "schema": "prisma/schema.prisma"
   }
 }

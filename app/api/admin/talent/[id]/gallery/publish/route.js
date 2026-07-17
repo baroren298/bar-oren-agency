@@ -76,6 +76,7 @@ export async function POST(request, { params }) {
     await galleryService.submit(talentAdapter, {
       parentId: id,
       actorId: session.userId,
+      actorRole: session.role,
       createdById: session.userId,
     });
   } catch (error) {
