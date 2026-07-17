@@ -23,6 +23,7 @@ import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
 import ClientDetailClient from "./ClientDetailClient";
 import { he } from "@/lib/admin/i18n/he";
+import { blockRetiredModulePage } from "@/lib/admin/retired-modules";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,12 @@ export const metadata = {
 };
 
 export default async function AdminClientDetailPage({ params }) {
+  // Website CMS Focus Cleanup — retired module (Client detail + nested
+  // Brands UI). Unavailable to everyone (renders 404) before any auth/data
+  // access; existing session/service checks below remain as an additional
+  // boundary.
+  blockRetiredModulePage();
+
   const session = await getSessionUser({ cookies: await cookies() });
   if (!session) {
     redirect("/admin/login");

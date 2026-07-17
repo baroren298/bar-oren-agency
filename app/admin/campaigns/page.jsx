@@ -21,6 +21,7 @@ import AdminShell from "../AdminShell";
 import PageHeader from "@/components/admin/PageHeader";
 import CampaignsPageClient from "./CampaignsPageClient";
 import { campaignsCopy } from "./_prototype/copy";
+import { blockRetiredModulePage } from "@/lib/admin/retired-modules";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,11 @@ export const metadata = {
 };
 
 export default async function AdminCampaignsPage() {
+  // Website CMS Focus Cleanup — retired module. Unavailable to everyone
+  // (renders 404) before any access; the prototype code/data below stays
+  // in place, just unreachable.
+  blockRetiredModulePage();
+
   const session = await getSessionUser({ cookies: await cookies() });
   if (!session) {
     redirect("/admin/login");

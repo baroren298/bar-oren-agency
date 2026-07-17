@@ -38,15 +38,13 @@ const BASE_NAV_ITEMS = [
   { href: "/admin", label: he.nav.dashboard },
   { href: "/admin/my-work", label: he.nav.myWork },
   { href: "/admin/talent", label: he.nav.talent },
-  // Sprint 7B (Clients & Brands Foundation) — visible to both roles:
-  // OWNER and EMPLOYEE may view/create/edit Clients and Brands. Archive is
-  // Owner-only, but that's enforced by the routes/service (and hidden per
-  // action inside the pages) — not by hiding this nav item.
-  { href: "/admin/clients", label: he.nav.clients },
-  // Sprint 8A (Campaigns UI Prototype) — PROTOTYPE module: fake in-memory
-  // demo data only, no database/API. Visible to both roles like Clients.
-  // Remove or keep this entry when the real Campaigns module ships.
-  { href: "/admin/campaigns", label: he.nav.campaigns },
+  // Website CMS Focus Cleanup — Clients and Campaigns are business modules
+  // that belong to the future My Agency platform, not the Website CMS, so
+  // their nav entries were removed here. Their code, data, and Hebrew
+  // labels (he.nav.clients / he.nav.campaigns) are intentionally left in
+  // place; the pages/APIs are made unavailable via the shared
+  // module-retirement gate (lib/admin/retired-modules.js). Re-adding an
+  // entry here is all that's needed to restore a module later.
 ];
 
 // Owner-only "Administration" section (frozen architecture). Sessions will

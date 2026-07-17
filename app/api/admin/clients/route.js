@@ -22,6 +22,10 @@ import { requireOwnerOrEmployee } from '@/lib/admin/auth/authorize';
 import { clientService } from '@/lib/admin/clientService';
 import { buildRequestAuditContext } from '@/lib/admin/requestAuditContext';
 import { he } from '@/lib/admin/i18n/he';
+// Website CMS Focus Cleanup — shared module-retirement gate. Additional
+// boundary layered ABOVE the existing auth/service checks (not a
+// replacement): every handler returns a uniform 404 with no data.
+import { retiredModuleApiResponse } from '@/lib/admin/retired-modules';
 
 function authErrorResponse(error) {
   return NextResponse.json(
@@ -47,6 +51,9 @@ function serviceErrorResponse(error, fallbackMessage) {
 }
 
 export async function GET(request) {
+  const retired = retiredModuleApiResponse();
+  if (retired) return retired;
+
   let session;
   try {
     session = await requireOwnerOrEmployee(request);
@@ -69,6 +76,9 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const retired = retiredModuleApiResponse();
+  if (retired) return retired;
+
   let session;
   try {
     session = await requireOwnerOrEmployee(request);

@@ -79,11 +79,12 @@ import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import SocialLinksOwnerReview from '@/components/admin/SocialLinksOwnerReview';
 import SeoEditor from '@/components/admin/SeoEditor';
 import Timeline from '@/components/admin/Timeline';
-// Sprint 8A (Campaigns UI Prototype) — PROTOTYPE-only client component:
-// fake in-memory demo data, zero database reads/writes (see the campaigns
-// _prototype folder). Safe to import from this Server Component; it renders
-// entirely client-side.
-import TalentCampaignsTab from '@/app/admin/campaigns/TalentCampaignsTab';
+// Website CMS Focus Cleanup — the Campaigns tab import (TalentCampaignsTab)
+// was removed here, along with its workspace section entry and the
+// conditional render below: Campaigns is a My Agency business module, not
+// Website CMS content. The prototype component file
+// (app/admin/campaigns/TalentCampaignsTab.jsx) is intentionally left in
+// place, just no longer imported or rendered.
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import {
   TALENT_WORKSPACE_SECTIONS,
@@ -911,14 +912,10 @@ export default async function AdminTalentDetailPage({ params }) {
         ),
       };
     }
-    if (section.key === 'campaigns') {
-      // Sprint 8A (Campaigns UI Prototype) — prototype tab, fake local
-      // data only. Deliberately receives no talent props: the prototype
-      // store knows nothing about real talents, so the tab aliases this
-      // profile to a fixed demo talent (and says so in a visible note).
-      // Pure client-side rendering — this page stays a pure read.
-      return { ...section, content: <TalentCampaignsTab /> };
-    }
+    // Website CMS Focus Cleanup — the `campaigns` section render was removed
+    // here (My Agency business module, not Website CMS content). The section
+    // is also no longer present in TALENT_WORKSPACE_SECTIONS, so this branch
+    // is unnecessary; the prototype component stays on disk, just unused.
     if (section.key === 'gallery') {
       return {
         ...section,

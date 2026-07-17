@@ -27,6 +27,7 @@ import PageHeader from "@/components/admin/PageHeader";
 import EmptyState from "@/components/admin/EmptyState";
 import ClientsPageClient from "./ClientsPageClient";
 import { he } from "@/lib/admin/i18n/he";
+import { blockRetiredModulePage } from "@/lib/admin/retired-modules";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,11 @@ export const metadata = {
 };
 
 export default async function AdminClientsPage() {
+  // Website CMS Focus Cleanup — retired module. Unavailable to everyone
+  // (renders 404) before any auth/data access; the existing session and
+  // service checks below remain intact as an additional boundary.
+  blockRetiredModulePage();
+
   const session = await getSessionUser({ cookies: await cookies() });
   if (!session) {
     redirect("/admin/login");
