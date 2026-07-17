@@ -43,6 +43,10 @@ const BASE_NAV_ITEMS = [
   // Owner-only, but that's enforced by the routes/service (and hidden per
   // action inside the pages) — not by hiding this nav item.
   { href: "/admin/clients", label: he.nav.clients },
+  // Sprint 8A (Campaigns UI Prototype) — PROTOTYPE module: fake in-memory
+  // demo data only, no database/API. Visible to both roles like Clients.
+  // Remove or keep this entry when the real Campaigns module ships.
+  { href: "/admin/campaigns", label: he.nav.campaigns },
 ];
 
 // Owner-only "Administration" section (frozen architecture). Sessions will

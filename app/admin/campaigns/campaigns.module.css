@@ -1,0 +1,540 @@
+/*
+ * /admin/campaigns styles — Sprint 8A (Campaigns UI Prototype).
+ *
+ * PROTOTYPE module, but styled as a first-class citizen: composes the
+ * shared components/admin/admin-tokens.module.css palette and mirrors
+ * clients.module.css so Campaigns reads as part of the same design system.
+ * Card/PrimaryButton/SecondaryButton/StatusBadge supply surfaces/colors;
+ * this file adds the table, filters, form, tabs, and participant blocks.
+ */
+
+.tokens {
+  composes: tokens from "../../../components/admin/admin-tokens.module.css";
+}
+
+/* Toolbar: search + filters on one side, New Campaign on the other. */
+.actionsRow {
+  composes: tokens;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.45rem 0.7rem;
+  min-width: 16rem;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+/* Lightweight filter selects (month / client / brand / status). */
+.filterSelect {
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.4rem 0.55rem;
+  max-width: 11rem;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+/* Visible "this is demo data" strip — deliberate, so QA never mistakes the
+   prototype for live data. */
+.prototypeNote {
+  composes: tokens;
+  font-size: 0.8rem;
+  color: var(--admin-text-muted);
+  background: var(--admin-bg);
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* Table — same rules as clients.module.css. */
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th {
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  padding: 0 0.6rem 0.6rem;
+  border-bottom: 1px solid var(--admin-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.7rem 0.6rem;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text-primary);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Whole row opens the campaign (in addition to the explicit action). */
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover td {
+  background: var(--admin-accent-subtle);
+}
+
+.nameCell {
+  font-weight: 600;
+}
+
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.mutedNote {
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+/* Detail page */
+.backLink {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-accent-strong);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+/* Client ‹ Brand ‹ Campaign hierarchy line above the title. */
+.hierarchy {
+  composes: tokens;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  margin: 0.75rem 0 0.25rem;
+}
+
+.hierarchySeparator {
+  color: var(--admin-text-muted);
+}
+
+.hierarchyCurrent {
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.headerBadges {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Tabs — same visual approach as talent-detail.module.css's workspace tabs,
+   duplicated locally so the prototype never imports talent styles. */
+.workspace {
+  composes: tokens;
+  margin-top: 1rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--admin-border);
+  margin-bottom: 1.25rem;
+}
+
+.tab {
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--admin-text-primary);
+}
+
+.tabActive {
+  color: var(--admin-accent-strong);
+  border-bottom-color: var(--admin-accent-strong);
+}
+
+.tabPanel {
+  min-height: 8rem;
+}
+
+/* Details tab rows — same pattern as clients detail. */
+.detailRows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detailRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.detailLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  min-width: 11rem;
+}
+
+.detailValue {
+  font-size: 0.95rem;
+  color: var(--admin-text-primary);
+  white-space: pre-wrap;
+}
+
+/* Participant (represented talent) blocks inside the campaign. */
+.participantStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.participantHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.participantName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0;
+}
+
+.participantMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+}
+
+.deliverableList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.deliverableRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+  color: var(--admin-text-primary);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.5rem 0.7rem;
+}
+
+.deliverableType {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.deliverableQuantity {
+  color: var(--admin-text-muted);
+  white-space: nowrap;
+}
+
+.deliverableDescription {
+  flex: 1 1 12rem;
+  min-width: 8rem;
+}
+
+/* Notes tab */
+.notesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.noteItem {
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.55rem 0.75rem;
+  white-space: pre-wrap;
+}
+
+.noteForm {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* History tab */
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historyItem {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
+.historyDate {
+  font-size: 0.8rem;
+  color: var(--admin-text-muted);
+  min-width: 5.5rem;
+  white-space: nowrap;
+}
+
+/* Form — same field styling as clients.module.css. */
+.createForm {
+  composes: tokens;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.fieldGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 12rem;
+  flex: 1 1 12rem;
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.fieldHint {
+  font-size: 0.78rem;
+  color: var(--admin-text-muted);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  color: #9c4a3a;
+}
+
+.formError {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #9c4a3a;
+}
+
+.input {
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--admin-text-primary);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.55rem 0.75rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-subtle);
+}
+
+.input:disabled {
+  color: var(--admin-text-muted);
+  background: var(--admin-bg);
+  cursor: not-allowed;
+}
+
+.select {
+  composes: input;
+}
+
+.textarea {
+  composes: input;
+  min-height: 4rem;
+  resize: vertical;
+  flex: 1 1 16rem;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+/* Talent multi-select checkboxes. */
+.talentChecks {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.talentCheck {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--admin-text-primary);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+
+.talentCheckSelected {
+  border-color: var(--admin-accent);
+  background: var(--admin-accent-subtle);
+}
+
+.preselectedTag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--admin-accent-strong);
+}
+
+/* Per-talent deliverables editor inside the form. */
+.perTalentBlock {
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.perTalentTitle {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.deliverableEditRow {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.deliverableEditRow .field {
+  min-width: 8rem;
+  flex: 1 1 8rem;
+}
+
+.quantityInput {
+  composes: input;
+  max-width: 5rem;
+}
+
+.linkButton {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--admin-accent-strong);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.removeButton {
+  composes: linkButton;
+  color: #9c4a3a;
+  align-self: center;
+}
+
+/* Talent-profile Campaigns tab. */
+.tabActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}

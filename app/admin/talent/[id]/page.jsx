@@ -79,6 +79,11 @@ import SocialLinksEditor from '@/components/admin/SocialLinksEditor';
 import SocialLinksOwnerReview from '@/components/admin/SocialLinksOwnerReview';
 import SeoEditor from '@/components/admin/SeoEditor';
 import Timeline from '@/components/admin/Timeline';
+// Sprint 8A (Campaigns UI Prototype) — PROTOTYPE-only client component:
+// fake in-memory demo data, zero database reads/writes (see the campaigns
+// _prototype folder). Safe to import from this Server Component; it renders
+// entirely client-side.
+import TalentCampaignsTab from '@/app/admin/campaigns/TalentCampaignsTab';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import {
   TALENT_WORKSPACE_SECTIONS,
@@ -905,6 +910,14 @@ export default async function AdminTalentDetailPage({ params }) {
           />
         ),
       };
+    }
+    if (section.key === 'campaigns') {
+      // Sprint 8A (Campaigns UI Prototype) — prototype tab, fake local
+      // data only. Deliberately receives no talent props: the prototype
+      // store knows nothing about real talents, so the tab aliases this
+      // profile to a fixed demo talent (and says so in a visible note).
+      // Pure client-side rendering — this page stays a pure read.
+      return { ...section, content: <TalentCampaignsTab /> };
     }
     if (section.key === 'gallery') {
       return {
