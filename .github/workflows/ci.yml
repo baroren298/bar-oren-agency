@@ -40,6 +40,12 @@ jobs:
 
       # Validates prisma/schema.prisma syntax only — does not connect to any
       # database, run migrations, or require DATABASE_URL/DIRECT_URL to be
-      # set to a real value.
+      # set to a real value. `prisma validate` only needs these env vars to
+      # be *present* (non-empty, well-formed) so it can parse the datasource
+      # block; it never opens a connection. Values below are synthetic
+      # placeholders scoped to this step only — not real credentials.
       - name: Validate Prisma schema
+        env:
+          DATABASE_URL: 'postgresql://ci_placeholder_user:ci_placeholder_pass@localhost:5432/ci_placeholder_db?schema=public'
+          DIRECT_URL: 'postgresql://ci_placeholder_user:ci_placeholder_pass@localhost:5432/ci_placeholder_db?schema=public'
         run: npx prisma validate
