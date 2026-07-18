@@ -41,3 +41,9 @@ scripts/migrate-day-import.report.json
 # local dev uploads (lib/storage/providers/localProvider.js writes here;
 # dev-only — production must use a cloud StorageProvider)
 /public/uploads/
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
