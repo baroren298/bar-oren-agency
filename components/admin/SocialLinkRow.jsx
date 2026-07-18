@@ -37,7 +37,7 @@
  * to "almavay@". Every place one of those three appears (read-only text,
  * input, or preview line) is wrapped/marked `dir="ltr"` for that reason.
  *
- * Props (unchanged):
+ * Props:
  *   - account ({ platform, label, customLabel, handle, url })
  *   - readOnly (boolean, optional, default false)
  *   - onChange (function, optional) — (field, value) => void, ignored when
@@ -45,9 +45,16 @@
  *   - showNotSavedBadge (boolean, optional, default false) — still shown,
  *     just as a small muted inline note next to the platform name now
  *     instead of a colored pill stacked on top of the card.
+ *   - onRemove (function, optional) — Social Remove sprint. Present only in
+ *     the editable (non-readOnly) proposed list; renders a Remove button in
+ *     the account's action row, mirroring GalleryImageCard's onRemove. The
+ *     actual HIDDEN-marking/local-splice decision lives in
+ *     SocialLinksEditor.handleRemove — this component only calls the
+ *     handler it's given.
  */
 
 import styles from "./SocialLinkRow.module.css";
+import SecondaryButton from "./SecondaryButton";
 import { he } from "@/lib/admin/i18n/he";
 import { getPlatformEntry, SOCIAL_ACCOUNT_LABELS } from "@/lib/admin/social-platforms";
 // Talent Visibility sprint (Issue 2 fix) — stripLeadingAt/normalizeHandleDisplay
@@ -76,6 +83,7 @@ export default function SocialLinkRow({
   readOnly = false,
   onChange = () => {},
   showNotSavedBadge = false,
+  onRemove = null,
 }) {
   const { platform, label, customLabel, handle, url } = account;
   const platformEntry = getPlatformEntry(platform);
@@ -188,6 +196,14 @@ export default function SocialLinkRow({
           </span>
         </div>
       </div>
+
+      {!readOnly && onRemove ? (
+        <div className={styles.actions}>
+          <SecondaryButton onClick={onRemove} className={styles.removeButton} title={he.social.removeHint}>
+            {he.social.actions.remove}
+          </SecondaryButton>
+        </div>
+      ) : null}
     </div>
   );
 }
