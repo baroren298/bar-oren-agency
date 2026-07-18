@@ -1,0 +1,65 @@
+name: Production Database Migration
+
+# Manual-only execution: this workflow has no push/pull_request/schedule
+# trigger and can only be started by a human from the Actions tab.
+on:
+  workflow_dispatch: {}
+
+# Least privilege: only reading repository contents is required to check
+# out committed migration files; no write access is needed.
+permissions:
+  contents: read
+
+# Prevent two Production migration runs from overlapping.
+concurrency:
+  group: production-database-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Apply migrations to Production
+    runs-on: ubuntu-latest
+    # Production approval gate: this job cannot start until a required
+    # reviewer on the "production" GitHub Environment approves it, and the
+    # Production database secret is only readable inside this environment.
+    environment: production
+    steps:
+      - name: Verify triggered from main
+        # Applies only already-committed migrations from main — refuse any
+        # other ref before touching Production.
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::This workflow may only run from main (got ${{ github.ref }})."
+          exit 1
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check migration status (before deploy)
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_DATABASE_URL }}
+        run: npx prisma migrate status
+
+      - name: Deploy pending migrations
+        # Applies only migration files already committed to prisma/migrations/
+        # on main, in order. Never authors, edits, or resets migrations.
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Check migration status (after deploy)
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DIRECT_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.PRODUCTION_DIRECT_DATABASE_URL }}
+        run: npx prisma migrate status
