@@ -28,12 +28,27 @@
  *     (`accounts` = every row successfully published this call; `errors` =
  *     any row that failed, each as { socialId, error } — empty when every
  *     row published cleanly)
+ *
+ * Post-Publish Edit Mode Cleanup fix — same best-effort cleanup as the
+ * sibling gallery/publish/route.js: TalentSocial rows are never part of
+ * TalentVersion, so this publish can succeed while leaving an unrelated
+ * pending TalentVersion DRAFT behind (the one "Start Editing" creates to
+ * open global edit mode). If that Draft was never actually edited —
+ * identical to Published, per talentVersionIsUnchangedFromPublished — it's
+ * discarded here too, so the workspace falls back to read-only instead of
+ * staying stuck. A Draft with real unpublished changes, or a PROPOSED
+ * version, is never touched. See that file's header comment for the full
+ * rationale.
  */
 
 import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { socialsService } from '@/lib/admin/engine/socialsService';
+import { versionService } from '@/lib/admin/engine/versionService';
+import { proposalService } from '@/lib/admin/engine/proposalService';
+import { talentVersionIsUnchangedFromPublished } from '@/lib/admin/talent-workspace';
+import { VERSION_STATUS } from '@/lib/admin/constants/enums';
 import { he } from '@/lib/admin/i18n/he';
 
 export async function POST(request, { params }) {
@@ -108,6 +123,36 @@ export async function POST(request, { params }) {
       );
       errors.push({ socialId: row.id, error: error.message || he.social.errors.serverError });
     }
+  }
+
+  // Social publishes do not use TalentVersion. Entering global edit mode
+  // eagerly creates an empty TalentVersion DRAFT for the Details/SEO/Podcast
+  // workflow (see StartEditingButton.jsx / proposals/route.js), even when
+  // the user only ever meant to touch Socials. If that DRAFT remained
+  // completely unchanged, discard it after a successful Social publish so
+  // the workspace correctly returns to read-only mode instead of staying
+  // stuck showing an editing session the user never touched. See this
+  // file's header comment for the full rationale. Best-effort only: any
+  // failure here is logged and swallowed, never surfaced as a failed
+  // publish.
+  try {
+    const pendingVersion = await versionService.getCurrentDraftOrProposed(talentAdapter, id);
+    if (pendingVersion && pendingVersion.status === VERSION_STATUS.DRAFT) {
+      const publishedVersion = await versionService.getCurrentPublished(talentAdapter, id);
+      if (talentVersionIsUnchangedFromPublished(pendingVersion, publishedVersion)) {
+        await proposalService.discard(talentAdapter, {
+          parentId: id,
+          versionId: pendingVersion.id,
+          actorId: session.userId,
+          actorRole: session.role,
+        });
+      }
+    }
+  } catch (cleanupError) {
+    console.error(
+      '[POST /api/admin/talent/[id]/socials/publish] failed to clean up an empty pending TalentVersion draft:',
+      cleanupError
+    );
   }
 
   return NextResponse.json({ accounts: published, errors }, { status: 200 });
