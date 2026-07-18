@@ -1,0 +1,72 @@
+/*
+ * Admin error boundary styles — CMS Error & Loading Boundaries sprint.
+ *
+ * Composes the shared admin design tokens (same source used by
+ * components/admin/**) so this standalone screen matches the rest of the
+ * admin panel exactly, without importing AdminShell or admin-shell.module.css
+ * itself — this file has no dependency on the shell it can't assume is
+ * mounted (see error.jsx's header comment).
+ */
+
+.tokens {
+  composes: tokens from "../../components/admin/admin-tokens.module.css";
+}
+
+.page {
+  composes: tokens;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--admin-bg);
+  padding: 2rem;
+}
+
+.card {
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  padding: 2.5rem 2rem;
+}
+
+.brand {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--admin-accent-strong);
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.body {
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--admin-text-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.backLink {
+  font-size: 0.85rem;
+  color: var(--admin-text-secondary);
+  text-decoration: underline;
+}
+
+.backLink:hover {
+  color: var(--admin-text-primary);
+}
