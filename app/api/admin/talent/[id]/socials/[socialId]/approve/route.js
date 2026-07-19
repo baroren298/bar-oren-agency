@@ -27,6 +27,7 @@ import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { socialsService } from '@/lib/admin/engine/socialsService';
 import { he } from '@/lib/admin/i18n/he';
+import { isTalentArchived, talentArchivedResponse } from '@/lib/admin/talent-archive-guard';
 
 export async function POST(request, { params }) {
   let session;
@@ -47,6 +48,12 @@ export async function POST(request, { params }) {
   const talent = await talentAdapter.getParent(id);
   if (!talent) {
     return NextResponse.json({ error: 'Talent not found.' }, { status: 404 });
+  }
+
+  // Talent Archive & Restore feature — an archived talent is read-only:
+  // no per-row social approval while it's archived.
+  if (isTalentArchived(talent)) {
+    return talentArchivedResponse();
   }
 
   try {

@@ -41,6 +41,7 @@ import { versionService } from '@/lib/admin/engine/versionService';
 import { proposalService } from '@/lib/admin/engine/proposalService';
 import { extractTalentVersionFields } from '@/lib/admin/talent-workspace';
 import { VERSION_STATUS } from '@/lib/admin/constants/enums';
+import { isTalentArchived, talentArchivedResponse } from '@/lib/admin/talent-archive-guard';
 
 export async function POST(request, { params }) {
   let session;
@@ -61,6 +62,12 @@ export async function POST(request, { params }) {
   const talent = await talentAdapter.getParent(id);
   if (!talent) {
     return NextResponse.json({ error: 'Talent not found.' }, { status: 404 });
+  }
+
+  // Talent Archive & Restore feature — an archived talent is read-only:
+  // no new Draft may be started on it until it's restored.
+  if (isTalentArchived(talent)) {
+    return talentArchivedResponse();
   }
 
   // Read-only check: does a pending (DRAFT or PROPOSED) version already exist?
