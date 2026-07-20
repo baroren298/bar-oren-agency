@@ -32,6 +32,29 @@
  *   - version is PUBLISHED or REJECTED  -> 409, { error, code: 'NOT_PUBLISHABLE' }
  *   - revision conflict                 -> 409, { error, code: 'REVISION_CONFLICT', conflict }
  *   - otherwise                         -> 200, { version, parent }
+ *
+ * Global Reconciliation sprint — this is the "global editor" Publish Now
+ * handler: the one Details/Podcast/SEO tabs (TalentDetailsEditor /
+ * SeoEditor) call while the page's global edit session (StartEditingButton /
+ * CancelEditingButton / globalEditing) is active, and `versionId` here IS
+ * that same session's pending TalentVersion — publishing it already flips
+ * its own status to PUBLISHED, which is normally what makes
+ * versionService.getCurrentDraftOrProposed() (and therefore the header's
+ * Continue/Cancel Editing controls and every tab's dirty/preview state)
+ * fall back to read-only on the client's next refresh.
+ *
+ * `globalEditing`/`pendingVersion` themselves are unchanged by this sprint
+ * — still derived directly from the current TalentVersion DRAFT/PROPOSED.
+ * What this call adds is `reconcileTalentEditMode`: after this publish
+ * succeeds, it checks Gallery and Socials too (not just TalentVersion) for
+ * any real unpublished work. If a second, older Draft is left over from
+ * this exact talent (e.g. an interrupted "Start Editing") and nothing else
+ * in the workspace is pending either, that leftover anchor is discarded so
+ * the workspace correctly falls back to read-only; if Gallery or Socials
+ * still has real pending work, the anchor (if any) is left exactly as-is,
+ * so Edit Mode correctly stays open. See
+ * lib/admin/talent-workspace-reconciliation.js's own header comment — never
+ * throws.
  */
 
 import { NextResponse } from 'next/server';
@@ -39,6 +62,7 @@ import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { proposalService } from '@/lib/admin/engine/proposalService';
 import { approvalService } from '@/lib/admin/engine/approvalService';
+import { reconcileTalentEditMode } from '@/lib/admin/talent-workspace-reconciliation';
 import {
   VERSION_STATUS,
   REVISION_CONFLICT_ERROR_CODE,
@@ -119,6 +143,18 @@ export async function POST(request, { params }) {
       actorId: session.userId,
       actorRole: session.role,
       basedOnRevisionNumber: talent.revisionNumber,
+    });
+
+    // Global Reconciliation sprint — see this file's header comment.
+    // `version` (now PUBLISHED) is excluded automatically:
+    // reconcileTalentEditMode's TalentVersion module only ever considers
+    // the current DRAFT/PROPOSED row, so this can only ever discard a
+    // *different*, leftover draft, never the one just published. Never
+    // throws — no try/catch needed here.
+    await reconcileTalentEditMode(talentAdapter, {
+      parentId: id,
+      actorId: session.userId,
+      actorRole: session.role,
     });
 
     return NextResponse.json({ version, parent }, { status: 200 });

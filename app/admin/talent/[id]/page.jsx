@@ -86,6 +86,7 @@ import Timeline from '@/components/admin/Timeline';
 // Website CMS content. The prototype component file
 // (app/admin/campaigns/TalentCampaignsTab.jsx) is intentionally left in
 // place, just no longer imported or rendered.
+import { Suspense } from 'react';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import {
   TALENT_WORKSPACE_SECTIONS,
@@ -1099,7 +1100,19 @@ export default async function AdminTalentDetailPage({ params }) {
         </div>
       ) : null}
 
-      <TalentWorkspaceTabs sections={sections} />
+      {/*
+        Active-tab persistence sprint — TalentWorkspaceTabs now reads/writes
+        the active tab via the URL (`?tab=`) instead of component-local
+        state alone, so a refresh or Back/Forward keeps the same tab open
+        instead of always resetting to פרטים. It needs `useSearchParams()`
+        for that, which Next.js requires to sit under a Suspense boundary
+        (this page is already `force-dynamic`, so this is a build-time
+        requirement, not a real loading state — the fallback is never
+        visibly shown since `sections` is already fully resolved above).
+      */}
+      <Suspense fallback={null}>
+        <TalentWorkspaceTabs sections={sections} />
+      </Suspense>
 
       <details className={styles.technicalInfo}>
         <summary className={styles.technicalInfoSummary}>{he.talent.detail.technicalInfo}</summary>

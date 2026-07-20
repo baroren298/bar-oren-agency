@@ -11,12 +11,23 @@
  *   - gallery row not found for this talent -> 404
  *   - gallery row isn't PROPOSED    -> 409, { error, code: 'NOT_PROPOSABLE' }
  *   - otherwise                     -> 200, { image }
+ *
+ * Global Reconciliation sprint — this per-row Approve is, from the
+ * workspace's point of view, exactly as much a "successful Gallery publish"
+ * as the bulk gallery/publish/route.js shortcut (a Gallery row going
+ * PROPOSED -> PUBLISHED). It gets the same best-effort reconciliation that
+ * route has, via the shared reconcileTalentEditMode helper, so approving a
+ * single row here while the page's global edit session held nothing but an
+ * untouched "Start Editing" Draft doesn't leave that empty Draft behind —
+ * see lib/admin/talent-workspace-reconciliation.js's own header comment —
+ * never throws.
  */
 
 import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { galleryService } from '@/lib/admin/engine/galleryService';
+import { reconcileTalentEditMode } from '@/lib/admin/talent-workspace-reconciliation';
 import { he } from '@/lib/admin/i18n/he';
 import { isTalentArchived, talentArchivedResponse } from '@/lib/admin/talent-archive-guard';
 
@@ -51,6 +62,14 @@ export async function POST(request, { params }) {
     const { image } = await galleryService.approve(talentAdapter, {
       parentId: id,
       imageId,
+      actorId: session.userId,
+      actorRole: session.role,
+    });
+
+    // Global Reconciliation sprint — see this file's header comment.
+    // Never throws — no try/catch needed here.
+    await reconcileTalentEditMode(talentAdapter, {
+      parentId: id,
       actorId: session.userId,
       actorRole: session.role,
     });
