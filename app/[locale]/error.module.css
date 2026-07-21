@@ -1,0 +1,53 @@
+/*
+ * Public error boundary styles — CMS Error & Loading Boundaries sprint.
+ *
+ * Reuses not-found.module.css's page/title/link classes directly via CSS
+ * Modules `composes` rather than re-declaring the same visual language, per
+ * the requirement to reuse the site's existing 404 look. Only the extra
+ * body/actions/retry-button styles below are new.
+ */
+
+.page {
+  composes: page from './not-found.module.css';
+}
+
+.title {
+  composes: title from './not-found.module.css';
+}
+
+.body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-secondary);
+  max-width: 48ch;
+  margin-bottom: var(--space-8);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.retry {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-bg);
+  background-color: var(--color-text-primary);
+  border: none;
+  padding: var(--space-3) var(--space-6);
+  cursor: pointer;
+}
+
+.retry:hover {
+  background-color: var(--color-accent);
+}
+
+.link {
+  composes: link from './not-found.module.css';
+}

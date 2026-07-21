@@ -20,13 +20,25 @@
  *   - social row not found for this talent -> 404
  *   - social row isn't PROPOSED     -> 409, { error, code: 'NOT_PROPOSABLE' }
  *   - otherwise                     -> 200, { account }
+ *
+ * Global Reconciliation sprint — this per-row Approve is, from the
+ * workspace's point of view, exactly as much a "successful Socials publish"
+ * as the bulk socials/publish/route.js shortcut (a Social row going
+ * PROPOSED -> PUBLISHED). It gets the same best-effort reconciliation that
+ * route has, via the shared reconcileTalentEditMode helper, so approving a
+ * single row here while the page's global edit session held nothing but an
+ * untouched "Start Editing" Draft doesn't leave that empty Draft behind —
+ * see lib/admin/talent-workspace-reconciliation.js's own header comment —
+ * never throws.
  */
 
 import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { socialsService } from '@/lib/admin/engine/socialsService';
+import { reconcileTalentEditMode } from '@/lib/admin/talent-workspace-reconciliation';
 import { he } from '@/lib/admin/i18n/he';
+import { isTalentArchived, talentArchivedResponse } from '@/lib/admin/talent-archive-guard';
 
 export async function POST(request, { params }) {
   let session;
@@ -49,10 +61,24 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: 'Talent not found.' }, { status: 404 });
   }
 
+  // Talent Archive & Restore feature — an archived talent is read-only:
+  // no per-row social approval while it's archived.
+  if (isTalentArchived(talent)) {
+    return talentArchivedResponse();
+  }
+
   try {
     const { account } = await socialsService.approve(talentAdapter, {
       parentId: id,
       socialId,
+      actorId: session.userId,
+      actorRole: session.role,
+    });
+
+    // Global Reconciliation sprint — see this file's header comment.
+    // Never throws — no try/catch needed here.
+    await reconcileTalentEditMode(talentAdapter, {
+      parentId: id,
       actorId: session.userId,
       actorRole: session.role,
     });

@@ -28,13 +28,26 @@
  *     (`accounts` = every row successfully published this call; `errors` =
  *     any row that failed, each as { socialId, error } — empty when every
  *     row published cleanly)
+ *
+ * Global Reconciliation sprint — same best-effort reconciliation as the
+ * sibling gallery/publish/route.js: TalentSocial rows are never part of
+ * TalentVersion, so this publish can succeed while a TalentVersion Draft
+ * (the one "Start Editing" creates to open global edit mode) is still
+ * sitting there untouched. If reconcileTalentEditMode finds nothing
+ * effectively pending anywhere in the workspace (Socials included), that
+ * untouched anchor Draft is discarded so the workspace falls back to
+ * read-only; if any real work remains anywhere, the anchor is left exactly
+ * as-is. See lib/admin/talent-workspace-reconciliation.js's own header
+ * comment — never throws, so no try/catch needed here.
  */
 
 import { NextResponse } from 'next/server';
 import { requireOwner } from '@/lib/admin/auth/authorize';
 import { talentAdapter } from '@/lib/admin/engine/adapters/talentAdapter';
 import { socialsService } from '@/lib/admin/engine/socialsService';
+import { reconcileTalentEditMode } from '@/lib/admin/talent-workspace-reconciliation';
 import { he } from '@/lib/admin/i18n/he';
+import { isTalentArchived, talentArchivedResponse } from '@/lib/admin/talent-archive-guard';
 
 export async function POST(request, { params }) {
   let session;
@@ -55,6 +68,12 @@ export async function POST(request, { params }) {
   const talent = await talentAdapter.getParent(id);
   if (!talent) {
     return NextResponse.json({ error: 'Talent not found.' }, { status: 404 });
+  }
+
+  // Talent Archive & Restore feature — an archived talent is read-only:
+  // no social-account publish while it's archived.
+  if (isTalentArchived(talent)) {
+    return talentArchivedResponse();
   }
 
   // Step 1 — submit the acting Owner's own still-DRAFT rows only (QA
@@ -109,6 +128,17 @@ export async function POST(request, { params }) {
       errors.push({ socialId: row.id, error: error.message || he.social.errors.serverError });
     }
   }
+
+  // Social publishes do not use TalentVersion. Entering global edit mode
+  // eagerly creates an empty TalentVersion DRAFT for the Details/SEO/Podcast
+  // workflow (see StartEditingButton.jsx / proposals/route.js), even when
+  // the user only ever meant to touch Socials. See this file's header
+  // comment — never throws, so no try/catch needed here.
+  await reconcileTalentEditMode(talentAdapter, {
+    parentId: id,
+    actorId: session.userId,
+    actorRole: session.role,
+  });
 
   return NextResponse.json({ accounts: published, errors }, { status: 200 });
 }

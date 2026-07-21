@@ -36,6 +36,18 @@ export const strings = {
       title: 'הדף לא נמצא',
       link: 'חזרה לדף הבית',
     },
+    // CMS Error & Loading Boundaries sprint — copy for app/[locale]/error.jsx.
+    // Deliberately has no `home`/link key of its own: the component reuses
+    // notFound.link ("חזרה לדף הבית") verbatim for its home link instead of
+    // duplicating the same destination/copy under a second key.
+    error: {
+      title: 'אופס, משהו השתבש',
+      body: 'אירעה שגיאה בטעינת העמוד.',
+      retry: 'נסה שוב',
+    },
+    // Visually-hidden status label for app/[locale]/loading.jsx — the
+    // spinner itself needs no translation, only its accessible name does.
+    loading: 'טוען…',
     contact: {
       sectionLabel: 'יצירת קשר',
       form: {
@@ -113,6 +125,15 @@ export const strings = {
       title: 'Page Not Found',
       link: 'Back to Homepage',
     },
+    // CMS Error & Loading Boundaries sprint — see the `he.error` comment
+    // above; same reasoning for reusing notFound.link instead of a
+    // duplicate `home` key here.
+    error: {
+      title: 'Something went wrong',
+      body: 'There was a problem loading this page.',
+      retry: 'Try again',
+    },
+    loading: 'Loading…',
     contact: {
       sectionLabel: 'Contact',
       form: {

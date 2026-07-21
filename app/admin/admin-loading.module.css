@@ -1,0 +1,52 @@
+/*
+ * Admin loading boundary styles — CMS Error & Loading Boundaries sprint.
+ * Same token source as admin-error.module.css — see that file's header
+ * comment for why this composes admin-tokens directly rather than
+ * depending on AdminShell/admin-shell.module.css.
+ */
+
+.tokens {
+  composes: tokens from "../../components/admin/admin-tokens.module.css";
+}
+
+.page {
+  composes: tokens;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--admin-bg);
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--admin-border);
+  border-inline-start-color: var(--admin-accent);
+  border-radius: 50%;
+  animation: admin-loading-spin 800ms linear infinite;
+}
+
+@keyframes admin-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2400ms;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

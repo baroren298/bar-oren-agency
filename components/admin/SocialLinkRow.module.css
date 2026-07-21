@@ -187,3 +187,20 @@
     text-align: start;
   }
 }
+
+/*
+ * Social Remove sprint — action row beneath the field list, editable mode
+ * only. Mirrors GalleryImageCard.module.css's .actions/.removeButton
+ * exactly (same sizing/placement language) since this is the same kind of
+ * "one destructive action per card" control.
+ */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-block-start: 0.4rem;
+}
+
+.removeButton {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+}

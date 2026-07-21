@@ -1,0 +1,47 @@
+/*
+ * Public loading boundary styles — CMS Error & Loading Boundaries sprint.
+ * min-height keeps this from collapsing to nothing (avoids a layout jump
+ * once the real page mounts) without assuming a specific page's content
+ * height — Header/Footer already take their own space above/below this.
+ */
+
+.page {
+  min-height: 60vh;
+  padding-top: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--color-border);
+  border-inline-start-color: var(--color-accent);
+  border-radius: 50%;
+  animation: public-loading-spin 800ms linear infinite;
+}
+
+@keyframes public-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2400ms;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

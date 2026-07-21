@@ -39,9 +39,16 @@
  *     itself, not here; OWNER may edit any account)
  *   - otherwise                   -> 200, { accounts }
  *
- * Out of scope (not this sprint): Gallery, SEO, image uploads, removing an
- * existing social account (no delete control exists in the UI yet — see
- * SocialLinkRow.jsx).
+ * Social Remove sprint — removing an existing social account is now
+ * supported through this same route: `socialsService.saveDraft` treats
+ * `lifecycleStatus` as a normal forwarded field (see that file's and
+ * talentRepository.js's updated header comments), so a body whose accounts
+ * include `lifecycleStatus: "HIDDEN"` marks that row for removal exactly
+ * like any other field edit — no new route, no new request shape. The
+ * client-side control lives in SocialLinkRow.jsx (its `onRemove` button),
+ * wired up by SocialLinksEditor.jsx's `handleRemove`.
+ *
+ * Out of scope (unrelated to this route): Gallery, SEO, image uploads.
  */
 
 import { NextResponse } from 'next/server';

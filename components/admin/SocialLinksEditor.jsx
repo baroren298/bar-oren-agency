@@ -36,13 +36,34 @@
  * Per this sprint's explicit scope:
  *   - No redesign: every existing card/form/markup is unchanged; only the
  *     state/handlers around them changed.
- *   - No delete/remove-account control exists (none did before either —
- *     SocialLinkRow.jsx still has no such button); this sprint doesn't add
- *     one.
  *   - Validation errors come back from the server (lib/admin/engine/
  *     socialsService.js's blocking validation) and are shown as a single,
  *     clear Hebrew summary plus a per-account note where possible, reusing
  *     `he.social.errors`.
+ *
+ * Social Remove sprint — a delete/remove-account control now exists
+ * (SocialLinkRow.jsx's onRemove button), reusing the exact
+ * lifecycleStatus-based mechanism MediaGalleryEditor already shipped for
+ * Gallery (see galleryService.js's header comment for the full lifecycle
+ * rationale, which applies unchanged here — TalentSocial already carried
+ * the same dual-axis lifecycleStatus/versionStatus shape, it just had no
+ * writable path for lifecycleStatus until this sprint):
+ *   - A not-yet-saved account (no `id`) is spliced out of local state only
+ *     — there is no database row to mark HIDDEN, nothing is ever sent to
+ *     the server for it.
+ *   - A saved account IS marked `lifecycleStatus: "HIDDEN"` (never deleted
+ *     client-side) and stays in `proposedAccounts` so Save Draft still
+ *     sends it — `visibleProposedAccounts` below is what actually renders,
+ *     filtering HIDDEN rows out of the list the instant Remove is clicked.
+ *   - `toComparablePayload` always forwards `lifecycleStatus`, defaulting
+ *     to "ACTIVE" for every row a removal wasn't just clicked on, so a
+ *     plain field edit can never accidentally flip it.
+ *   - What removal actually *does* once saved (clone-and-hide vs.
+ *     hide-in-place, Owner Review visibility, when the public site stops
+ *     showing it) is entirely socialsService.saveDraft's decision — see
+ *     that file's header comment — this component only ever expresses
+ *     "the user wants this row gone" and lets the existing Draft ->
+ *     Proposed -> Published pipeline do the rest.
  *
  * Props:
  *   - talentId (string, optional) — the Talent id. When absent, this
@@ -105,7 +126,44 @@ function toComparablePayload(accounts) {
     handle: account.handle ?? null,
     url: account.url ?? null,
     sortOrder: account.sortOrder ?? null,
+    // Social Remove sprint — always forwarded (defaulting to ACTIVE for a
+    // row that predates this field) so an account marked HIDDEN by
+    // handleRemove is actually included in the Save Draft payload, even
+    // though it's filtered out of what's rendered (see
+    // visibleProposedAccounts below). Every field above this line is
+    // preserved unchanged for a removal, exactly as-is — socialsService's
+    // validateSocialAccount still requires platform/label/handle-or-url on
+    // every row it sees, removed or not, so a removal payload must never
+    // be trimmed down to just `{ id, lifecycleStatus }`.
+    lifecycleStatus: account.lifecycleStatus ?? "ACTIVE",
   }));
+}
+
+/**
+ * Social Remove sprint — the Remove button's actual state transition,
+ * extracted as a small pure function (same reasoning social-review.js's
+ * diff/filter helpers are pure and exported: testable without rendering,
+ * and the one place this decision is made). Mirrors
+ * MediaGalleryEditor.handleRemove's inline logic exactly:
+ *   - a row with no `id` yet (added via the form, never saved) is spliced
+ *     out entirely — there is no database row to mark HIDDEN;
+ *   - a row with a real `id` is marked `lifecycleStatus: "HIDDEN"` in
+ *     place, keeping its position/other fields untouched so Save Draft
+ *     still sends the full account.
+ *
+ * @param {object[]} accounts - current proposedAccounts state
+ * @param {string} key - the target account's `_key`
+ * @returns {object[]} the next proposedAccounts state
+ */
+export function removeAccountFromProposed(accounts, key) {
+  const target = accounts.find((account) => account._key === key);
+  if (!target) return accounts;
+  if (!target.id) {
+    return accounts.filter((account) => account._key !== key);
+  }
+  return accounts.map((account) =>
+    account._key === key ? { ...account, lifecycleStatus: "HIDDEN" } : account
+  );
 }
 
 /*
@@ -270,6 +328,15 @@ export default function SocialLinksEditor({
   // never sent anywhere, just needs to be unique within this render tree.
   const [nextLocalId, setNextLocalId] = useState(1);
 
+  // Social Remove sprint — what actually renders. An account marked HIDDEN
+  // by handleRemove stays in `proposedAccounts` (so save/dirty-check logic
+  // below keeps treating it as part of the set), but is excluded here so it
+  // visually disappears from the list the instant it's removed. Mirrors
+  // MediaGalleryEditor's visibleProposedImages exactly.
+  const visibleProposedAccounts = proposedAccounts.filter(
+    (account) => account.lifecycleStatus !== "HIDDEN"
+  );
+
   // Single-Section Editing UX sprint — collapses the old simultaneous
   // "Published" + "Proposed" two-section layout into one section that
   // toggles between a read-only view and the exact same editable surface,
@@ -386,6 +453,15 @@ export default function SocialLinksEditor({
     setProposedAccounts((previous) =>
       previous.map((account) => (account._key === key ? { ...account, [field]: value } : account))
     );
+    clearStatuses();
+  }
+
+  // Social Remove sprint — see removeAccountFromProposed's own header
+  // comment for the no-id-vs-real-id split. This handler owns only the
+  // state update; the decision logic is the extracted pure function so it
+  // can be unit-tested without rendering.
+  function handleRemove(key) {
+    setProposedAccounts((previous) => removeAccountFromProposed(previous, key));
     clearStatuses();
   }
 
@@ -538,7 +614,7 @@ export default function SocialLinksEditor({
         </p>
 
         {isEditing ? (
-          proposedAccounts.length === 0 ? (
+          visibleProposedAccounts.length === 0 ? (
             <EmptyState
               title={he.social.noProposedAccountsTitle}
               description={he.social.noProposedAccountsDescription}
@@ -546,12 +622,13 @@ export default function SocialLinksEditor({
             />
           ) : (
             <div className={styles.accountListEditable}>
-              {proposedAccounts.map((account) => (
+              {visibleProposedAccounts.map((account) => (
                 <SocialAccountCard
                   key={account._key}
                   account={account}
                   showNotSavedBadge={!account.id}
                   onChange={(field, value) => handleFieldChange(account._key, field, value)}
+                  onRemove={() => handleRemove(account._key)}
                 />
               ))}
               <AddSocialAccountForm platforms={platforms} labels={labels} onAdd={handleAdd} />

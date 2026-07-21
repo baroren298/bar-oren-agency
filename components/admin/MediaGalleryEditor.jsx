@@ -85,15 +85,28 @@
  *      This editor's onChange plumbing is unchanged: the card still calls
  *      onChange("position"/"scale", value) into handleFieldChange.
  *
+ * UPDATED — Gallery Image Removal sprint: "Remove" is real now. Was:
+ * strictly local — Save Draft only ever sent the rows still present in the
+ * array, so removing a card left the underlying row untouched in the
+ * database. Is: handleRemove marks the row `lifecycleStatus: "HIDDEN"`
+ * in place (for any row with a real `id`) instead of splicing it out, so
+ * Save Draft's existing PATCH call carries the removal through
+ * galleryService.saveDraft. `visibleProposedImages` (derived from
+ * `proposedImages`, filtering out HIDDEN rows) is what actually renders —
+ * the card still visually disappears the instant "הסר" is clicked, exactly
+ * like before, but the full `proposedImages` array (HIDDEN rows included)
+ * is still what's dirty-checked and sent on Save Draft. A row that was
+ * never saved yet (no `id` — an in-flight upload) is still spliced out of
+ * the array outright, same as before: there is no database row to mark
+ * HIDDEN, and nothing here should invent one. What happens after Save
+ * Draft (whether the removal needs Owner approval) is decided server-side
+ * by whether the row has a live Published counterpart — see
+ * galleryService.saveDraft and gallery-review.js's header comments.
+ *
  * Per Gallery Sprint 1's explicit scope:
  *   - Existing images only. There is still no Add Image / Replace Image /
  *     Upload — AddImageCard and GalleryImageCard's "החלף" button stay
  *     disabled with their existing "coming soon" tooltips, unchanged.
- *   - "Remove" stays exactly as before: a local-only, never-persisted
- *     operation (see its existing `removeHint` copy) — Save Draft only
- *     ever sends the rows still present in the proposed grid, so removing
- *     a card here simply leaves that row untouched in the database rather
- *     than deleting it. This sprint adds no delete capability.
  *   - "Reorder" (move up/down) is still real against the in-memory array,
  *     but now also feeds the persisted `order` field — saving a draft
  *     writes each row's current position in the proposed grid.
@@ -279,6 +292,12 @@ function toComparablePayload(images) {
     position: image.position ?? null,
     scale: image.scale ?? null,
     mobileOrder: image.mobileOrder ?? null,
+    // Gallery Image Removal sprint — always forwarded (defaulting to
+    // ACTIVE for a row that predates this field) so a card marked HIDDEN
+    // by handleRemove is actually included in the Save Draft payload, even
+    // though it's filtered out of what's rendered (see
+    // visibleProposedImages below).
+    lifecycleStatus: image.lifecycleStatus ?? "ACTIVE",
   }));
 }
 
@@ -380,6 +399,13 @@ export default function MediaGalleryEditor({
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  // Gallery Image Removal sprint — what actually renders. A card marked
+  // HIDDEN by handleRemove stays in `proposedImages` (so save/dirty-check/
+  // drag logic below keeps treating it as part of the set), but is
+  // excluded here so it visually disappears from the grid the instant it's
+  // removed, same as before this sprint.
+  const visibleProposedImages = proposedImages.filter((image) => image.lifecycleStatus !== "HIDDEN");
 
   const isDirty =
     JSON.stringify(toComparablePayload(proposedImages)) !== JSON.stringify(toComparablePayload(savedImages));
@@ -486,9 +512,23 @@ export default function MediaGalleryEditor({
     setSaveDraftError(null);
   }
 
-  // Still local-only, never persisted — see this file's header comment.
-  function handleRemove(index) {
-    setProposedImages((previous) => previous.filter((_, i) => i !== index));
+  // Gallery Image Removal sprint — see this file's header comment. A row
+  // with no `id` yet (an in-flight/never-saved upload) is spliced out
+  // exactly as before: there is no database row to mark HIDDEN. A row with
+  // a real `id` is instead marked lifecycleStatus HIDDEN in place, keeping
+  // it in `proposedImages` (so Save Draft still sends it) while
+  // `visibleProposedImages` below filters it out of what actually renders.
+  function handleRemove(key) {
+    setProposedImages((previous) => {
+      const target = previous.find((image) => image._key === key);
+      if (!target) return previous;
+      if (!target.id) {
+        return previous.filter((image) => image._key !== key);
+      }
+      return previous.map((image) =>
+        image._key === key ? { ...image, lifecycleStatus: "HIDDEN" } : image
+      );
+    });
     clearStatuses();
   }
 
@@ -731,7 +771,7 @@ export default function MediaGalleryEditor({
         ) : null}
 
         {isEditing ? (
-          proposedImages.length === 0 && uploadQueue.length === 0 ? (
+          visibleProposedImages.length === 0 && uploadQueue.length === 0 ? (
             <EmptyState
               title={emptyProposedTitle}
               description={emptyProposedDescription}
@@ -745,16 +785,16 @@ export default function MediaGalleryEditor({
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext
-                items={proposedImages.map((image) => image._key)}
+                items={visibleProposedImages.map((image) => image._key)}
                 strategy={rectSortingStrategy}
               >
                 <div className={styles.proposedGrid}>
-                  {proposedImages.map((image, index) => (
+                  {visibleProposedImages.map((image) => (
                     <GalleryImageCard
                       key={image._key}
                       image={image}
                       onChange={(field, value) => handleFieldChange(image._key, field, value)}
-                      onRemove={() => handleRemove(index)}
+                      onRemove={() => handleRemove(image._key)}
                     />
                   ))}
                   {uploadQueue.map((item) => (

@@ -70,6 +70,7 @@ import EmptyState from '@/components/admin/EmptyState';
 import StartEditingButton from '@/components/admin/StartEditingButton';
 import CancelEditingButton from '@/components/admin/CancelEditingButton';
 import TalentVisibilityAction from '@/components/admin/TalentVisibilityAction';
+import TalentArchiveAction from '@/components/admin/TalentArchiveAction';
 import ProfileImagePanel from '@/components/admin/ProfileImagePanel';
 import PodcastTab from '@/components/admin/PodcastTab';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
@@ -85,6 +86,7 @@ import Timeline from '@/components/admin/Timeline';
 // Website CMS content. The prototype component file
 // (app/admin/campaigns/TalentCampaignsTab.jsx) is intentionally left in
 // place, just no longer imported or rendered.
+import { Suspense } from 'react';
 import TalentWorkspaceTabs from './TalentWorkspaceTabs';
 import {
   TALENT_WORKSPACE_SECTIONS,
@@ -105,7 +107,7 @@ import { he } from '@/lib/admin/i18n/he';
 import { resolveAdminTalentRoute } from '@/lib/admin/talent-route';
 import { buildGalleryImages } from '@/lib/admin/gallery-images';
 import { isGlobalEditingStatus } from '@/lib/admin/edit-mode';
-import { VERSION_STATUS, TALENT_VISIBILITY, ENTITY_TYPE } from '@/lib/admin/constants/enums';
+import { VERSION_STATUS, TALENT_VISIBILITY, ENTITY_TYPE, LIFECYCLE_STATUS } from '@/lib/admin/constants/enums';
 import styles from './talent-detail.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -999,7 +1001,16 @@ export default async function AdminTalentDetailPage({ params }) {
   // already-computed one wins. The Details tab's Current/Proposed
   // visibility comparison row is untouched — it renders independently in
   // ComparisonView, not from this badge.
-  const headerBadge = selectDetailBadge(status, currentVisibility);
+  // Talent Archive & Restore feature — an archived talent's badge replaces
+  // (not joins) the usual workflow/visibility badge, same "one badge, most
+  // important state wins" rule selectDetailBadge itself already follows
+  // for Hidden vs. Published. Archive is a stronger, entity-level state
+  // than any content-workflow status, so it takes precedence over all of
+  // them here rather than being combined with selectDetailBadge's result.
+  const talentArchived = talent.status === LIFECYCLE_STATUS.ARCHIVED;
+  const headerBadge = talentArchived
+    ? { label: he.talent.detail.archiveAction.archivedBadge, tone: 'neutral' }
+    : selectDetailBadge(status, currentVisibility);
 
   return (
     <AdminShell>
@@ -1048,7 +1059,7 @@ export default async function AdminTalentDetailPage({ params }) {
               published and has no draft either. Never publishes by itself;
               see TalentVisibilityAction.jsx for exactly what it does.
             */}
-            {publishedVersion ? (
+            {publishedVersion && !talentArchived ? (
               <TalentVisibilityAction
                 talentId={talent.id}
                 role={role}
@@ -1057,9 +1068,30 @@ export default async function AdminTalentDetailPage({ params }) {
                 pendingVersionStatus={pendingVersion?.status ?? null}
               />
             ) : null}
+            {/*
+              Talent Archive & Restore feature — the OWNER-only Archive /
+              Restore action. Always rendered (for OWNER; the component
+              itself renders nothing for EMPLOYEE) regardless of
+              published/draft state, unlike TalentVisibilityAction above —
+              there is always something meaningful to archive (even a
+              never-published talent), and always something to restore once
+              archived.
+            */}
+            <TalentArchiveAction talentId={talent.id} role={role} archived={talentArchived} />
           </div>
         }
       />
+
+      {talentArchived ? (
+        <div className={styles.rejectionNotice} role="note">
+          <p className={styles.rejectionNoticeTitle}>
+            {he.talent.detail.archiveAction.archivedNoticeTitle}
+          </p>
+          <p className={styles.rejectionNoticeBody}>
+            {he.talent.detail.archiveAction.archivedNoticeBody}
+          </p>
+        </div>
+      ) : null}
 
       {rejectionNote ? (
         <div className={styles.rejectionNotice} role="note">
@@ -1068,7 +1100,19 @@ export default async function AdminTalentDetailPage({ params }) {
         </div>
       ) : null}
 
-      <TalentWorkspaceTabs sections={sections} />
+      {/*
+        Active-tab persistence sprint — TalentWorkspaceTabs now reads/writes
+        the active tab via the URL (`?tab=`) instead of component-local
+        state alone, so a refresh or Back/Forward keeps the same tab open
+        instead of always resetting to פרטים. It needs `useSearchParams()`
+        for that, which Next.js requires to sit under a Suspense boundary
+        (this page is already `force-dynamic`, so this is a build-time
+        requirement, not a real loading state — the fallback is never
+        visibly shown since `sections` is already fully resolved above).
+      */}
+      <Suspense fallback={null}>
+        <TalentWorkspaceTabs sections={sections} />
+      </Suspense>
 
       <details className={styles.technicalInfo}>
         <summary className={styles.technicalInfoSummary}>{he.talent.detail.technicalInfo}</summary>

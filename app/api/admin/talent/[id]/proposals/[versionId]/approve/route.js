@@ -39,6 +39,7 @@ import {
   SLUG_CONFLICT_ERROR_CODE,
   SLUG_INVALID_ERROR_CODE,
 } from '@/lib/admin/constants/enums';
+import { isTalentArchived, talentArchivedResponse } from '@/lib/admin/talent-archive-guard';
 
 export async function POST(request, { params }) {
   let session;
@@ -62,6 +63,13 @@ export async function POST(request, { params }) {
   const talent = await talentAdapter.getParent(id);
   if (!talent) {
     return NextResponse.json({ error: 'Talent not found.' }, { status: 404 });
+  }
+
+  // Talent Archive & Restore feature — an archived talent is read-only:
+  // nothing already in flight may be approved (and thereby published)
+  // while it's archived. See lib/admin/talent-archive-guard.js.
+  if (isTalentArchived(talent)) {
+    return talentArchivedResponse();
   }
 
   const existingVersion = await talentAdapter.getVersion(versionId);
