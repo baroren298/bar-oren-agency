@@ -20,14 +20,21 @@
  * authority), the POST request, and Hebrew error display.
  *
  * Profile image upload reuses the existing, unmodified upload
- * infrastructure exactly the way MediaGalleryEditor does: a direct POST to
- * /api/admin/assets/upload (multipart, `file` + `purpose`), here with
- * `purpose=profile` (lib/storage/utils/validationProfiles.js) instead of
- * `purpose=gallery`. The upload happens immediately on file selection,
- * before Save Draft — by the time the talent-create POST fires, it only
- * ever sends an already-uploaded Asset's id (`profileImageAssetId`), never
- * a file. No new upload code, no new storage code — only this form's own
- * upload-state bookkeeping (uploading / preview / remove) is new.
+ * infrastructure exactly the way ImageEditorCard does: the canonical
+ * `useImageAssetUpload("profile", he.media.errors)` hook
+ * (lib/admin/hooks/useImageAssetUpload.js), which validates type/size
+ * against lib/storage/utils/validationProfiles.js's "profile" entry
+ * client-side *before* any request is sent, then POSTs to
+ * /api/admin/assets/upload (multipart, `file` + `purpose=profile`) on a
+ * valid file. The upload happens immediately on file selection, before
+ * Save Draft — by the time the talent-create POST fires, it only ever
+ * sends an already-uploaded Asset's id (`profileImageAssetId`), never a
+ * file. This form still owns its own preview/replace/remove bookkeeping;
+ * only the upload request + validation + status/error state come from the
+ * shared hook (Profile Image Upload Fix sprint, 2026-08-25 — previously
+ * this form hand-rolled its own fetch with no client-side pre-validation,
+ * which both missed the oversized-file case and reported every upload
+ * failure with the generic Talent-save error string).
  *
  * Create Talent Screen Polish sprint — the profile image control was
  * rebuilt as a single click-or-drop zone (empty state) that's fully
@@ -49,10 +56,14 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import PrimaryButton from "@/components/admin/PrimaryButton";
 import SecondaryButton from "@/components/admin/SecondaryButton";
+import { useImageAssetUpload } from "@/lib/admin/hooks/useImageAssetUpload";
 import { he } from "@/lib/admin/i18n/he";
 import styles from "./new-talent.module.css";
 
 const COPY = he.talent.create;
+// Only used for the "uploads unavailable in this environment" notice below
+// — the upload request/validation/error copy itself now comes from the
+// canonical useImageAssetUpload hook (he.media.errors), not this bundle.
 const UPLOAD_ERRORS = he.gallery.errors;
 
 // Mirrors the server's SLUG_PATTERN (app/api/admin/talent/route.js) — a
@@ -92,9 +103,19 @@ export default function NewTalentForm({ uploadsEnabled = true }) {
   const fileInputRef = useRef(null);
   const [profileImageAssetId, setProfileImageAssetId] = useState(null);
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState(null);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imageUploadError, setImageUploadError] = useState(null);
   const [isImageDragOver, setIsImageDragOver] = useState(false);
+
+  // Profile Image Upload Fix sprint — the upload request itself, its
+  // client-side pre-validation (type + the new 4MB size cap), and its
+  // uploading/error state now come from the same canonical hook
+  // ImageEditorCard uses, instead of a hand-rolled fetch.
+  const {
+    status: imageUploadStatus,
+    error: imageUploadError,
+    upload: uploadProfileImageFile,
+    reset: resetImageUpload,
+  } = useImageAssetUpload("profile", he.media.errors);
+  const imageUploading = imageUploadStatus === "uploading";
 
   function updateField(field, value) {
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -116,38 +137,21 @@ export default function NewTalentForm({ uploadsEnabled = true }) {
     if (!uploadsEnabled) return;
     if (!file) return;
 
-    setImageUploadError(null);
-    setImageUploading(true);
+    // The hook validates type + size (lib/storage/utils/validationProfiles.js
+    // "profile" entry) before sending anything, sets its own uploading/error
+    // status, and posts to /api/admin/assets/upload on a valid file. A
+    // validation or upload failure returns null and leaves imageUploadError
+    // set to a Hebrew message from he.media.errors (never the generic
+    // Talent-save string).
+    const result = await uploadProfileImageFile(file);
+    if (!result?.asset) return;
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("purpose", "profile");
-
-      const response = await fetch("/api/admin/assets/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const body = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setImageUploadError(body.error || UPLOAD_ERRORS.serverError);
-        setImageUploading(false);
-        return;
-      }
-
-      // A "replace" upload simply overwrites the previous asset id/preview
-      // in local state — the previous Asset row is left as-is server-side
-      // (no delete/cleanup call here; an orphaned row is accepted for now,
-      // per this sprint's scope).
-      setProfileImageAssetId(body.asset.id);
-      setProfileImagePreviewUrl(body.asset.blobUrl);
-      setImageUploading(false);
-    } catch {
-      setImageUploadError(UPLOAD_ERRORS.networkError);
-      setImageUploading(false);
-    }
+    // A "replace" upload simply overwrites the previous asset id/preview
+    // in local state — the previous Asset row is left as-is server-side
+    // (no delete/cleanup call here; an orphaned row is accepted for now,
+    // per this sprint's scope).
+    setProfileImageAssetId(result.asset.id);
+    setProfileImagePreviewUrl(result.asset.blobUrl);
   }
 
   function handleImageFileChange(event) {
@@ -187,7 +191,7 @@ export default function NewTalentForm({ uploadsEnabled = true }) {
   function removeProfileImage() {
     setProfileImageAssetId(null);
     setProfileImagePreviewUrl(null);
-    setImageUploadError(null);
+    resetImageUpload();
   }
 
   function validateClientSide() {

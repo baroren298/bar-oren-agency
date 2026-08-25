@@ -136,8 +136,9 @@ export const metadata = {
  * pending to read from, which <ComparisonView> already treats as "fall
  * back to the published value" (its existing, unchanged default).
  */
-function buildDetailsGroups(publishedVersion, pendingVersion) {
+export function buildDetailsGroups(publishedVersion, pendingVersion) {
   const pending = pendingVersion || {};
+  const published = publishedVersion || {};
 
   return [
     {
@@ -148,21 +149,21 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           key: 'name',
           label: he.talent.fields.name,
           type: 'text',
-          value: publishedVersion.name,
+          value: published.name,
           draftValue: pendingVersion ? pending.name : undefined,
         },
         {
           key: 'nameEn',
           label: he.talent.fields.nameEn,
           type: 'text',
-          value: publishedVersion.nameEn,
+          value: published.nameEn,
           draftValue: pendingVersion ? pending.nameEn : undefined,
         },
         {
           key: 'featured',
           label: he.talent.fields.featured,
           type: 'boolean',
-          value: Boolean(publishedVersion.featured),
+          value: Boolean(published.featured),
           draftValue: pendingVersion ? Boolean(pending.featured) : undefined,
         },
         // Talent Detail Foundation sprint — sortOrder/featuredOrder are
@@ -179,14 +180,14 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           key: 'sortOrder',
           label: he.talent.fields.sortOrder,
           type: 'number',
-          value: publishedVersion.sortOrder,
+          value: published.sortOrder,
           draftValue: pendingVersion ? pending.sortOrder : undefined,
         },
         {
           key: 'featuredOrder',
           label: he.talent.fields.featuredOrder,
           type: 'number',
-          value: publishedVersion.featuredOrder,
+          value: published.featuredOrder,
           draftValue: pendingVersion ? pending.featuredOrder : undefined,
         },
         // Talent Visibility sprint (admin UI) — requirement #4: visibility
@@ -203,7 +204,7 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           key: 'visibility',
           label: he.talent.fields.visibility,
           type: 'visibility',
-          value: publishedVersion.visibility || TALENT_VISIBILITY.VISIBLE,
+          value: published.visibility || TALENT_VISIBILITY.VISIBLE,
           draftValue: pendingVersion ? pending.visibility || TALENT_VISIBILITY.VISIBLE : undefined,
         },
       ],
@@ -216,14 +217,14 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           key: 'bioHe',
           label: he.talent.fields.bio,
           type: 'textarea',
-          value: publishedVersion.bioHe,
+          value: published.bioHe,
           draftValue: pendingVersion ? pending.bioHe : undefined,
         },
         {
           key: 'bioEn',
           label: he.talent.fields.bioEn,
           type: 'textarea',
-          value: publishedVersion.bioEn,
+          value: published.bioEn,
           draftValue: pendingVersion ? pending.bioEn : undefined,
         },
       ],
@@ -236,14 +237,14 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           key: 'category',
           label: he.talent.fields.category,
           type: 'list',
-          value: publishedVersion.category,
+          value: published.category,
           draftValue: pendingVersion ? pending.category : undefined,
         },
         {
           key: 'tags',
           label: he.talent.fields.tags,
           type: 'list',
-          value: publishedVersion.tags,
+          value: published.tags,
           draftValue: pendingVersion ? pending.tags : undefined,
         },
       ],
@@ -256,14 +257,14 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           key: 'location',
           label: he.talent.fields.location,
           type: 'text',
-          value: publishedVersion.location,
+          value: published.location,
           draftValue: pendingVersion ? pending.location : undefined,
         },
         {
           key: 'locationEn',
           label: he.talent.fields.locationEn,
           type: 'text',
-          value: publishedVersion.locationEn,
+          value: published.locationEn,
           draftValue: pendingVersion ? pending.locationEn : undefined,
         },
         // Talent Detail "location & age" cleanup sprint — birthDate/age
@@ -284,14 +285,14 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
           key: 'birthDate',
           label: he.talent.fields.birthDate,
           type: 'date',
-          value: publishedVersion.birthDate,
+          value: published.birthDate,
           draftValue: pendingVersion ? pending.birthDate : undefined,
         },
         {
           key: 'age',
           label: he.talent.fields.age,
           type: 'computed',
-          value: calculateAge(publishedVersion.birthDate),
+          value: calculateAge(published.birthDate),
           draftValue: pendingVersion ? calculateAge(pending.birthDate) : undefined,
         },
       ],
@@ -311,8 +312,20 @@ function buildDetailsGroups(publishedVersion, pendingVersion) {
  * `versionStatus` is what lets it pick the right button label and decide
  * whether Submit may be offered at all (Submit stays DRAFT-only).
  */
-function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role, uploadsEnabled }) {
-  if (!publishedVersion) {
+export function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, displayName, role, uploadsEnabled }) {
+  const isEditablePending =
+    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
+
+  // New-Talent Draft Details fix — a brand-new Talent has no published
+  // version yet, but its very first TalentVersion is created as an
+  // editable DRAFT (talentRepository.createTalentWithInitialVersion). The
+  // empty state is only correct when there is truly nothing to show or
+  // edit: no published version AND no editable pending version. Whenever
+  // an editable DRAFT/PROPOSED exists, the editors below render with the
+  // published column empty ("—") and the proposed column holding the
+  // pending version's values (buildDetailsGroups/ProfileImagePanel are
+  // both null-safe on the published side for exactly this case).
+  if (!publishedVersion && !isEditablePending) {
     return (
       <EmptyState
         title={he.talent.detail.noPublishedVersionTitle}
@@ -321,8 +334,6 @@ function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, dis
     );
   }
 
-  const isEditablePending =
-    pendingVersion?.status === VERSION_STATUS.DRAFT || pendingVersion?.status === VERSION_STATUS.PROPOSED;
   const editableVersionId = isEditablePending ? pendingVersion.id : null;
 
   return (
@@ -341,9 +352,9 @@ function DetailsSectionContent({ talentId, publishedVersion, pendingVersion, dis
         talentId={talentId}
         versionId={editableVersionId}
         versionStatus={isEditablePending ? pendingVersion.status : null}
-        imageUrl={publishedVersion.profileImageAsset?.blobUrl ?? null}
-        profileImagePosition={publishedVersion.profileImagePosition}
-        profileImageScale={publishedVersion.profileImageScale}
+        imageUrl={publishedVersion?.profileImageAsset?.blobUrl ?? null}
+        profileImagePosition={publishedVersion?.profileImagePosition ?? null}
+        profileImageScale={publishedVersion?.profileImageScale ?? null}
         pendingImageUrl={pendingVersion?.profileImageAsset?.blobUrl ?? null}
         pendingImagePosition={pendingVersion?.profileImagePosition ?? null}
         pendingImageScale={pendingVersion?.profileImageScale ?? null}
