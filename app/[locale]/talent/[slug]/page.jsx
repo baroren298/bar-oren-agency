@@ -24,9 +24,20 @@ import { buildTalentSeoMetadata } from '@/lib/public/seo';
  * list whenever the database isn't configured, has no published talent
  * yet, or a read fails. See that file's header comment for the fallback
  * contract. ISR keeps the page from hitting the database on every request
- * while still picking up new Publishes within TALENT_REVALIDATE_SECONDS;
- * `dynamicParams` stays at its default (true) so a slug published after
- * the last build/regeneration still renders on demand instead of 404ing.
+ * while still picking up new Publishes within TALENT_REVALIDATE_SECONDS.
+ *
+ * A slug published after the last build renders on demand only while NO
+ * segment on this route's chain exports `dynamicParams = false`. Next
+ * resolves that flag once for the whole chain, not per segment
+ * (`segments.every((s) => s.config?.dynamicParams !== false)` in
+ * next/dist/build/static-paths/app.js), so this page leaving it at its
+ * default (true) is necessary but NOT sufficient on its own:
+ * app/[locale]/layout.jsx used to export `dynamicParams = false`, which
+ * put this route into fallback mode NOT_FOUND and 404'd every slug
+ * published after a deployment at the routing layer, before this
+ * component ran. That export was removed; see that file's header comment
+ * and app/[locale]/__tests__/publicTalentRouteConfig.test.js, which
+ * guards the invariant.
  *
  * NOTE: Next.js's route segment config exports (revalidate, dynamic, etc.)
  * must be statically analyzable literals — it rejects an exported

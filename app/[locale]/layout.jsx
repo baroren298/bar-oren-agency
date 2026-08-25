@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { Frank_Ruhl_Libre, Heebo, Cormorant_Garamond, DM_Sans } from 'next/font/google';
 import '@/styles/globals.css';
 import Header from '@/components/layout/Header';
@@ -6,7 +7,7 @@ import FloatingWhatsApp from '@/components/ui/FloatingWhatsApp';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import JsonLd from '@/components/ui/JsonLd';
 import { siteConfig } from '@/data/site';
-import { getStrings } from '@/lib/i18n';
+import { getStrings, SUPPORTED_LOCALES } from '@/lib/i18n';
 
 /*
  * Supported locales:
@@ -15,26 +16,39 @@ import { getStrings } from '@/lib/i18n';
  *   en — English, served at "/en".
  *
  * generateStaticParams pre-renders both locale trees at build time. Any
- * other first path segment would otherwise also match this [locale]
- * route (Next.js dynamic segments match any string) — `dynamicParams =
- * false` below tells Next to treat any locale NOT returned here as a
- * standard unmatched route (Next's generic 404), instead of rendering it.
+ * other first path segment also structurally matches this [locale] route
+ * (Next.js dynamic segments match any string), so unsupported locales are
+ * rejected explicitly by the notFound() guard in RootLayout below.
  *
- * We deliberately do NOT call notFound() inside this layout to reject bad
- * locales: this layout owns <html>/<body> as the de-facto root layout
- * (there's no app/layout.jsx above it), and throwing notFound() from the
- * component that owns the document shell creates an ambiguous "who
- * renders <html> now" situation. `dynamicParams = false` avoids that
- * entirely — invalid locales are 404'd at the routing layer, before this
- * component ever runs.
+ * This layout used to reject them with a `dynamicParams = false` route
+ * segment config instead. That export had to be removed: dynamicParams is
+ * NOT scoped to the segment that declares it. Next resolves it once for
+ * the whole route chain —
+ *
+ *   node_modules/next/dist/build/static-paths/app.js
+ *   const dynamicParams = segments.every((s) => s.config?.dynamicParams !== false)
+ *   const fallbackMode  = dynamicParams ? ... : FallbackMode.NOT_FOUND
+ *
+ * (the TODO directly above that line notes per-segment granularity does
+ * not exist yet) — so this one export also put every dynamic route nested
+ * under [locale], including /[locale]/talent/[slug], into fallback mode
+ * NOT_FOUND. Only slugs returned by generateStaticParams *at build time*
+ * existed publicly: a talent published from the CMS after a deployment
+ * 404'd at the routing layer before its page component ever ran, and
+ * neither the page's ISR `revalidate` window nor the publish flow's
+ * revalidatePath() call could fix it, because on-demand revalidation
+ * cannot create a path that was never prerendered.
+ *
+ * The locale allowlist itself is unchanged — it just moved from a route
+ * segment config to an explicit runtime check, so it constrains the
+ * `locale` param only instead of every dynamic segment below it.
+ * SUPPORTED_LOCALES is imported from lib/i18n.js (the canonical list this
+ * routing layer already shares with getLocaleFromPathname/localizeHref)
+ * rather than redeclared here.
  */
-const SUPPORTED_LOCALES = ['he', 'en'];
-
 export function generateStaticParams() {
   return SUPPORTED_LOCALES.map((locale) => ({ locale }));
 }
-
-export const dynamicParams = false;
 
 const frankRuhlLibre = Frank_Ruhl_Libre({
   subsets: ['latin', 'hebrew'],
@@ -205,8 +219,12 @@ function buildSiteSchema(locale) {
 export default async function RootLayout({ children, params }) {
   const { locale } = await params;
 
-  /* dynamicParams = false above guarantees `locale` is always 'he' or
-   * 'en' here — anything else 404s before this component runs. */
+  /* Fail closed on an unsupported locale. Replaces the removed
+   * `dynamicParams = false` route segment config (see this file's header
+   * comment for why that export could not stay); the allowlist is the
+   * same one generateStaticParams pre-renders. */
+  if (!SUPPORTED_LOCALES.includes(locale)) notFound();
+
   const dir = locale === 'he' ? 'rtl' : 'ltr';
   const t = getStrings(locale);
 
