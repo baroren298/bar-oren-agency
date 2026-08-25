@@ -255,3 +255,68 @@ describe('DetailsSectionContent — unified Profile Image lifecycle (Gap 1 + Gap
     expect(countOccurrences(html, CANCEL_LABEL)).toBe(1);
   });
 });
+
+/*
+ * Production regression fix — RSC (React Server Components) serializability
+ * of buildDetailsGroups' return value.
+ *
+ * page.jsx (buildDetailsGroups' home) is a Server Component; the `groups`
+ * it returns is passed as a prop into <TalentDetailsEditor>, which is
+ * "use client" — a Server -> Client boundary. React/Next's RSC Flight
+ * serializer can only carry plain, JSON-shaped data across that boundary:
+ * a function value anywhere in `groups` throws at request time (this is
+ * exactly what broke production after 91e93aa — the "profileImage" field's
+ * server-built `copy` object included `he.media.errors`, which contains
+ * `tooLarge: (maxMb) => ...`).
+ *
+ * No existing test caught this because every test in this file renders the
+ * component tree with plain react-dom/server `renderToString` — ordinary
+ * in-memory React SSR, not Next's actual RSC Flight pipeline — so a
+ * function sitting in props never gets serialized and never throws there.
+ * This test instead inspects the *data* buildDetailsGroups returns,
+ * directly, with no rendering at all: it recursively walks every group's
+ * every field (including nested metadata objects like `image`) and fails
+ * the moment it finds a function anywhere — a mechanical, render-free proxy
+ * for "this is legal to pass across an RSC Server -> Client boundary."
+ * It fails against the pre-fix implementation (the "profileImage" field's
+ * `image.copy.errors.tooLarge` function) and passes once that copy is
+ * assembled client-side instead (see ComparisonView.jsx's IMAGE_FIELD_COPY).
+ */
+describe('buildDetailsGroups — RSC Server→Client serializability', () => {
+  function findFunctionPaths(value, path = 'groups') {
+    if (typeof value === 'function') {
+      return [path];
+    }
+    if (Array.isArray(value)) {
+      return value.flatMap((item, index) => findFunctionPaths(item, `${path}[${index}]`));
+    }
+    if (value && typeof value === 'object') {
+      return Object.entries(value).flatMap(([key, nested]) => findFunctionPaths(nested, `${path}.${key}`));
+    }
+    return [];
+  }
+
+  it('contains no function values anywhere — Draft-only fixture (no Published version)', () => {
+    const groups = buildDetailsGroups(null, draftVersion, {
+      uploadsEnabled: true,
+      displayName: 'מיוצג לבדיקה',
+    });
+
+    expect(findFunctionPaths(groups)).toEqual([]);
+  });
+
+  it('contains no function values anywhere — Published + Draft fixture', () => {
+    const groups = buildDetailsGroups(publishedVersion, draftVersion, {
+      uploadsEnabled: true,
+      displayName: 'מיוצג לבדיקה',
+    });
+
+    expect(findFunctionPaths(groups)).toEqual([]);
+  });
+
+  it('contains no function values anywhere — Published-only fixture, options omitted (defaults exercised)', () => {
+    const groups = buildDetailsGroups(publishedVersion, null);
+
+    expect(findFunctionPaths(groups)).toEqual([]);
+  });
+});

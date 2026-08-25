@@ -163,6 +163,39 @@ import ImageAssetEditor from "./ImageAssetEditor";
 import { he } from "@/lib/admin/i18n/he";
 import { formatHebrewDate } from "@/lib/admin/talent-workspace";
 
+/*
+ * Production regression fix (RSC serializability) — the "image" field's
+ * editor copy (eyebrow labels, upload-area/preview/position-controls copy,
+ * the disabled hint, and `errors` — which includes a function,
+ * `he.media.errors.tooLarge`) used to be built server-side in
+ * buildDetailsGroups (app/admin/talent/[id]/page.jsx) and handed down
+ * through the `groups` prop. `groups` crosses a Server Component -> Client
+ * Component boundary (this file is "use client"; page.jsx is not), and
+ * React/Next's RSC Flight serializer cannot carry a function across that
+ * boundary — it threw at request time on every talent detail page load.
+ *
+ * None of this copy varies per talent/request (unlike `field.image.alt`/
+ * `field.image.uploadDisabled`, which do and stay server-provided,
+ * serializable props), so it is assembled once, here, exactly reproducing
+ * the contract the deleted <ProfileImagePanel> used to build locally for
+ * itself before the Profile Image field existed on this component.
+ */
+const IMAGE_FIELD_COPY = {
+  viewEyebrowIcon: he.media.viewEyebrowIcon,
+  viewEyebrowTitle: he.media.viewEyebrowTitle,
+  viewSubtitle: he.media.viewSubtitle,
+  editingEyebrowIcon: he.media.editingEyebrowIcon,
+  editingEyebrowTitle: he.media.editingEyebrowTitle,
+  editingSubtitle: he.media.editingSubtitle,
+  noImage: he.talent.detail.profile.noImage,
+  uploadArea: he.media.uploadArea,
+  preview: he.media.preview,
+  positionControls: he.media.positionControls,
+  disabledHint: he.talent.detail.profile.image.noEditableVersionHint,
+  uploadsDisabledHint: he.media.uploadsDisabledHint,
+  errors: he.media.errors,
+};
+
 function normalizeGroups({ groups, fields }) {
   if (groups && groups.length) return groups;
   if (fields && fields.length) return [{ key: "_ungrouped", label: null, fields }];
@@ -629,7 +662,7 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
                         uploadDisabled={field.image?.uploadDisabled}
                         defaultPosition={field.image?.defaultPosition}
                         alt={field.image?.alt}
-                        copy={field.image?.copy}
+                        copy={IMAGE_FIELD_COPY}
                       />
                     </div>
                   ) : isEditing ? (

@@ -183,26 +183,29 @@ export function buildDetailsGroups(publishedVersion, pendingVersion, options = {
           // Rendering-only metadata for ComparisonView's "image" field
           // branch — mirrors exactly what <ProfileImagePanel> used to pass
           // to <ImageAssetEditor> itself.
+          //
+          // Production regression fix (RSC serializability) — this object
+          // used to also carry a `copy` sub-object built from `he.media`/
+          // `he.talent.detail.profile.image` (viewEyebrowTitle, uploadArea,
+          // errors, etc.). `he.media.errors.tooLarge` is a function, and
+          // `groups` is a prop crossing a Server Component
+          // (page.jsx) -> Client Component ("use client"
+          // TalentDetailsEditor.jsx) boundary — React/Next.js's RSC Flight
+          // serializer cannot carry a function across that boundary and
+          // throws at request time (the production crash on every talent
+          // detail page load). Only genuinely per-request/serializable
+          // values belong here: `alt` (needs displayName) and
+          // `uploadDisabled` (needs uploadsEnabled) are plain strings/
+          // booleans, so they stay. Every static i18n value that used to
+          // live in `copy` — including the function-valued `errors` — is
+          // now assembled inside ComparisonView.jsx itself (already
+          // "use client", already imports `he`), the same place
+          // <ProfileImagePanel> used to build it before this field existed.
           image: {
             purpose: 'profile',
             alt: he.talent.detail.profile.imageAlt(displayName),
             defaultPosition: 'center top',
             uploadDisabled: !uploadsEnabled,
-            copy: {
-              viewEyebrowIcon: he.media.viewEyebrowIcon,
-              viewEyebrowTitle: he.media.viewEyebrowTitle,
-              viewSubtitle: he.media.viewSubtitle,
-              editingEyebrowIcon: he.media.editingEyebrowIcon,
-              editingEyebrowTitle: he.media.editingEyebrowTitle,
-              editingSubtitle: he.media.editingSubtitle,
-              noImage: he.talent.detail.profile.noImage,
-              uploadArea: he.media.uploadArea,
-              preview: he.media.preview,
-              positionControls: he.media.positionControls,
-              disabledHint: he.talent.detail.profile.image.noEditableVersionHint,
-              uploadsDisabledHint: he.media.uploadsDisabledHint,
-              errors: he.media.errors,
-            },
           },
         },
       ],
