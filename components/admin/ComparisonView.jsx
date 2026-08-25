@@ -153,6 +153,13 @@ import { useEffect, useState } from "react";
 import styles from "./ComparisonView.module.css";
 import EditorHelperNote from "./EditorHelperNote";
 import EditorActionBar from "./EditorActionBar";
+// Talent Details Lifecycle Unification sprint — the one new field type
+// this component gained, "image" (see the render loop below). Reuses the
+// exact same controlled ImageAssetEditor <ProfileImagePanel> used to
+// compose directly — no upload/storage logic moves into this file, only
+// the Save Draft/Submit/Cancel ownership that already lived here for every
+// other field type.
+import ImageAssetEditor from "./ImageAssetEditor";
 import { he } from "@/lib/admin/i18n/he";
 import { formatHebrewDate } from "@/lib/admin/talent-workspace";
 
@@ -596,7 +603,36 @@ export default function ComparisonView({ fields, groups, onSaveDraft, onSubmit, 
               ) : null}
               <div className={styles.fieldList}>
                 {group.fields.map((field) =>
-                  isEditing ? (
+                  // Talent Details Lifecycle Unification sprint — an
+                  // "image" field bypasses the generic label+input/
+                  // read-only-text row entirely and renders the exact same
+                  // controlled <ImageAssetEditor> <ProfileImagePanel> used
+                  // to own: it already switches between its own read-only
+                  // preview and its own upload/position/scale editing
+                  // surface based on `disabled`, and already has its own
+                  // eyebrow heading (no need to also print field.label — the
+                  // group label above already reads "תמונת פרופיל"). Save
+                  // Draft/Submit/Cancel stay owned by this component, same
+                  // as every other field: proposedValues[field.key] is the
+                  // exact { assetUrl, assetId?, position, scale } value
+                  // contract ImageEditorCard's onChange already produces,
+                  // so the existing JSON-based isDirty/resync/Cancel logic
+                  // below needs no adaptation to cover it.
+                  field.type === "image" ? (
+                    <div key={field.key} className={styles.imageFieldRow}>
+                      <ImageAssetEditor
+                        publishedValue={field.value}
+                        proposedValue={proposedValues[field.key]}
+                        onProposedChange={(nextValue) => handleChange(field.key, nextValue)}
+                        purpose={field.image?.purpose}
+                        disabled={!isEditing}
+                        uploadDisabled={field.image?.uploadDisabled}
+                        defaultPosition={field.image?.defaultPosition}
+                        alt={field.image?.alt}
+                        copy={field.image?.copy}
+                      />
+                    </div>
+                  ) : isEditing ? (
                     <div key={field.key} className={styles.fieldRowEditable}>
                       <label htmlFor={`proposed-${field.key}`} className={styles.proposedFieldLabel}>
                         {/*

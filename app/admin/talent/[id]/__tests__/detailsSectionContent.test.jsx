@@ -16,8 +16,25 @@
  * surface, and asserting on that HTML needs no DOM/browser test dependency
  * this repo doesn't have.
  *
- * next/navigation's useRouter is mocked (ProfileImagePanel/TalentDetailsEditor
- * call it, but only their Save/Submit handlers use it — never invoked here).
+ * next/navigation's useRouter is mocked (TalentDetailsEditor calls it, but
+ * only its Save/Submit handlers use it — never invoked here).
+ *
+ * Talent Details Lifecycle Unification sprint — extended with:
+ *   (a) a Gap 1 regression guard: a Draft-only Talent's own profile image
+ *       must actually reach the rendered Details tab (this is the exact
+ *       bug talentRepository.listTalentVersionsForTalent's new
+ *       `profileImageAsset` include, covered separately in
+ *       talentRepository.listTalentVersionsForTalent.test.js, fixes);
+ *   (b) a Gap 2 regression guard: the Details tab now renders exactly one
+ *       Save Draft/Cancel action bar (Profile Image no longer owns its
+ *       own separate <ProfileImagePanel> lifecycle).
+ * These are still initial-render/string-containment assertions only, same
+ * technique and same DOM-free limits as the rest of this file — they prove
+ * shape and content, not click-driven interactions (upload, drag-to-
+ * reposition, Save Draft's network call). Those remain manual QA, exactly
+ * like this file's existing precedent in podcastImageUpload.test.jsx
+ * ("click→upload→PATCH flow itself can't be simulated without a DOM
+ * harness").
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -60,14 +77,14 @@ const publishedVersion = {
   profileImageScale: 1,
 };
 
-function renderDetails(publishedVer, pendingVer) {
+function renderDetails(publishedVer, pendingVer, role = 'OWNER') {
   return renderToString(
     h(DetailsSectionContent, {
       talentId: 't-1',
       publishedVersion: publishedVer,
       pendingVersion: pendingVer,
       displayName: 'מיוצג לבדיקה',
-      role: 'OWNER',
+      role,
       uploadsEnabled: true,
     })
   );
@@ -127,5 +144,114 @@ describe('buildDetailsGroups — null-safe published side', () => {
     const nameField = basicGroup.fields.find((f) => f.key === 'name');
     expect(nameField.value).toBeUndefined();
     expect(nameField.draftValue).toBe(draftVersion.name);
+  });
+});
+
+/*
+ * Talent Details Lifecycle Unification sprint — Profile Image is now the
+ * "profileImage" group/field buildDetailsGroups returns (see page.jsx),
+ * consumed by ComparisonView's new "image" field type instead of a
+ * sibling <ProfileImagePanel>.
+ */
+describe('buildDetailsGroups — profileImage field', () => {
+  it('builds a null-safe published value and an undefined draftValue when there is no pending version', () => {
+    const groups = buildDetailsGroups(publishedVersion, null);
+    const imageGroup = groups.find((g) => g.key === 'profileImage');
+    const imageField = imageGroup.fields.find((f) => f.key === 'profileImage');
+
+    expect(imageField.type).toBe('image');
+    expect(imageField.value).toEqual({
+      assetUrl: publishedVersion.profileImageAsset.blobUrl,
+      position: publishedVersion.profileImagePosition,
+      scale: publishedVersion.profileImageScale,
+    });
+    expect(imageField.draftValue).toBeUndefined();
+  });
+
+  it('builds a draftValue from the pending version profile image when one exists — the Gap 1 fix, at the field-builder level', () => {
+    const groups = buildDetailsGroups(null, draftVersion);
+    const imageGroup = groups.find((g) => g.key === 'profileImage');
+    const imageField = imageGroup.fields.find((f) => f.key === 'profileImage');
+
+    expect(imageField.value).toEqual({ assetUrl: null, position: null, scale: null });
+    expect(imageField.draftValue).toEqual({
+      assetUrl: draftVersion.profileImageAsset.blobUrl,
+      position: draftVersion.profileImagePosition,
+      scale: draftVersion.profileImageScale,
+    });
+  });
+
+  it('forwards uploadsEnabled/displayName into the image field render metadata, defaulting safely when omitted', () => {
+    const withOptions = buildDetailsGroups(publishedVersion, null, {
+      uploadsEnabled: false,
+      displayName: 'מיוצג לבדיקה',
+    });
+    const fieldWithOptions = withOptions.find((g) => g.key === 'profileImage').fields[0];
+    expect(fieldWithOptions.image.uploadDisabled).toBe(true);
+    expect(fieldWithOptions.image.alt).toContain('מיוצג לבדיקה');
+
+    const withoutOptions = buildDetailsGroups(publishedVersion, null);
+    const fieldWithoutOptions = withoutOptions.find((g) => g.key === 'profileImage').fields[0];
+    expect(fieldWithoutOptions.image.uploadDisabled).toBe(false);
+  });
+});
+
+/*
+ * Talent Details Lifecycle Unification sprint — Gap 1 regression guard
+ * (the pending image now actually renders) + Gap 2 regression guard (one
+ * lifecycle, not two). `he.editor.actions.cancel` ("בטל עריכה") is used as
+ * the action-bar-instance counter: every <EditorActionBar> unconditionally
+ * renders exactly one Cancel button (see that component's own props —
+ * `onCancel` has no `show*` flag), so its occurrence count in the rendered
+ * HTML is exactly the number of action bars on the page. Before this
+ * sprint that count was 2 (ProfileImagePanel's own bar + ComparisonView's);
+ * this suite locks it at 1.
+ */
+describe('DetailsSectionContent — unified Profile Image lifecycle (Gap 1 + Gap 2 regression)', () => {
+  const CANCEL_LABEL = he.editor.actions.cancel;
+  const SAVE_DRAFT_LABEL = he.editor.actions.saveDraft;
+  const SUBMIT_LABEL = he.editor.actions.submit;
+  const PUBLISH_LABEL = he.editor.actions.publishNow;
+
+  function countOccurrences(haystack, needle) {
+    return haystack.split(needle).length - 1;
+  }
+
+  it('renders the read-only Profile Image view with the Published image when there is no editable pending version', () => {
+    const html = renderDetails(publishedVersion, null);
+    expect(html).toContain(publishedVersion.profileImageAsset.blobUrl);
+    expect(html).not.toContain(draftVersion.profileImageAsset.blobUrl);
+    expect(html).toContain(he.media.viewEyebrowTitle);
+  });
+
+  it('renders the Profile Image editing surface seeded from the Draft image for a Draft-only Talent (Gap 1, end to end)', () => {
+    const html = renderDetails(null, draftVersion);
+    expect(html).toContain(draftVersion.profileImageAsset.blobUrl);
+    expect(html).toContain(he.media.editingEyebrowTitle);
+  });
+
+  it('renders exactly one Save Draft/Cancel action bar for an editable Details tab (Gap 2)', () => {
+    const html = renderDetails(publishedVersion, draftVersion);
+    expect(countOccurrences(html, CANCEL_LABEL)).toBe(1);
+    expect(countOccurrences(html, SAVE_DRAFT_LABEL)).toBe(1);
+  });
+
+  it('renders at most one forward action (Submit or Publish combined) for an Owner — Publish, not Submit', () => {
+    const ownerHtml = renderDetails(publishedVersion, draftVersion, 'OWNER');
+    expect(countOccurrences(ownerHtml, SUBMIT_LABEL) + countOccurrences(ownerHtml, PUBLISH_LABEL)).toBe(1);
+    expect(countOccurrences(ownerHtml, PUBLISH_LABEL)).toBe(1);
+    expect(countOccurrences(ownerHtml, SUBMIT_LABEL)).toBe(0);
+  });
+
+  it('renders at most one forward action (Submit or Publish combined) for an Employee — Submit, not Publish', () => {
+    const employeeHtml = renderDetails(publishedVersion, draftVersion, 'EMPLOYEE');
+    expect(countOccurrences(employeeHtml, SUBMIT_LABEL) + countOccurrences(employeeHtml, PUBLISH_LABEL)).toBe(1);
+    expect(countOccurrences(employeeHtml, SUBMIT_LABEL)).toBe(1);
+    expect(countOccurrences(employeeHtml, PUBLISH_LABEL)).toBe(0);
+  });
+
+  it('renders exactly one (disabled) action bar when there is no editable pending version — ComparisonView always renders its own bar; the fix is that ProfileImagePanel no longer also renders one', () => {
+    const html = renderDetails(publishedVersion, null);
+    expect(countOccurrences(html, CANCEL_LABEL)).toBe(1);
   });
 });

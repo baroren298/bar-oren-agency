@@ -71,7 +71,6 @@ import StartEditingButton from '@/components/admin/StartEditingButton';
 import CancelEditingButton from '@/components/admin/CancelEditingButton';
 import TalentVisibilityAction from '@/components/admin/TalentVisibilityAction';
 import TalentArchiveAction from '@/components/admin/TalentArchiveAction';
-import ProfileImagePanel from '@/components/admin/ProfileImagePanel';
 import PodcastTab from '@/components/admin/PodcastTab';
 import TalentDetailsEditor from '@/components/admin/TalentDetailsEditor';
 import MediaGalleryEditor from '@/components/admin/MediaGalleryEditor';
@@ -136,11 +135,78 @@ export const metadata = {
  * pending to read from, which <ComparisonView> already treats as "fall
  * back to the published value" (its existing, unchanged default).
  */
-export function buildDetailsGroups(publishedVersion, pendingVersion) {
+export function buildDetailsGroups(publishedVersion, pendingVersion, options = {}) {
   const pending = pendingVersion || {};
   const published = publishedVersion || {};
+  // Talent Details Lifecycle Unification sprint — Profile Image is now a
+  // field inside this same groups array/ComparisonView instance instead of
+  // the separate <ProfileImagePanel> lifecycle it used to own (see the
+  // "profileImage" group below). uploadsEnabled/displayName are the two
+  // bits of caller context that field needs and buildDetailsGroups' other
+  // fields never did; both are optional so every existing call site
+  // (including this file's own detailsSectionContent.test.jsx) keeps
+  // working unchanged.
+  const { uploadsEnabled = true, displayName = '' } = options;
 
   return [
+    {
+      // Talent Details Lifecycle Unification sprint — Profile Image moves
+      // from its own <ProfileImagePanel> lifecycle (separate Save Draft/
+      // Submit/Cancel) into this single Details-tab ComparisonView
+      // lifecycle, as one "image" field. Its own group (not folded into
+      // "basic") so it keeps the same visual section heading
+      // ("תמונת פרופיל") the old panel rendered. ComparisonView's new
+      // "image" field type renders it via the exact same, unmodified
+      // <ImageAssetEditor> the old panel used — only lifecycle ownership
+      // moved, not the image editing UI itself.
+      key: 'profileImage',
+      label: he.talent.detail.profile.image.sectionTitle,
+      fields: [
+        {
+          key: 'profileImage',
+          type: 'image',
+          value: {
+            assetUrl: published.profileImageAsset?.blobUrl ?? null,
+            position: published.profileImagePosition ?? null,
+            scale: published.profileImageScale ?? null,
+          },
+          // Same "undefined means fall back to published" convention every
+          // other field's draftValue already uses — only seeded from the
+          // pending version once one actually exists.
+          draftValue: pendingVersion
+            ? {
+                assetUrl: pending.profileImageAsset?.blobUrl ?? null,
+                position: pending.profileImagePosition ?? null,
+                scale: pending.profileImageScale ?? null,
+              }
+            : undefined,
+          // Rendering-only metadata for ComparisonView's "image" field
+          // branch — mirrors exactly what <ProfileImagePanel> used to pass
+          // to <ImageAssetEditor> itself.
+          image: {
+            purpose: 'profile',
+            alt: he.talent.detail.profile.imageAlt(displayName),
+            defaultPosition: 'center top',
+            uploadDisabled: !uploadsEnabled,
+            copy: {
+              viewEyebrowIcon: he.media.viewEyebrowIcon,
+              viewEyebrowTitle: he.media.viewEyebrowTitle,
+              viewSubtitle: he.media.viewSubtitle,
+              editingEyebrowIcon: he.media.editingEyebrowIcon,
+              editingEyebrowTitle: he.media.editingEyebrowTitle,
+              editingSubtitle: he.media.editingSubtitle,
+              noImage: he.talent.detail.profile.noImage,
+              uploadArea: he.media.uploadArea,
+              preview: he.media.preview,
+              positionControls: he.media.positionControls,
+              disabledHint: he.talent.detail.profile.image.noEditableVersionHint,
+              uploadsDisabledHint: he.media.uploadsDisabledHint,
+              errors: he.media.errors,
+            },
+          },
+        },
+      ],
+    },
     {
       key: 'basic',
       label: he.talent.detailGroups.basic,
@@ -337,38 +403,20 @@ export function DetailsSectionContent({ talentId, publishedVersion, pendingVersi
   const editableVersionId = isEditablePending ? pendingVersion.id : null;
 
   return (
-    <>
-      {/*
-        UI/structure fix — Profile Image scoped to פרטים tab only. This used
-        to render globally above <TalentWorkspaceTabs> (and therefore also
-        above every other tab's edit mode: Gallery/Socials/Podcast/SEO/
-        History), which was confusing since editing e.g. Socials had nothing
-        to do with the profile image. Moved here, inside the Details tab's
-        own content, so it only ever appears when פרטים is the active tab.
-        No prop, behavior, upload, or storage change — same
-        <ProfileImagePanel> with the exact same props it always received.
-      */}
-      <ProfileImagePanel
-        talentId={talentId}
-        versionId={editableVersionId}
-        versionStatus={isEditablePending ? pendingVersion.status : null}
-        imageUrl={publishedVersion?.profileImageAsset?.blobUrl ?? null}
-        profileImagePosition={publishedVersion?.profileImagePosition ?? null}
-        profileImageScale={publishedVersion?.profileImageScale ?? null}
-        pendingImageUrl={pendingVersion?.profileImageAsset?.blobUrl ?? null}
-        pendingImagePosition={pendingVersion?.profileImagePosition ?? null}
-        pendingImageScale={pendingVersion?.profileImageScale ?? null}
-        displayName={displayName}
-        uploadsEnabled={uploadsEnabled}
-      />
-      <TalentDetailsEditor
-        talentId={talentId}
-        versionId={editableVersionId}
-        versionStatus={isEditablePending ? pendingVersion.status : null}
-        groups={buildDetailsGroups(publishedVersion, pendingVersion)}
-        role={role}
-      />
-    </>
+    // Talent Details Lifecycle Unification sprint — Profile Image no
+    // longer renders as its own sibling <ProfileImagePanel> with an
+    // independent Save Draft/Submit/Cancel lifecycle. It is now the first
+    // field/group buildDetailsGroups returns, so <TalentDetailsEditor>'s
+    // single <ComparisonView> instance is the Details tab's only
+    // save/submit/cancel action surface (see that function's "profileImage"
+    // group above for exactly what moved and why).
+    <TalentDetailsEditor
+      talentId={talentId}
+      versionId={editableVersionId}
+      versionStatus={isEditablePending ? pendingVersion.status : null}
+      groups={buildDetailsGroups(publishedVersion, pendingVersion, { uploadsEnabled, displayName })}
+      role={role}
+    />
   );
 }
 

@@ -72,6 +72,47 @@ import { useRouter } from "next/navigation";
 import ComparisonView from "./ComparisonView";
 import { VERSION_STATUS, ROLE } from "@/lib/admin/constants/enums";
 
+/*
+ * Talent Details Lifecycle Unification sprint — ComparisonView's
+ * `values.profileImage` is the Profile Image field's live proposed value,
+ * in the exact { assetUrl, assetId?, position, scale } shape
+ * ImageEditorCard's onChange already produces (see ComparisonView's new
+ * "image" field type) — not a real TalentVersion column itself. This
+ * flattens it into the three real columns the API/repository expect,
+ * exactly mirroring what the old, now-removed <ProfileImagePanel> PATCHed
+ * on its own:
+ *
+ *   - `assetUrl` is a client-side display concern only — never sent.
+ *   - `profileImagePosition`/`profileImageScale` are ALWAYS included, even
+ *     when `null` — talentRepository.updateTalentVersionFields is a
+ *     sparse, allowlisted update where an ABSENT key leaves the existing
+ *     DB value untouched but a key present with `null` is a deliberate
+ *     write, and clearing either back to its default is exactly that: a
+ *     deliberate write, not an omission.
+ *   - `profileImageAssetId` is included only when `assetId` is present on
+ *     the value, i.e. a new upload actually completed during this editing
+ *     session (see ImageEditorCard's onChange contract) — omitted
+ *     otherwise, which leaves whatever asset id is already on the version
+ *     untouched, the same "no need to know the published asset id
+ *     client-side" property <ProfileImagePanel> relied on.
+ *
+ * Module-scope (not a closure inside the component) and exported: it is a
+ * pure function of `values` — no talentId/versionId/router — and exporting
+ * it lets this mapping be unit-tested directly, the same "export the pure
+ * piece for testing" pattern page.jsx already uses for buildDetailsGroups.
+ */
+export function buildSaveFields(values) {
+  const { profileImage, ...fields } = values;
+  if (profileImage) {
+    fields.profileImagePosition = profileImage.position ?? null;
+    fields.profileImageScale = profileImage.scale ?? null;
+    if (profileImage.assetId) {
+      fields.profileImageAssetId = profileImage.assetId;
+    }
+  }
+  return fields;
+}
+
 export default function TalentDetailsEditor({ talentId, versionId, versionStatus = null, groups, role = null }) {
   const isProposed = versionStatus === VERSION_STATUS.PROPOSED;
   const isDraft = versionStatus === VERSION_STATUS.DRAFT;
@@ -82,7 +123,7 @@ export default function TalentDetailsEditor({ talentId, versionId, versionStatus
     const response = await fetch(`/api/admin/talent/${talentId}/proposals/${versionId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fields: values }),
+      body: JSON.stringify({ fields: buildSaveFields(values) }),
     });
 
     const body = await response.json().catch(() => ({}));

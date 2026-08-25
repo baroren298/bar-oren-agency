@@ -158,6 +158,19 @@
   padding-block: 0.5rem;
 }
 
+/*
+ * Talent Details Lifecycle Unification sprint — the "image" field type
+ * (Profile Image) renders <ImageAssetEditor> directly instead of the
+ * label+input/read-only-text grid every other field type uses (that
+ * component already has its own internal heading and full-width upload/
+ * preview surface, in both view and edit mode) — the 160px label column
+ * above would only clip it. Full-width block, same vertical rhythm
+ * (padding-block) as its siblings.
+ */
+.imageFieldRow {
+  padding-block: 0.5rem;
+}
+
 .proposedFieldLabel {
   display: flex;
   align-items: center;
