@@ -54,7 +54,9 @@ export default function AddImageCard({ className = "", onSelectFiles = null }) {
         disabled
         title={he.gallery.addImageComingSoon}
       >
-        <span className={styles.label}>{he.gallery.actions.addImage}</span>
+        <span className={styles.frame}>
+          <span className={styles.label}>{he.gallery.actions.addImage}</span>
+        </span>
       </button>
     );
   }
@@ -116,22 +118,24 @@ export default function AddImageCard({ className = "", onSelectFiles = null }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <span className={styles.dropzoneIcon} aria-hidden="true">
-        📷
+      <span className={styles.frame}>
+        <span className={styles.dropzoneIcon} aria-hidden="true">
+          📷
+        </span>
+        <span className={styles.dropzoneLabel}>{he.gallery.actions.dropHint}</span>
+        <span className={styles.dropzoneOr}>{he.gallery.actions.or}</span>
+        <span className={styles.dropzoneLabel}>{he.gallery.actions.uploadImage}</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_MIME_TYPES}
+          multiple
+          className={styles.hiddenInput}
+          onChange={handleFileChange}
+          tabIndex={-1}
+          aria-hidden="true"
+        />
       </span>
-      <span className={styles.dropzoneLabel}>{he.gallery.actions.dropHint}</span>
-      <span className={styles.dropzoneOr}>{he.gallery.actions.or}</span>
-      <span className={styles.dropzoneLabel}>{he.gallery.actions.uploadImage}</span>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={ACCEPTED_MIME_TYPES}
-        multiple
-        className={styles.hiddenInput}
-        onChange={handleFileChange}
-        tabIndex={-1}
-        aria-hidden="true"
-      />
     </div>
   );
 }

@@ -10,6 +10,20 @@
   border: 1px solid var(--admin-border);
   border-radius: var(--admin-radius-lg);
   padding: 0.6rem;
+  /*
+   * Gallery preview card layout fix — every card here is a CSS Grid item
+   * inside .proposedGrid (repeat(4, 1fr)). A grid item's default min-width/
+   * min-height is `auto`, which lets its content's *intrinsic* size act as
+   * a lower bound on its track — so one photo with unusual native
+   * dimensions (e.g. an unusually wide source image feeding the fixed
+   * 4/5 ImagePreview frame below) could force its whole column wider than
+   * the other 1fr columns, and since the frame's aspect-ratio is fixed,
+   * a wider column also renders a visibly taller card. Overriding both to
+   * 0 is the standard fix: every card is sized purely by the grid's equal
+   * 1fr tracks, never by what a specific image happens to be shaped like.
+   */
+  min-width: 0;
+  min-height: 0;
 }
 
 /*

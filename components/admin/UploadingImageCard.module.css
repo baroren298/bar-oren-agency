@@ -10,6 +10,10 @@
   border: 1px solid var(--admin-border);
   border-radius: var(--admin-radius-lg);
   padding: 0.6rem;
+  /* Same grid-item sizing contract as GalleryImageCard.module.css's .card
+   * — see the comment there. This card shares the same .proposedGrid row. */
+  min-width: 0;
+  min-height: 0;
 }
 
 .imageWrapper {
